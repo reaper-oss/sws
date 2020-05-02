@@ -427,7 +427,7 @@ void GetRenderedFiles(string dir, vector<RenderRegion> regions, map <string, Ren
 			}
 
 			for (std::vector<RenderRegion>::iterator region = regions.begin(); region != regions.end(); ++region) {
-				string regionFileNamePrefix = region->getFileName("", 2);
+				string regionFileNamePrefix = region->getFileName("", 0);
 				//TODO make sure filename sanitizing works as expected (REAPER internally handling during region rendering
 				if (!fileName.compare(0, regionFileNamePrefix.length(), regionFileNamePrefix)) {
 					string path = string(dir + PATH_SLASH_CHAR + fileName);

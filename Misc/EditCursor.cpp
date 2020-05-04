@@ -99,14 +99,15 @@ void MoveCursorSample(COMMAND_T* ct)
 	if (!projsrate)
 		return;
 
-	INT64 iCurSample = (INT64)(dPos * *projsrate + 0.5);
-	if (ct->user == -1 && (dPos == (double)(iCurSample / *projsrate)))
+	const double dSrate = *projsrate;
+	int64_t iCurSample = static_cast<int64_t>(dPos * dSrate + 0.5);
+
+	if (ct->user == -1 && (dPos == iCurSample / dSrate))
 		iCurSample--;
 	else if (ct->user == 1)
 		iCurSample++;
 
-	double dNewPos = (double)(iCurSample / *projsrate);
-
+	const double dNewPos = iCurSample / dSrate;
 	SetEditCurPos(dNewPos, true, false);
 }
 

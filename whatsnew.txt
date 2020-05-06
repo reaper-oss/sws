@@ -1,3 +1,7 @@
++Issue 1344: "SWS/FNG: Show only used CC lanes" does not restore "Program/Bank Select" lane
++Issue 1344: "SWS/FNG: Hide unused CC lanes" hides "Program/Bank Select" lane
++Issue 1344: "SWS/BR: Show only used CC lanes (detect 14-bit)" does not restore "Program/Bank Select" lane
+
 !v2.12.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.982+!</strong>
 

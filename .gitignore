@@ -4,3 +4,8 @@
 
 # External files
 /vendor
+
+# Local configuration
+.vscode
+.vs/
+CMakeSettings.json

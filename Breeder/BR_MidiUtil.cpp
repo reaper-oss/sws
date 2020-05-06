@@ -794,7 +794,11 @@ set<int> GetUsedCCLanes (HWND midiEditor, int detect14bit, bool selectedEventsOn
 			if (!MIDI_GetCC(take, id, &selected, NULL, NULL, &chanMsg, &chan, &msg2, NULL) || !editor.IsCCVisible(take, id) || (selectedEventsOnly && !selected))
 				continue;
 
-			if      (chanMsg == STATUS_PROGRAM)          usedCC.insert(CC_PROGRAM);
+			if      (chanMsg == STATUS_PROGRAM)
+			{
+				usedCC.insert(CC_PROGRAM);
+				usedCC.insert(CC_BANK_SELECT);
+			}
 			else if (chanMsg == STATUS_CHANNEL_PRESSURE) usedCC.insert(CC_CHANNEL_PRESSURE);
 			else if (chanMsg == STATUS_PITCH)            usedCC.insert(CC_PITCH);
 			else if (chanMsg == STATUS_CC)

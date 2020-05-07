@@ -252,6 +252,7 @@ void SWS_GetSelectedMediaItems(WDL_TypedBuf<MediaItem*>* buf);
 void SWS_GetSelectedMediaItemsOnTrack(WDL_TypedBuf<MediaItem*>* buf, MediaTrack* tr);
 int SWS_GetModifiers();
 bool SWS_IsWindow(HWND hwnd);
+bool SWS_IsTrackHeightLocked(MediaTrack* track);
 
 // Localization, sws_util.cpp
 #define _SWS_LOCALIZATION

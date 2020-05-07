@@ -542,3 +542,8 @@ void UpdateStretchMarkersAfterSetTakeStartOffset(MediaItem_Take* take, double ta
 	}
 	UpdateItemInProject(GetMediaItemTake_Item(take));
 }
+
+bool SWS_IsTrackHeightLocked(MediaTrack* track)
+{
+	return GetMediaTrackInfo_Value(track, "B_HEIGHTLOCK") ? true : false;
+}

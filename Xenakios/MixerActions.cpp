@@ -29,6 +29,7 @@
 #include "../SnM/SnM_Dlg.h"
 #include "../reaper/localize.h"
 #include "Parameters.h"
+#include "../nofish/nofish.h" // NF_IsObeyTrackHeightLockEnabled()
 
 using namespace std;
 
@@ -242,32 +243,36 @@ typedef struct
 
 vector<t_trackheight_struct> g_vec_trackheighs;
 
-void DoSelTraxHeightA(COMMAND_T* ct)
+void DoSelTraxHeight(COMMAND_T* ct)
 {
-	for (int i=0;i<GetNumTracks();i++)
+	int trackHeight = 0;
+	switch (ct->user)
 	{
-		MediaTrack* CurTrack=CSurf_TrackFromID(i+1,false);
-		if (*(int*)GetSetMediaTrackInfo(CurTrack, "I_SELECTED", NULL)) {
-			// ct->user == 1: respect height locked tracks
-			if (ct->user == 0 || (ct->user == 1 && !static_cast<bool>(GetMediaTrackInfo_Value(CurTrack, "B_HEIGHTLOCK"))))
-				GetSetMediaTrackInfo(CurTrack, "I_HEIGHTOVERRIDE", &g_command_params.TrackHeightA);
-		}
-			
+		case 0: 
+			trackHeight = g_command_params.TrackHeightA;
+			break;
+		case 1:
+			trackHeight = g_command_params.TrackHeightB;
+			break;
 	}
-	TrackList_AdjustWindows(false);
-	UpdateTimeline();
-}
-
-void DoSelTraxHeightB(COMMAND_T* ct)
-{
-	for (int i=0;i<GetNumTracks();i++)
-	{
-		MediaTrack* CurTrack=CSurf_TrackFromID(i+1,false);
-		if (*(int*)GetSetMediaTrackInfo(CurTrack, "I_SELECTED", NULL)) {
-			if (ct->user == 0 || (ct->user == 1 && !static_cast<bool>(GetMediaTrackInfo_Value(CurTrack, "B_HEIGHTLOCK"))))
-				GetSetMediaTrackInfo(CurTrack, "I_HEIGHTOVERRIDE", &g_command_params.TrackHeightB);
+		
+	if (NF_IsObeyTrackHeightLockEnabled())
+	{ 
+		for (int i = 0; i < GetNumTracks(); i++)
+		{
+			MediaTrack* CurTrack = CSurf_TrackFromID(i + 1, false);
+			if (*(int*)GetSetMediaTrackInfo(CurTrack, "I_SELECTED", NULL) && !SWS_IsTrackHeightLocked(CurTrack))
+				GetSetMediaTrackInfo(CurTrack, "I_HEIGHTOVERRIDE", &trackHeight);
 		}
-			
+	}
+	else
+	{
+		for (int i = 0; i < GetNumTracks(); i++)
+		{
+			MediaTrack* CurTrack = CSurf_TrackFromID(i + 1, false);
+			if (*(int*)GetSetMediaTrackInfo(CurTrack, "I_SELECTED", NULL))
+				GetSetMediaTrackInfo(CurTrack, "I_HEIGHTOVERRIDE", &trackHeight);
+		}
 	}
 	TrackList_AdjustWindows(false);
 	UpdateTimeline();
@@ -292,15 +297,32 @@ void DoStoreSelTraxHeights(COMMAND_T*)
 
 void DoRecallSelectedTrackHeights(COMMAND_T*)
 {
-	for (int i=0;i<GetNumTracks();i++)
+	if (NF_IsObeyTrackHeightLockEnabled())
 	{
-		MediaTrack* CurTrack = CSurf_TrackFromID(i+1,false);
-		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
+		for (int i = 0; i < GetNumTracks(); i++)
 		{
-			GUID curGUID=*(GUID*)GetSetMediaTrackInfo(CurTrack,"GUID",NULL);
-			for (int j=0;j<(int)g_vec_trackheighs.size();j++)
-				if (GuidsEqual(&curGUID, &g_vec_trackheighs[j].guid))
-					GetSetMediaTrackInfo(CurTrack,"I_HEIGHTOVERRIDE",&g_vec_trackheighs[j].Heigth);	
+			MediaTrack* CurTrack = CSurf_TrackFromID(i + 1, false);
+			if (*(int*)GetSetMediaTrackInfo(CurTrack, "I_SELECTED", NULL) && !SWS_IsTrackHeightLocked(CurTrack))
+			{
+				GUID curGUID = *(GUID*)GetSetMediaTrackInfo(CurTrack, "GUID", NULL);
+				for (int j = 0; j < (int)g_vec_trackheighs.size(); j++)
+					if (GuidsEqual(&curGUID, &g_vec_trackheighs[j].guid))
+						GetSetMediaTrackInfo(CurTrack, "I_HEIGHTOVERRIDE", &g_vec_trackheighs[j].Heigth);
+			}
+		}
+	}
+	else
+	{
+		for (int i = 0; i < GetNumTracks(); i++)
+		{
+			MediaTrack* CurTrack = CSurf_TrackFromID(i + 1, false);
+			if (*(int*)GetSetMediaTrackInfo(CurTrack, "I_SELECTED", NULL))
+			{
+				GUID curGUID = *(GUID*)GetSetMediaTrackInfo(CurTrack, "GUID", NULL);
+				for (int j = 0; j < (int)g_vec_trackheighs.size(); j++)
+					if (GuidsEqual(&curGUID, &g_vec_trackheighs[j].guid))
+						GetSetMediaTrackInfo(CurTrack, "I_HEIGHTOVERRIDE", &g_vec_trackheighs[j].Heigth);
+			}
 		}
 	}
 	TrackList_AdjustWindows(false);
@@ -700,20 +722,32 @@ void DoToggleTrackHeightAB(COMMAND_T*)
 	XenGetProjectTracks(TheTracks,true);
 	int i;
 	int newHei=0;
-		if (g_CurTrackHeightIdx==0)
-		{
-			g_CurTrackHeightIdx=1;
-			newHei=g_command_params.TrackHeightB;
-		} else
-		{
-			g_CurTrackHeightIdx=0;
-			newHei=g_command_params.TrackHeightA;
-		}
-	for (i=0;i<(int)TheTracks.size();i++)
+	if (g_CurTrackHeightIdx==0)
 	{
-		
-		GetSetMediaTrackInfo(TheTracks[i],"I_HEIGHTOVERRIDE",&newHei);
+		g_CurTrackHeightIdx=1;
+		newHei=g_command_params.TrackHeightB;
+	} else
+	{
+		g_CurTrackHeightIdx=0;
+		newHei=g_command_params.TrackHeightA;
 	}
+
+	if (NF_IsObeyTrackHeightLockEnabled())
+	{
+		for (i = 0; i < (int)TheTracks.size(); i++)
+		{
+			if (!SWS_IsTrackHeightLocked(TheTracks[i]))
+				GetSetMediaTrackInfo(TheTracks[i], "I_HEIGHTOVERRIDE", &newHei);
+		}
+	}
+	else
+	{
+		for (i = 0; i < (int)TheTracks.size(); i++)
+		{
+			GetSetMediaTrackInfo(TheTracks[i], "I_HEIGHTOVERRIDE", &newHei);
+		}
+	}
+
 	TrackList_AdjustWindows(false);
 	UpdateTimeline();
 }

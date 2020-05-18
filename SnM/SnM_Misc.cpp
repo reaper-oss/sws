@@ -217,6 +217,24 @@ bool SNM_SetDoubleConfigVar(const char *varName, double newValue) {
 	return ConfigVar<double>(varName).try_set(newValue);
 }
 
+bool SNM_GetLongConfigVar(const char *varName, int *highOut, int *lowOut) {
+	const ConfigVar<long long> var(varName);
+	if (!var)
+		return false;
+
+	if (highOut)
+		*highOut = *var >> 32;
+	if (lowOut)
+		*lowOut = *var & 0xFFFFFFFF;
+
+	return true;
+}
+
+bool SNM_SetLongConfigVar(const char *varName, const int newHighValue, const int newLowValue) {
+	const auto newValue = (static_cast<long long>(newHighValue) << 32) | (newLowValue & 0xFFFFFFFF);
+	return ConfigVar<long long>(varName).try_set(newValue);
+}
+
 // host some funcs from Ultraschall, https://github.com/Ultraschall
 const char* ULT_GetMediaItemNote(MediaItem* _item) {
 		return _item ? (const char*)GetSetMediaItemInfo(_item, "P_NOTES", NULL): "";

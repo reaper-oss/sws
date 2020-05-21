@@ -519,8 +519,8 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Dump action list (native actions only)" }, "S&M_DUMP_ACTION_LIST", DumpActionList, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (SWS actions only)" }, "S&M_DUMP_SWS_ACTION_LIST", DumpActionList, NULL, 8},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (custom actions only)" }, "S&M_DUMP_CUST_ACTION_LIST", DumpActionList, NULL, 16},
-	{ { DEFACCEL, "SWS/S&M: Dump action list (all but custom actions)" }, "S&M_DUMP_CUST_ACTION_LIST", DumpActionList, NULL, 4|8},
-	{ { DEFACCEL, "SWS/S&M: Dump action list (all actions)" }, "S&M_DUMP_CUST_ACTION_LIST", DumpActionList, NULL, 4|8|16},
+	{ { DEFACCEL, "SWS/S&M: Dump action list (all but custom actions)" }, "S&M_DUMP_NOT_CUST_ACTION_LIST", DumpActionList, NULL, 4|8},
+	{ { DEFACCEL, "SWS/S&M: Dump action list (all actions)" }, "S&M_DUMP_ALL_ACTION_LIST", DumpActionList, NULL, 4|8|16},
 
 	{ { DEFACCEL, "SWS/S&M: Resources - Clear FX chain slot, prompt for slot" }, "S&M_CLRFXCHAINSLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_FXC},
 	{ { DEFACCEL, "SWS/S&M: Resources - Clear track template slot, prompt for slot" }, "S&M_CLR_TRTEMPLATE_SLOT", ResourcesClearSlotPrompt, NULL, SNM_SLOT_TR},

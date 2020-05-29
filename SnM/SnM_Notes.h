@@ -56,7 +56,7 @@ enum {
 class SNM_TrackNotes {
 public:
 	SNM_TrackNotes(ReaProject* project, const GUID* guid, const char* notes)
-		: m_project(project), m_guid(*guid), m_notes(notes)
+		: m_project{project}, m_guid{*guid}, m_notes{notes}
 	{
 		// The current project (project == NULL) doen't always match
 		// the notes' project when saving in SaveExtensionConfig [#1141]
@@ -75,8 +75,14 @@ public:
 
 class SNM_RegionSubtitle {
 public:
-	SNM_RegionSubtitle(int _id, const char* _notes) 
-		: m_id(_id),m_notes(_notes ? _notes : "") {}
+	SNM_RegionSubtitle(ReaProject* project, const int id, const char* notes)
+		: m_project{project}, m_id{id}, m_notes{notes}
+	{
+		if (!project) // see SNM_TrackNotes's constructor
+			m_project = EnumProjects(-1, nullptr, 0);
+	}
+
+	ReaProject *m_project;
 	int m_id;
 	WDL_FastString m_notes;
 };

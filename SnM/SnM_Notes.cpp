@@ -822,7 +822,7 @@ void NotesWnd::SaveCurrentMkrRgnNameOrSub(int _type, bool _wantUndo)
 				}
 			}
 			if (!found)
-				g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(g_lastMarkerRegionId, g_lastText));
+				g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(nullptr, g_lastMarkerRegionId, g_lastText));
 			if (_wantUndo)
 				Undo_OnStateChangeEx2(NULL, IsRegion(g_lastMarkerRegionId) ? __LOCALIZE("Edit region subtitle","sws_undo") : __LOCALIZE("Edit marker subtitle","sws_undo"), UNDO_STATE_MISCCFG, -1);
 			else
@@ -1045,7 +1045,7 @@ int NotesWnd::UpdateMkrRgnNameOrSub(int _type)
 							SetText(g_pRegionSubs.Get()->Get(i)->m_notes.Get());
 							return REQUEST_REFRESH;
 						}
-					g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(id, ""));
+					g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(nullptr, id, ""));
 					SetText("");
 				}
 				refreshType = REQUEST_REFRESH;
@@ -1310,7 +1310,7 @@ bool ImportSubRipFile(const char* _fn)
 
 						int id = MakeMarkerRegionId(num, true);
 						if (id > 0) // add the sub, no duplicate mgmt..
-							g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(id, notes.Get()));
+							g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(nullptr, id, notes.Get()));
 					}
 				}
 				else
@@ -1467,14 +1467,14 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	}
 	else if (!strcmp(lp.gettoken_str(0), "<S&M_SUBTITLE"))
 	{
-		if (GetMarkerRegionIndexFromId(NULL, lp.gettoken_int(1)) >= 0) // still exists?
+		if (GetMarkerRegionIndexFromId(p, lp.gettoken_int(1)) >= 0) // still exists?
 		{
 			WDL_FastString notes;
 			ExtensionConfigToString(&notes, ctx);
 
 			char buf[MAX_HELP_LENGTH] = "";
 			if (GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH))
-				g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(lp.gettoken_int(1), buf));
+				g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(p, lp.gettoken_int(1), buf));
 			return true;
 		}
 	}
@@ -1525,7 +1525,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	{
 		if (SNM_RegionSubtitle* sub = g_pRegionSubs.Get()->Get(i))
 		{
-			if (sub->m_notes.GetLength() && GetMarkerRegionIndexFromId(NULL, sub->m_id) >= 0) // valid mkr/rgn?
+			if (sub->m_notes.GetLength() && GetMarkerRegionIndexFromId(sub->m_project, sub->m_id) >= 0) // valid mkr/rgn?
 			{
 				if (snprintfStrict(line, sizeof(line), "<S&M_SUBTITLE %d\n|", sub->m_id) > 0)
 					if (GetNotesChunkFromString(sub->m_notes.Get(), &formatedNotes, line))
@@ -1764,7 +1764,7 @@ bool NFDoSetSWSMarkerRegionSub(const char* mkrRgnSubIn, int mkrRgnIdxNumberIn)
 			// mkrRgn sub doesn't exist but marker/region is present in project, add new mkrRgn sub
 			if (mkrRgnExists)
 			{
-				g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(mkrRgnId, mkrRgnSubIn));
+				g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(nullptr, mkrRgnId, mkrRgnSubIn));
 				return true;
 			}
 			else // mkrRgn isn't present in project

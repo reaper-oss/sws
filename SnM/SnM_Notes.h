@@ -55,12 +55,20 @@ enum {
 
 class SNM_TrackNotes {
 public:
-	SNM_TrackNotes(const GUID* _guid, const char* _notes) {
-		if (_guid) memcpy(&m_guid, _guid, sizeof(GUID));
-		m_notes.Set(_notes ? _notes : "");
+	SNM_TrackNotes(ReaProject* project, const GUID* guid, const char* notes)
+		: m_project(project), m_guid(*guid), m_notes(notes)
+	{
+		// The current project (project == NULL) doen't always match
+		// the notes' project when saving in SaveExtensionConfig [#1141]
+
+		if (!project)
+			m_project = EnumProjects(-1, nullptr, 0);
 	}
-	MediaTrack* GetTrack() { return GuidToTrack(&m_guid); }
+
+	MediaTrack* GetTrack() { return GuidToTrack(m_project, &m_guid); }
 	const GUID* GetGUID() { return &m_guid; }
+
+	ReaProject *m_project;
 	GUID m_guid;
 	WDL_FastString m_notes;
 };

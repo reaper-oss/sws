@@ -757,7 +757,7 @@ void NotesWnd::SaveCurrentTrackNotes(bool _wantUndo)
 			}
 		}
 		if (!found)
-			g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(TrackToGuid(g_trNote), g_lastText));
+			g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(nullptr, TrackToGuid(g_trNote), g_lastText));
 		if (_wantUndo)
 			Undo_OnStateChangeEx2(NULL, __LOCALIZE("Edit track notes","sws_undo"), UNDO_STATE_MISCCFG, -1); //JFB TODO? -1 to replace?
 		else
@@ -990,7 +990,7 @@ int NotesWnd::UpdateTrackNotes()
 					return REQUEST_REFRESH;
 				}
 
-			g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(TrackToGuid(g_trNote), ""));
+			g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(nullptr, TrackToGuid(g_trNote), ""));
 			SetText("");
 			refreshType = REQUEST_REFRESH;
 		} 
@@ -1438,6 +1438,8 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	if (lp.parse(line) || lp.getnumtokens() < 1)
 		return false;
 
+	ReaProject *p = GetCurrentProjectInLoadSave();
+
 	if (!strcmp(lp.gettoken_str(0), "<S&M_PROJNOTES"))
 	{
 		WDL_FastString notes;
@@ -1459,7 +1461,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		{
 			GUID g;
 			stringToGuid(lp.gettoken_str(1), &g);
-			g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(&g, buf));
+			g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(p, &g, buf));
 		}
 		return true;
 	}
@@ -1499,8 +1501,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 		if (SNM_TrackNotes* tn = g_SNM_TrackNotes.Get()->Get(i))
 		{
 			MediaTrack* tr = tn->GetTrack();
-			if (tn->m_notes.GetLength() &&
-				tr && CSurf_TrackToID(tr, false) >= 0) // valid track?
+			if (tr && tn->m_notes.GetLength() > 0)
 			{
 				guidToString((GUID*)tn->GetGUID(), strId);
 				if (snprintfStrict(line, sizeof(line), "<S&M_TRACKNOTES %s\n|", strId) > 0)
@@ -1697,7 +1698,7 @@ void NFDoSetSWSTrackNotes(MediaTrack* track, const char* buf)
 	}
 
 	// tracknote for the track doesn't exist yet, add new one 
-	g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(TrackToGuid(track), buf));
+	g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(nullptr, TrackToGuid(track), buf));
 }
 
 const char* NFDoGetSWSMarkerRegionSub(int mkrRgnIdxNumberIn)

@@ -751,7 +751,7 @@ void NotesWnd::SaveCurrentTrackNotes(bool _wantUndo)
 		{
 			if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == g_trNote)
 			{
-				g_SNM_TrackNotes.Get()->Get(i)->m_notes.Set(g_lastText); // CRLF removed only when saving the project..
+				g_SNM_TrackNotes.Get()->Get(i)->SetNotes(g_lastText); // CRLF removed only when saving the project..
 				found = true;
 				break;
 			}
@@ -815,8 +815,8 @@ void NotesWnd::SaveCurrentMkrRgnNameOrSub(int _type, bool _wantUndo)
 			bool found = false;
 			for (int i=0; i < g_pRegionSubs.Get()->GetSize(); i++) 
 			{
-				if (g_pRegionSubs.Get()->Get(i)->m_id == g_lastMarkerRegionId) {
-					g_pRegionSubs.Get()->Get(i)->m_notes.Set(g_lastText);
+				if (g_pRegionSubs.Get()->Get(i)->GetId() == g_lastMarkerRegionId) {
+					g_pRegionSubs.Get()->Get(i)->SetNotes(g_lastText);
 					found = true;
 					break;
 				}
@@ -986,7 +986,7 @@ int NotesWnd::UpdateTrackNotes()
 
 			for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++)
 				if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == g_trNote) {
-					SetText(g_SNM_TrackNotes.Get()->Get(i)->m_notes.Get());
+					SetText(g_SNM_TrackNotes.Get()->Get(i)->GetNotes());
 					return REQUEST_REFRESH;
 				}
 
@@ -1041,8 +1041,8 @@ int NotesWnd::UpdateMkrRgnNameOrSub(int _type)
 				else // update subtitle
 				{
 					for (int i=0; i < g_pRegionSubs.Get()->GetSize(); i++)
-						if (g_pRegionSubs.Get()->Get(i)->m_id == id) {
-							SetText(g_pRegionSubs.Get()->Get(i)->m_notes.Get());
+						if (g_pRegionSubs.Get()->Get(i)->GetId() == id) {
+							SetText(g_pRegionSubs.Get()->Get(i)->GetNotes());
 							return REQUEST_REFRESH;
 						}
 					g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(nullptr, id, ""));
@@ -1079,8 +1079,8 @@ void NotesWnd::ForceUpdateMkrRgnNameOrSub(int _type)
 	if (id > 0)
 	{
 		for (int i = 0; i < g_pRegionSubs.Get()->GetSize(); i++)
-			if (g_pRegionSubs.Get()->Get(i)->m_id == id) {
-				SetText(g_pRegionSubs.Get()->Get(i)->m_notes.Get());
+			if (g_pRegionSubs.Get()->Get(i)->GetId() == id) {
+				SetText(g_pRegionSubs.Get()->Get(i)->GetNotes());
 				if (g_locked)
 					RefreshGUI();
 				return;
@@ -1366,7 +1366,7 @@ bool ExportSubRipFile(const char* _fn)
 				for (int i=0; i < g_pRegionSubs.Get()->GetSize(); i++)
 				{
 					SNM_RegionSubtitle* rn = g_pRegionSubs.Get()->Get(i);
-					if (rn->m_id == id)
+					if (rn->GetId() == id)
 					{
 						subs.AppendFormatted(64, "%d\n", subIdx++); // subs have their own indexes
 						
@@ -1376,8 +1376,8 @@ bool ExportSubRipFile(const char* _fn)
 						TranslatePos(p2, &h, &m, &s, &ms);
 						subs.AppendFormatted(64,"%02d:%02d:%02d,%03d\n",h,m,s,ms);
 
-						subs.Append(rn->m_notes.Get());
-						if (rn->m_notes.GetLength() && rn->m_notes.Get()[rn->m_notes.GetLength()-1] != '\n')
+						subs.Append(rn->GetNotes());
+						if (rn->GetNotesLength() && rn->GetNotes()[rn->GetNotesLength()-1] != '\n')
 							subs.Append("\n");
 						subs.Append("\n");
 					}
@@ -1501,11 +1501,11 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 		if (SNM_TrackNotes* tn = g_SNM_TrackNotes.Get()->Get(i))
 		{
 			MediaTrack* tr = tn->GetTrack();
-			if (tr && tn->m_notes.GetLength() > 0)
+			if (tr && tn->GetNotesLength() > 0)
 			{
 				guidToString((GUID*)tn->GetGUID(), strId);
 				if (snprintfStrict(line, sizeof(line), "<S&M_TRACKNOTES %s\n|", strId) > 0)
-					if (GetNotesChunkFromString(tn->m_notes.Get(), &formatedNotes, line))
+					if (GetNotesChunkFromString(tn->GetNotes(), &formatedNotes, line))
 						StringToExtensionConfig(&formatedNotes, ctx);
 			}
 			else
@@ -1525,10 +1525,10 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	{
 		if (SNM_RegionSubtitle* sub = g_pRegionSubs.Get()->Get(i))
 		{
-			if (sub->m_notes.GetLength() && GetMarkerRegionIndexFromId(sub->m_project, sub->m_id) >= 0) // valid mkr/rgn?
+			if (sub->GetNotesLength() && sub->IsValid())
 			{
-				if (snprintfStrict(line, sizeof(line), "<S&M_SUBTITLE %d\n|", sub->m_id) > 0)
-					if (GetNotesChunkFromString(sub->m_notes.Get(), &formatedNotes, line))
+				if (snprintfStrict(line, sizeof(line), "<S&M_SUBTITLE %d\n|", sub->GetId()) > 0)
+					if (GetNotesChunkFromString(sub->GetNotes(), &formatedNotes, line))
 						StringToExtensionConfig(&formatedNotes, ctx);
 			}
 			else
@@ -1669,7 +1669,7 @@ const char* NFDoGetSWSTrackNotes(MediaTrack* track)
 {
 	for (int i = 0; i < g_SNM_TrackNotes.Get()->GetSize(); i++) {
 		if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == track) {
-			return g_SNM_TrackNotes.Get()->Get(i)->m_notes.Get();
+			return g_SNM_TrackNotes.Get()->Get(i)->GetNotes();
 			break;
 		}
 	}
@@ -1685,7 +1685,7 @@ void NFDoSetSWSTrackNotes(MediaTrack* track, const char* buf)
 	for (int i = 0; i < g_SNM_TrackNotes.Get()->GetSize(); i++) {
 
 		if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == track) {
-			g_SNM_TrackNotes.Get()->Get(i)->m_notes.Set(buf);
+			g_SNM_TrackNotes.Get()->Get(i)->SetNotes(buf);
 
 			// update displayed text if Notes window is visible and notes for set track are displayed
 			if (NotesWnd* w = g_notesWndMgr.Get()) {
@@ -1716,9 +1716,9 @@ const char* NFDoGetSWSMarkerRegionSub(int mkrRgnIdxNumberIn)
 			for (int i = 0; i < g_pRegionSubs.Get()->GetSize(); i++)
 			{
 				// regionSub exists
-				if (mkrRgnId == g_pRegionSubs.Get()->Get(i)->m_id)
+				if (mkrRgnId == g_pRegionSubs.Get()->Get(i)->GetId())
 				{
-					mkrRgnSubOut->Set(g_pRegionSubs.Get()->Get(i)->m_notes.Get());
+					mkrRgnSubOut->Set(g_pRegionSubs.Get()->Get(i)->GetNotes());
 					return mkrRgnSubOut->Get();
 				}
 			}
@@ -1732,9 +1732,9 @@ const char* NFDoGetSWSMarkerRegionSub(int mkrRgnIdxNumberIn)
 	for (int i = 0; i < g_pRegionSubs.Get()->GetSize(); i++)
 	{
 		// mkrRgn sub exists
-		if (mkrRgnId == g_pRegionSubs.Get()->Get(i)->m_id)
+		if (mkrRgnId == g_pRegionSubs.Get()->Get(i)->GetId())
 		{
-			return g_pRegionSubs.Get()->Get(i)->m_notes.Get();
+			return g_pRegionSubs.Get()->Get(i)->GetNotes();
 		}
 	}
 
@@ -1754,9 +1754,9 @@ bool NFDoSetSWSMarkerRegionSub(const char* mkrRgnSubIn, int mkrRgnIdxNumberIn)
 			int mkrRgnId = GetMarkerRegionIdFromIndex(NULL, idx - 1); // takes zero-based idx
 			for (int i = 0; i < g_pRegionSubs.Get()->GetSize(); i++)
 			{
-				if (mkrRgnId == g_pRegionSubs.Get()->Get(i)->m_id) // mkrRgn sub exists, update it
+				if (mkrRgnId == g_pRegionSubs.Get()->Get(i)->GetId()) // mkrRgn sub exists, update it
 				{
-					g_pRegionSubs.Get()->Get(i)->m_notes.Set(mkrRgnSubIn);
+					g_pRegionSubs.Get()->Get(i)->SetNotes(mkrRgnSubIn);
 					return true;
 				}
 			}

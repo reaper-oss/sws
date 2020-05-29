@@ -67,7 +67,11 @@ public:
 
 	MediaTrack* GetTrack() { return GuidToTrack(m_project, &m_guid); }
 	const GUID* GetGUID() { return &m_guid; }
+	const char *GetNotes() const { return m_notes.Get(); }
+	int GetNotesLength() const { return m_notes.GetLength(); }
+	void SetNotes(const char *notes) { m_notes.Set(notes); }
 
+private:
 	ReaProject *m_project;
 	GUID m_guid;
 	WDL_FastString m_notes;
@@ -82,6 +86,13 @@ public:
 			m_project = EnumProjects(-1, nullptr, 0);
 	}
 
+	int GetId() const { return m_id; }
+	bool IsValid() const { return GetMarkerRegionIndexFromId(m_project, m_id) >= 0; }
+	const char *GetNotes() const { return m_notes.Get(); }
+	int GetNotesLength() const { return m_notes.GetLength(); }
+	void SetNotes(const char *notes) { m_notes.Set(notes); }
+
+private:
 	ReaProject *m_project;
 	int m_id;
 	WDL_FastString m_notes;

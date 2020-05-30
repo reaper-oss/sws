@@ -33,3 +33,4 @@ void TogTrackSel(COMMAND_T* = NULL);
 void SelChildren(COMMAND_T* = NULL);
 void SetLTT(COMMAND_T* = NULL);
 void SelTracksWItems(COMMAND_T* = NULL);
+void SelectTrack(COMMAND_T* = NULL);

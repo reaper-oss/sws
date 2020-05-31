@@ -307,7 +307,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(SN_FocusMIDIEditor), "void", "", "", "Focuses the active/open MIDI editor.", },
 
 	{ APIFUNC(CF_SetClipboard), "void", "const char*", "str", "Write the given string into the system clipboard.", },
-	{ APIFUNC(CF_GetClipboard), "void", "char*,int", "textOut,textOut_sz", "Read the contents of the system clipboard.", },
+	{ APIFUNC(CF_GetClipboard), "void", "char*,int", "textOutNeedBig,textOutNeedBig_sz", "Read the contents of the system clipboard.", },
 	{ APIFUNC(CF_GetClipboardBig), "const char*", "WDL_FastString*", "output", "[DEPRECATED: Use <a href=\"#CF_GetClipboard\">CF_GetClipboard</a>] Read the contents of the system clipboard. See <a href=\"#SNM_CreateFastString\">SNM_CreateFastString</a> and <a href=\"#SNM_DeleteFastString\">SNM_DeleteFastString</a>.", },
 	{ APIFUNC(CF_ShellExecute), "bool", "const char*", "file", "Open the given file or URL in the default application. See also <a href=\"#CF_LocateInExplorer\">CF_LocateInExplorer</a>.", },
 	{ APIFUNC(CF_LocateInExplorer), "bool", "const char*", "file", "Select the given file in explorer/finder.", },

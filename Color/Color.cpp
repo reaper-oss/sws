@@ -26,10 +26,12 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "../reaper/localize.h"
+
 #include "../Freeze/Freeze.h"
 #include "../SnM/SnM_Dlg.h"
 #include "Color.h"
+
+#include <WDL/localize/localize.h>
 
 #define COLORDLG_WINDOWPOS_KEY "ColorDlgPos"
 #define GRADIENT_COLOR_KEY "ColorGradients"
@@ -168,11 +170,11 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					else if (wParam == IDC_SETCUST && ChooseColor(&cc))
 						PersistColors();
 #elif !defined(__APPLE__)
-					int cc = 0;
+					COLORREF cc = 0;
 					if (wParam == IDC_COLOR1) cc = g_crGradStart;
 					if (wParam == IDC_COLOR2) cc = g_crGradEnd;
 
-					if (SWELL_ChooseColor(hwndDlg,&cc,16,(int *)g_custColors))
+					if (SWELL_ChooseColor(hwndDlg,&cc,16,g_custColors))
 					{
 						if (wParam == IDC_COLOR1) g_crGradStart = cc;
 						if (wParam == IDC_COLOR2) g_crGradEnd = cc;

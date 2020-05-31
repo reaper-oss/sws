@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "SnM.h"
 #include "SnM_Chunk.h"
 #include "SnM_Dlg.h"
@@ -35,11 +36,10 @@
 #include "SnM_Resources.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
-#include "../reaper/localize.h"
 
+#include <WDL/localize/localize.h>
 
 WDL_FastString g_fXChainClipboard;
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Take FX chains

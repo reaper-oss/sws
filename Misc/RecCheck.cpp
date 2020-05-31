@@ -28,9 +28,11 @@
 // Actions that behave differently based on the cursor context
 
 #include "stdafx.h"
-#include "../reaper/localize.h"
+
 #include "../SnM/SnM_Dlg.h"
 #include "RecCheck.h"
+
+#include <WDL/localize/localize.h>
 
 static bool g_bEnRecInputCheck = false;
 #define RECINPUTCHECK_KEY "Record input check"

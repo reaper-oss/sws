@@ -27,7 +27,7 @@
 
 
 #include "stdafx.h"
-#include "../reaper/localize.h"
+
 #include "Adam.h"
 #include "Context.h"
 #include "TrackSel.h"
@@ -36,8 +36,7 @@
 #include "../SnM/SnM_Dlg.h"
 #include "../Breeder/BR_Util.h"
 
-
-//#include "Context.cpp"
+#include <WDL/localize/localize.h>
 
 // Globals for copy and paste
 

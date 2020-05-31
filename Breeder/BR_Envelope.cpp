@@ -26,6 +26,7 @@
 /
 ******************************************************************************/
 #include "stdafx.h"
+
 #include "BR_Envelope.h"
 #include "BR_ContinuousActions.h"
 #include "BR_EnvelopeUtil.h"
@@ -33,7 +34,8 @@
 #include "BR_MouseUtil.h"
 #include "BR_ProjState.h"
 #include "BR_Util.h"
-#include "../reaper/localize.h"
+
+#include <WDL/localize/localize.h>
 
 /******************************************************************************
 * Commands: Envelope continuous actions                                       *

@@ -25,6 +25,7 @@
 / OTHER DEALINGS IN THE SOFTWARE.
 /
 ******************************************************************************/
+
 #include "stdafx.h"
 #include "BR_Loudness.h"
 #include "BR_EnvelopeUtil.h"
@@ -33,7 +34,8 @@
 #include "../SnM/SnM_Util.h"
 #include "../SnM/SnM.h"
 #include "../libebur128/ebur128.h"
-#include "../reaper/localize.h"
+
+#include <WDL/localize/localize.h>
 
 /******************************************************************************
 * Constants                                                                   *

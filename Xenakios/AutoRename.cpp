@@ -26,9 +26,11 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "../Breeder/BR_Util.h"
 #include "../SnM/SnM_Dlg.h"
-#include "../reaper/localize.h"
+
+#include <WDL/localize/localize.h>
 
 #define LAST_AUTORENAME_STR_KEY "Last autorename string"
 

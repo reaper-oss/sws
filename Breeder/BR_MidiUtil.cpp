@@ -25,13 +25,16 @@
 / OTHER DEALINGS IN THE SOFTWARE.
 /
 ******************************************************************************/
+
 #include "stdafx.h"
+
 #include "BR_MidiUtil.h"
 #include "BR_MouseUtil.h"
 #include "BR_Util.h"
 #include "../SnM/SnM.h"
 #include "../SnM/SnM_Chunk.h"
-#include "../reaper/localize.h"
+
+#include <WDL/localize/localize.h>
 
 /******************************************************************************
 * BR_MidiEditor                                                               *

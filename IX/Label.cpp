@@ -25,11 +25,13 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "IX.h"
 #include "../resource.h"
 #include "../Misc/Analysis.h"
-#include "../reaper/localize.h"
 #include "../SnM/SnM_Dlg.h"
+
+#include <WDL/localize/localize.h>
 
 #define IX_LABELPROC_TEXT_KEY	"Label processor"
 #define IX_LABELPROC_ALLTAKES_KEY	IX_LABELPROC_TEXT_KEY" all takes"

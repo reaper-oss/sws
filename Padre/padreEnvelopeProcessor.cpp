@@ -28,8 +28,9 @@
 #include "stdafx.h"
 
 #include "padreEnvelopeProcessor.h"
-#include "../reaper/localize.h"
 #include "../SnM/SnM_Item.h"
+
+#include <WDL/localize/localize.h>
 
 const char* GetEnvTypeStr(EnvType type)
 {

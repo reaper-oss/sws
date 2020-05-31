@@ -27,9 +27,11 @@
 
 
 #include "stdafx.h"
-#include "../reaper/localize.h"
+
 #include "../Utility/Base64.h"
 #include "ItemSelState.h"
+
+#include <WDL/localize/localize.h>
 
 //*****************************************************
 //Globals

@@ -25,12 +25,13 @@
 /
 ******************************************************************************/
 
-
 #include "stdafx.h"
-#include "../reaper/localize.h"
+
 #include "../SnM/SnM_Dlg.h"
 #include "ProjectMgr.h"
 #include "ProjectList.h"
+
+#include <WDL/localize/localize.h>
 
 // Globals
 static SWSProjConfig<WDL_PtrList_DOD<WDL_String> > g_relatedProjects;

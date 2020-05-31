@@ -25,21 +25,24 @@
 / OTHER DEALINGS IN THE SOFTWARE.
 /
 ******************************************************************************/
+
 #include "stdafx.h"
+
 #include "BR_Util.h"
 #include "BR.h"
 #include "BR_EnvelopeUtil.h"
 #include "BR_MidiUtil.h"
 #include "BR_Misc.h"
-#include "../reaper/localize.h"
 #include "../SnM/SnM.h"
 #include "../SnM/SnM_Chunk.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Item.h"
 #include "../SnM/SnM_Util.h"
-#include "WDL/lice/lice.h"
-#include "WDL/lice/lice_bezier.h"
-#include "WDL/projectcontext.h"
+
+#include <WDL/localize/localize.h>
+#include <WDL/lice/lice.h>
+#include <WDL/lice/lice_bezier.h>
+#include <WDL/projectcontext.h>
 
 /******************************************************************************
 * Constants                                                                   *

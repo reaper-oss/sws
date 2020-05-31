@@ -26,9 +26,11 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "../reaper/localize.h"
+
 #include "../SnM/SnM_Dlg.h"
 #include "Parameters.h"
+
+#include <WDL/localize/localize.h>
 
 using namespace std;
 

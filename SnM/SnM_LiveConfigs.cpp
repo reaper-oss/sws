@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "SnM.h"
 #include "SnM_Chunk.h"
 #include "SnM_Dlg.h"
@@ -36,10 +37,10 @@
 #include "SnM_Util.h"
 #include "SnM_Window.h"
 #include "../url.h"
-#include "../reaper/localize.h"
 #include "../Prompt.h"
-#include "WDL/projectcontext.h"
 
+#include <WDL/localize/localize.h>
+#include <WDL/projectcontext.h>
 
 #define LIVECFG_WND_ID				"SnMLiveConfigs"
 #define LIVECFG_MON_WND_ID			"SnMLiveConfigMonitor%d"

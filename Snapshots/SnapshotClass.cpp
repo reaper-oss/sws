@@ -27,11 +27,13 @@
 
 
 #include "stdafx.h"
-#include "WDL/projectcontext.h"
-#include "../reaper/localize.h"
+
 #include "../Utility/Base64.h"
 #include "SnapshotClass.h"
 #include "Snapshots.h"
+
+#include <WDL/projectcontext.h>
+#include <WDL/localize/localize.h>
 
 FXSnapshot::FXSnapshot(MediaTrack* tr, int fx)
 {

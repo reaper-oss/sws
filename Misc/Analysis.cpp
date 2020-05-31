@@ -26,9 +26,11 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "Analysis.h"
 #include "../sws_waitdlg.h"
-#include "../reaper/localize.h"
+
+#include <WDL/localize/localize.h>
 
 static void GetRMSOptions(double *target, double *windowSize);
 

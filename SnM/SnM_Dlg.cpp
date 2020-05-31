@@ -26,15 +26,16 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "SnM.h"
 #include "SnM_Dlg.h"
 #include "SnM_Util.h"
 #ifdef _WIN32
   #include "../Breeder/BR_Util.h" // for SetWndIcon()
 #endif
-#include "../reaper/localize.h"
 #include "../Prompt.h"
 
+#include <WDL/localize/localize.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // General S&M UI helpers

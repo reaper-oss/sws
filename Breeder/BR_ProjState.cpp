@@ -25,7 +25,9 @@
 / OTHER DEALINGS IN THE SOFTWARE.
 /
 ******************************************************************************/
+
 #include "stdafx.h"
+
 #include "BR_ProjState.h"
 #include "BR_EnvelopeUtil.h"
 #include "BR_Loudness.h"

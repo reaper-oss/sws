@@ -27,10 +27,12 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "wol.h"
 #include "wol_Util.h"
 #include "wol_Zoom.h"
-#include "../reaper/localize.h"
+
+#include <WDL/localize/localize.h>
 
 void SelectAllTracksExceptFolderParents(COMMAND_T* ct);
 

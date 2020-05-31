@@ -25,13 +25,14 @@
 /
 ******************************************************************************/
 
-
 #include "stdafx.h"
-#include "../reaper/localize.h"
+
 #include "../SnM/SnM_Dlg.h"
 #include "SnapshotClass.h"
 #include "SnapshotMerge.h"
 #include "../Prompt.h"
+
+#include <WDL/localize/localize.h>
 
 #define MERGE_STATE_KEY		"MergeState"
 #define MERGEWND_POS_KEY	"MergeWndPos"

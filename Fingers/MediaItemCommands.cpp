@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include "../reaper/localize.h"
 
 #include "MediaItemCommands.h"
 #include "CommandHandler.h"
@@ -9,9 +8,9 @@
 #include "RprTake.h"
 #include "RprTrack.h"
 #include "RprMidiTake.h"
+#include "../SnM/SnM_Misc.h" // #865, for SNM_GetIntConfigVar()
 
-// #865, for SNM_GetIntConfigVar()
-#include "../SnM/SnM_Misc.h"
+#include <WDL/localize/localize.h>
 
 void CmdCleanItemLengths(int flag, void *data);
 void CmdLegatoItemLengths(int flag, void *data);

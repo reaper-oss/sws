@@ -25,8 +25,10 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "../reaper/localize.h"
+
 #include "envelope.hpp"
+
+#include <WDL/localize/localize.h>
 
 // wraps GetEnvelopeStateChunk() to make it more save
 // until maybe it gets enhanced one day

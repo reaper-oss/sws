@@ -26,13 +26,14 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "../reaper/localize.h"
+
 #include "../SnM/SnM_Dlg.h"
 #include "padreActions.h"
 #include "padreEnvelopeProcessor.h"
 #include "padreMidiItemFilters.h"
 #include "padreRmeTotalmix.h"
 
+#include <WDL/localize/localize.h>
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 

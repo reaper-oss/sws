@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include "../reaper/localize.h"
 
 #include "GrooveTemplates.h"
 
@@ -10,6 +9,8 @@
 #include "RprItem.h"
 #include "RprTake.h"
 #include "RprMidiTake.h"
+
+#include <WDL/localize/localize.h>
 
 template<class T>
 struct subtract : public std::unary_function <T, T>

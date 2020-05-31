@@ -26,10 +26,11 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "FolderActions.h"
 #include "TrackSel.h"
-#include "../reaper/localize.h"
 
+#include <WDL/localize/localize.h>
 
 void MuteChildren(COMMAND_T* = NULL)
 {

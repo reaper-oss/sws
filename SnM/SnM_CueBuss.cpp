@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "SnM.h"
 #include "SnM_Chunk.h"
 #include "SnM_CueBuss.h"
@@ -33,15 +34,14 @@
 #include "SnM_Routing.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
-#include "../reaper/localize.h"
-#include "WDL/projectcontext.h"
 
+#include <WDL/localize/localize.h>
+#include <WDL/projectcontext.h>
 
 HWND g_cueBussHwnd = NULL;
 int g_cueBussConfId = 0; // not saved in prefs yet
 int g_cueBussLastSettingsId = 0; // 0 for ascendant compatibility
 bool g_cueBussDisableSave = false;
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Cue buss 

@@ -29,6 +29,7 @@
 // (better find/replace version sleeping in a drawer..)
 
 #include "stdafx.h"
+
 #include "SnM.h"
 #include "SnM_Dlg.h"
 #include "SnM_Find.h"
@@ -37,8 +38,8 @@
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "../Zoom.h"
-#include "../reaper/localize.h"
 
+#include <WDL/localize/localize.h>
 
 #define FIND_WND_ID				"SnMFind"
 #define FIND_INI_SEC			"Find"
@@ -125,7 +126,6 @@ bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr)
 	}
 	return match;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // FindWnd

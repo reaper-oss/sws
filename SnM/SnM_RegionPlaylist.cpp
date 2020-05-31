@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "SnM.h"
 #include "SnM_CSurf.h"
 #include "SnM_Dlg.h"
@@ -34,10 +35,10 @@
 #include "SnM_RegionPlaylist.h"
 #include "SnM_Util.h"
 #include "../Prompt.h"
-#include "../reaper/localize.h"
-#include "WDL/projectcontext.h"
 #include "WDL/xsrand.h"
 
+#include <WDL/localize/localize.h>
+#include <WDL/projectcontext.h>
 
 #define RGNPL_WND_ID			"SnMRgnPlaylist"
 #define UNDO_PLAYLIST_STR		__LOCALIZE("Region Playlist edition", "sws_undo")

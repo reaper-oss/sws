@@ -27,11 +27,13 @@
 
 
 #include "stdafx.h"
+
 #include "MarkerListClass.h"
 #include "MarkerList.h"
 #include "MarkerListActions.h"
-#include "../reaper/localize.h"
 #include "../SnM/SnM_Project.h"
+
+#include <WDL/localize/localize.h>
 
 void ListToClipboard(COMMAND_T*)
 {

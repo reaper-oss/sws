@@ -26,12 +26,13 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "./reaper/localize.h"
+
 #include "./ObjectState/TrackEnvelope.h"
 #include "./SnM/SnM_Dlg.h"
 #include "./Breeder/BR_EnvelopeUtil.h"
 #include "./Breeder/BR_Util.h"
 
+#include <WDL/localize/localize.h>
 
 #define VZOOM_RANGE 40
 

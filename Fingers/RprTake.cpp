@@ -1,11 +1,11 @@
 #include "stdafx.h"
-#include "../reaper/localize.h"
 
 #include "RprTake.h"
 #include "RprItem.h"
 #include "RprTrack.h"
 #include "RprException.h"
 
+#include <WDL/localize/localize.h>
 
 RprTake::RprTake(MediaItem_Take *take)
 {

@@ -25,7 +25,9 @@
 / OTHER DEALINGS IN THE SOFTWARE.
 /
 ******************************************************************************/
+
 #include "stdafx.h"
+
 #include "BR.h"
 #include "BR_ContextualToolbars.h"
 #include "BR_ContinuousActions.h"
@@ -39,7 +41,8 @@
 #include "BR_Util.h"
 #include "../SnM/SnM.h"
 #include "../SnM/SnM_Util.h"
-#include "../reaper/localize.h"
+
+#include <WDL/localize/localize.h>
 
 /******************************************************************************
 * Globals                                                                     *

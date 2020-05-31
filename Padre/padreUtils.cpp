@@ -26,7 +26,8 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "../reaper/localize.h"
+
+#include <WDL/localize/localize.h>
 
 const char* GetWaveShapeStr(WaveShape shape)
 {

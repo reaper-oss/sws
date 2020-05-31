@@ -26,12 +26,14 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "../reaper/localize.h"
+
 #include "../SnM/SnM_Dlg.h"
-#include "WDL/projectcontext.h"
 #include "MarkerListClass.h"
 #include "MarkerList.h"
 #include "MarkerListActions.h"
+
+#include <WDL/localize/localize.h>
+#include <WDL/projectcontext.h>
 
 #define SAVEWINDOW_POS_KEY "Markerlist Save Window Position"
 #define ML_OPTIONS_KEY "MarkerlistOptions"

@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "SnM.h"
 #include "SnM_Dlg.h"
 #include "SnM_FX.h"
@@ -34,8 +35,8 @@
 #include "SnM_Window.h"
 #include "Breeder/BR_Util.h" // GetTcpWnd(), GetTrackGap()
 #include "Wol/wol_Util.h" // GetCurrentTcpMaxHeight()
-#include "../reaper/localize.h"
 
+#include <WDL/localize/localize.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Misc window actions/helpers

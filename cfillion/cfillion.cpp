@@ -28,10 +28,11 @@
 #include "stdafx.h"
 #include "cfillion.hpp"
 
-#include "reaper/localize.h"
 #include "SnM/SnM_FX.h"
 #include "SnM/SnM_Window.h"
 #include "version.h"
+
+#include <WDL/localize/localize.h>
 
 #ifdef _WIN32
   static const unsigned int CLIPBOARD_FORMAT = CF_UNICODETEXT;

@@ -25,13 +25,13 @@
 /
 ******************************************************************************/
 
-
 #include "stdafx.h"
+
 #include "ItemParams.h"
 #include "TrackSel.h"
 #include "../Breeder/BR_Util.h"
-#include "../reaper/localize.h"
 
+#include <WDL/localize/localize.h>
 
 void TogItemMute(COMMAND_T* = NULL)
 {	// Toggle item's mutes on selected tracks

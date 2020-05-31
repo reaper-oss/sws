@@ -25,9 +25,10 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "IX.h"
-#include "../reaper/localize.h"
 
+#include "IX.h"
+
+#include <WDL/localize/localize.h>
 
 struct SPlaylistEntry
 {

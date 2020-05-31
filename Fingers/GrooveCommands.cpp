@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include "../reaper/localize.h"
 
 #include "CommandHandler.h"
 #include "GrooveTemplates.h"
@@ -7,6 +6,8 @@
 #include "GrooveDialog.h"
 #include "FNG_Settings.h"
 #include "../Xenakios/XenakiosExts.h"
+
+#include <WDL/localize/localize.h>
 
 static void ApplyGroove(int flags, void *data)
 {

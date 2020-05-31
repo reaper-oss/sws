@@ -28,9 +28,11 @@
 //JFB most of actions in there do not set undo points: normal?
 
 #include "stdafx.h"
+
 #include "TrackParams.h"
 #include "TrackSel.h"
-#include "../reaper/localize.h"
+
+#include <WDL/localize/localize.h>
 
 void EnableMPSend(COMMAND_T* = NULL)
 {

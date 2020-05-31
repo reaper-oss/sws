@@ -26,21 +26,23 @@
 
 
 #include "stdafx.h"
+
 #ifdef _WIN32
 	#include "dirent.h"
-	#include "Shlwapi.h"
+	#include <Shlwapi.h>
 #endif
 
 //#define UNICODE
-#include <time.h>
 
 #include "RenderRegion.h"
 
 #include "../cfillion/cfillion.hpp" // CF_ShellExecute
-#include "../reaper/localize.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../Prompt.h"
-#include "WDL/projectcontext.h"
+
+#include <time.h>
+#include <WDL/localize/localize.h>
+#include <WDL/projectcontext.h>
 
 #include <taglib/tag.h>
 #include <taglib/fileref.h>

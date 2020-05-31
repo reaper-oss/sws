@@ -27,9 +27,11 @@
 
 
 #include "stdafx.h"
+
 #include "Breeder/BR_Util.h"
-#include "WDL/sha.h"
-#include "reaper/localize.h"
+
+#include <WDL/sha.h>
+#include <WDL/localize/localize.h>
 
 // Globals
 double g_d0 = 0.0;

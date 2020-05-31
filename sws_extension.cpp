@@ -59,11 +59,8 @@
 #include "snooks/snooks.h"
 
 #define LOCALIZE_IMPORT_PREFIX "sws_"
-#ifdef LOCALIZE_IMPORT_PREFIX
-#include "./reaper/localize-import.h"
-#endif
-#include "./reaper/localize.h"
-
+#include <WDL/localize/localize-import.h>
+#include <WDL/localize/localize.h>
 
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
 HWND g_hwndParent = NULL;
@@ -677,9 +674,10 @@ error:
 			ERR_RETURN("Null rec->GetFunc ptr.")
 
 #ifdef _SWS_LOCALIZATION
-		IMPORT_LOCALIZE_RPLUG(rec);
+		*(void **)&importedLocalizeFunc = rec->GetFunc("__localizeFunc");
+		*(void **)&importedLocalizeMenu = rec->GetFunc("__localizeMenu");
+		*(void **)&importedLocalizePrepareDialog = rec->GetFunc("__localizePrepareDialog");
 #endif
-
 
 		// Mandatory API functions
 		int errcnt=0; // IMPAPI failed if >0

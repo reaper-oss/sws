@@ -26,11 +26,13 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "../reaper/localize.h"
+
 #include "Parameters.h"
 #include "../SnM/SnM_Track.h"
 #include "../Breeder/BR_MidiUtil.h"
 #include "../Breeder/BR_Util.h"
+
+#include <WDL/localize/localize.h>
 
 using namespace std;
 

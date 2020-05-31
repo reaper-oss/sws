@@ -855,12 +855,12 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, ExecuteOn
 		}
 		else
 		{
-			int type = GetTakeType(take);
-			if      (type == 0) context = (this->GetMouseAction(ARRANGE_TRACK_ITEM_AUDIO)    == INHERIT_PARENT) ? ARRANGE_TRACK_ITEM : ARRANGE_TRACK_ITEM_AUDIO;
-			else if (type == 1) context = (this->GetMouseAction(ARRANGE_TRACK_ITEM_MIDI)     == INHERIT_PARENT) ? ARRANGE_TRACK_ITEM : ARRANGE_TRACK_ITEM_MIDI;
-			else if (type == 2) context = (this->GetMouseAction(ARRANGE_TRACK_ITEM_VIDEO)    == INHERIT_PARENT) ? ARRANGE_TRACK_ITEM : ARRANGE_TRACK_ITEM_VIDEO;
-			else if (type == 3) context = (this->GetMouseAction(ARRANGE_TRACK_ITEM_CLICK)    == INHERIT_PARENT) ? ARRANGE_TRACK_ITEM : ARRANGE_TRACK_ITEM_CLICK;
-			else if (type == 4) context = (this->GetMouseAction(ARRANGE_TRACK_ITEM_TIMECODE) == INHERIT_PARENT) ? ARRANGE_TRACK_ITEM : ARRANGE_TRACK_ITEM_TIMECODE;
+			const SourceType type = GetSourceType(take);
+			if      (type == SourceType::Audio)    context = (this->GetMouseAction(ARRANGE_TRACK_ITEM_AUDIO)    == INHERIT_PARENT) ? ARRANGE_TRACK_ITEM : ARRANGE_TRACK_ITEM_AUDIO;
+			else if (type == SourceType::MIDI)     context = (this->GetMouseAction(ARRANGE_TRACK_ITEM_MIDI)     == INHERIT_PARENT) ? ARRANGE_TRACK_ITEM : ARRANGE_TRACK_ITEM_MIDI;
+			else if (type == SourceType::Video)    context = (this->GetMouseAction(ARRANGE_TRACK_ITEM_VIDEO)    == INHERIT_PARENT) ? ARRANGE_TRACK_ITEM : ARRANGE_TRACK_ITEM_VIDEO;
+			else if (type == SourceType::Click)    context = (this->GetMouseAction(ARRANGE_TRACK_ITEM_CLICK)    == INHERIT_PARENT) ? ARRANGE_TRACK_ITEM : ARRANGE_TRACK_ITEM_CLICK;
+			else if (type == SourceType::Timecode) context = (this->GetMouseAction(ARRANGE_TRACK_ITEM_TIMECODE) == INHERIT_PARENT) ? ARRANGE_TRACK_ITEM : ARRANGE_TRACK_ITEM_TIMECODE;
 		}
 
 		// Check item options

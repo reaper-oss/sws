@@ -971,14 +971,15 @@ void SelectItemsByType (COMMAND_T* ct)
 			if (MediaItem_Take* take = GetActiveTake(item))
 			{
 				bool select = false;
-				int type = GetTakeType(take);
+				const SourceType type = GetSourceType(take);
 
-				if      (abs((int)ct->user) == 1) select = (type == 0) ? true : false;
-				else if (abs((int)ct->user) == 2) select = (type == 1) ? true : false;
-				else if (abs((int)ct->user) == 3) select = (type == 2) ? true : false;
-				else if (abs((int)ct->user) == 4) select = (type == 3) ? true : false;
-				else if (abs((int)ct->user) == 5) select = (type == 4) ? true : false;
-				else if (abs((int)ct->user) == 6) select = (type == 5) ? true : false;
+				if      (abs((int)ct->user) == 1) select = type == SourceType::Audio;
+				else if (abs((int)ct->user) == 2) select = type == SourceType::MIDI;
+				else if (abs((int)ct->user) == 3) select = type == SourceType::Video;
+				else if (abs((int)ct->user) == 4) select = type == SourceType::Click;
+				else if (abs((int)ct->user) == 5) select = type == SourceType::Timecode;
+				else if (abs((int)ct->user) == 6) select = type == SourceType::Project;
+
 				if (select)
 				{
 					SetMediaItemInfo_Value(item, "B_UISEL", 1);

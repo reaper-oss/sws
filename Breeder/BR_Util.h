@@ -133,7 +133,17 @@ double ItemTimeToProjectTime (MediaItem* item, double itemTime);
 int GetTakeId (MediaItem_Take* take, MediaItem* item = NULL);
 int GetLoopCount (MediaItem_Take* take, double position, int* loopIterationForPosition);
 int GetEffectiveTakeId (MediaItem_Take* take, MediaItem* item, int id, int* effectiveTakeCount); // empty takes could be hidden, so displayed id and real id can differ (pass either take or item and take id)
-int GetTakeType (MediaItem_Take* take); // -1 = unknown, 0 = audio, 1 = MIDI, 2 = video, 3 = click, 4 = timecode generator, 5 = RPR project
+enum class SourceType {
+	Unknown = -1,
+	Audio,
+	MIDI,
+	Video,
+	Click,
+	Timecode,
+	Project,
+};
+SourceType GetSourceType (PCM_source*);
+SourceType GetSourceType (MediaItem_Take*);
 int GetEffectiveTimebase (MediaItem* item); // returns 0=time, 1=allbeats, 2=beatsosonly
 int GetTakeFXCount (MediaItem_Take* take);
 bool GetMidiTakeTempoInfo (MediaItem_Take* take, bool* ignoreProjTempo, double* bpm, int* num, int* den);

@@ -1,3 +1,7 @@
++Issue 1344: "SWS/FNG: Show only used CC lanes" does not restore "Program/Bank Select" lane
++Issue 1344: "SWS/FNG: Hide unused CC lanes" hides "Program/Bank Select" lane
++Issue 1344: "SWS/BR: Show only used CC lanes (detect 14-bit)" does not restore "Program/Bank Select" lane
+
 Fix _SWS_MOVECURSAMPLEFT and _SWS_MOVECURSAMPRIGHT
 
 !v2.12.0 pre-release build

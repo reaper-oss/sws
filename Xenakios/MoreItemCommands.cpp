@@ -1104,6 +1104,8 @@ void ReplaceItemSourceFileFromFolder(bool askforFolder,int mode,int param,bool o
 		SplitFileNameComponents(srcfn,fncompns);
 		foundfiles.clear();
 		SearchDirectory(foundfiles, fncompns[0].c_str(), onlyRPP ? "RPP" : NULL, false);
+		if (mode==0) // sequential mode
+			std::sort(foundfiles.begin(), foundfiles.end());
 		int j;
 		// find index take's source file in the found files
 		int fileindx=-1;

@@ -1,3 +1,5 @@
+Sort files alphabetically when switching to prev/next in folder
+
 ReaScript: add SNM_{Get,Set}LongConfigVar for 64-bit integer values
 
 +Issue 1344: "SWS/FNG: Show only used CC lanes" does not restore "Program/Bank Select" lane

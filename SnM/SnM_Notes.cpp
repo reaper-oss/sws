@@ -134,7 +134,8 @@ bool g_internalMkrRgnChange = false;
 // S&M windows lazy init: below's "" prevents registering the SWS' screenset callback
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
 NotesWnd::NotesWnd()
-	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes","sws_DLG_152"), "")
+	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes","sws_DLG_152"), ""),
+	m_edit{nullptr} // NotesWnd may be constructed without being open
 {
 	m_id.Set(NOTES_WND_ID);
 	// must call SWS_DockWnd::Init() to restore parameters and open the window if necessary

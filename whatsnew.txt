@@ -1,3 +1,5 @@
+Fix a potential crash occuring after saving window screensets
+
 Fix disappearing notes when using multiple project tabs
 
 Fix dump action list (all but custom actions) and (all actions)

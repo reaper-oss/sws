@@ -304,26 +304,35 @@ HWND GetRulerWnd()
 // overrides the native GetTrackGUID(): returns a special GUID for the master track
 // (useful for persistence as no GUID is stored in RPP files for the master..)
 // note: TrackToGuid(NULL) will return also NULL, contrary to GetTrackGUID(NULL)
-const GUID* TrackToGuid(MediaTrack* tr)
+// also adds support for retriving GUIDs from any project tabs
+const GUID* TrackToGuid(ReaProject* proj, MediaTrack* tr)
 {
-	if (tr)
-	{
-		if (tr == GetMasterTrack(NULL))
-			return &GUID_NULL;
-		else
-			return GetTrackGUID(tr);
-	}
-	return NULL;
+	if (tr == GetMasterTrack(proj))
+		return &GUID_NULL;
+	else if(ValidatePtr2(proj, tr, "MediaTrack*"))
+		return static_cast<GUID*>(GetSetMediaTrackInfo(tr, "GUID", nullptr));
+
+	return nullptr;
 }
 
-MediaTrack* GuidToTrack(const GUID* guid)
+
+MediaTrack* GuidToTrack(ReaProject* project, const GUID* guid)
 {
-	if (guid)
-		for (int i=0; i<=GetNumTracks(); i++)
-			if (MediaTrack* tr = CSurf_TrackFromID(i, false))
-				if (TrackMatchesGuid(tr, guid))
-					return tr;
-	return NULL;
+	if (!guid)
+		return nullptr;
+
+	MediaTrack* master = GetMasterTrack(project);
+	if (master && TrackMatchesGuid(project, master, guid))
+		return master;
+
+	const int trackCount = CountTracks(project);
+	for (int i = 0; i < trackCount; ++i) {
+		MediaTrack* tr = GetTrack(project, i);
+		if (tr && TrackMatchesGuid(project, tr, guid))
+			return tr;
+	}
+
+	return nullptr;
 }
 
 bool GuidsEqual(const GUID* g1, const GUID* g2)
@@ -331,17 +340,10 @@ bool GuidsEqual(const GUID* g1, const GUID* g2)
 	return g1 && g2 && !memcmp(g1, g2, sizeof(GUID));
 }
 
-bool TrackMatchesGuid(MediaTrack* tr, const GUID* g)
+bool TrackMatchesGuid(ReaProject* proj, MediaTrack* tr, const GUID* match)
 {
-	if (tr && g)
-	{
-		if (GuidsEqual(GetTrackGUID(tr), g))
-			return true;
-		// 2nd try for the master
-		if (tr == GetMasterTrack(NULL))
-			return GuidsEqual(g, &GUID_NULL);
-	}
-	return false;
+	return tr && match &&
+		GuidsEqual(TrackToGuid(proj, tr), match);
 }
 
 const char *stristr(const char* a, const char* b)

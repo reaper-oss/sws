@@ -1,3 +1,5 @@
+Fix disappearing notes when using multiple project tabs
+
 Fix dump action list (all but custom actions) and (all actions)
 
 Sort files alphabetically when switching to prev/next in folder

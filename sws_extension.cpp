@@ -1124,6 +1124,7 @@ error:
 		IMPAPI(UpdateItemInProject);
 		IMPAPI(UpdateTimeline);
 		IMPAPI(ValidatePtr);
+		IMPAPI(ValidatePtr2); // v5.12
 
 		if (errcnt)
 		{

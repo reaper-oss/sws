@@ -55,20 +55,45 @@ enum {
 
 class SNM_TrackNotes {
 public:
-	SNM_TrackNotes(const GUID* _guid, const char* _notes) {
-		if (_guid) memcpy(&m_guid, _guid, sizeof(GUID));
-		m_notes.Set(_notes ? _notes : "");
+	SNM_TrackNotes(ReaProject* project, const GUID* guid, const char* notes)
+		: m_project{project}, m_guid{*guid}, m_notes{notes}
+	{
+		// The current project (project == NULL) doen't always match
+		// the notes' project when saving in SaveExtensionConfig [#1141]
+
+		if (!project)
+			m_project = EnumProjects(-1, nullptr, 0);
 	}
-	MediaTrack* GetTrack() { return GuidToTrack(&m_guid); }
+
+	MediaTrack* GetTrack() { return GuidToTrack(m_project, &m_guid); }
 	const GUID* GetGUID() { return &m_guid; }
+	const char *GetNotes() const { return m_notes.Get(); }
+	int GetNotesLength() const { return m_notes.GetLength(); }
+	void SetNotes(const char *notes) { m_notes.Set(notes); }
+
+private:
+	ReaProject *m_project;
 	GUID m_guid;
 	WDL_FastString m_notes;
 };
 
 class SNM_RegionSubtitle {
 public:
-	SNM_RegionSubtitle(int _id, const char* _notes) 
-		: m_id(_id),m_notes(_notes ? _notes : "") {}
+	SNM_RegionSubtitle(ReaProject* project, const int id, const char* notes)
+		: m_project{project}, m_id{id}, m_notes{notes}
+	{
+		if (!project) // see SNM_TrackNotes's constructor
+			m_project = EnumProjects(-1, nullptr, 0);
+	}
+
+	int GetId() const { return m_id; }
+	bool IsValid() const { return GetMarkerRegionIndexFromId(m_project, m_id) >= 0; }
+	const char *GetNotes() const { return m_notes.Get(); }
+	int GetNotesLength() const { return m_notes.GetLength(); }
+	void SetNotes(const char *notes) { m_notes.Set(notes); }
+
+private:
+	ReaProject *m_project;
 	int m_id;
 	WDL_FastString m_notes;
 };

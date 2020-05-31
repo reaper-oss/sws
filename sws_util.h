@@ -225,10 +225,13 @@ void SetTrackVis(MediaTrack* tr, int vis); // &1 == mcp, &2 == tcp
 int AboutBoxInit(); // Not worth its own .h
 HWND GetTrackWnd();
 HWND GetRulerWnd();
-const GUID* TrackToGuid(MediaTrack* tr);
-MediaTrack* GuidToTrack(const GUID* guid);
+const GUID* TrackToGuid(ReaProject*, MediaTrack*);
+inline const GUID* TrackToGuid(MediaTrack* tr) { return TrackToGuid(nullptr, tr); }
+MediaTrack* GuidToTrack(ReaProject*, const GUID*);
+inline MediaTrack* GuidToTrack(const GUID* guid) { return GuidToTrack(nullptr, guid); }
 bool GuidsEqual(const GUID* g1, const GUID* g2);
-bool TrackMatchesGuid(MediaTrack* tr, const GUID* g);
+bool TrackMatchesGuid(ReaProject*, MediaTrack*, const GUID*);
+inline bool TrackMatchesGuid(MediaTrack* tr, const GUID* g) { return TrackMatchesGuid(nullptr, tr, g); }
 const char *stristr(const char* a, const char* b);
 
 // NF: fix / workaround for setting take start offset doesn't work if containing stretch markers

@@ -1,3 +1,5 @@
+ReaScript: Fix automatic resizing of CF_GetClipboard's output buffer
+
 Fix a potential crash occuring after saving window screensets
 
 Fix disappearing notes when using multiple project tabs

@@ -95,7 +95,7 @@ public:
       buf[m_size] = 0;
     }
 
-    if(!bufSize)
+    if(bufSize <= 0)
       return;
 
 #ifdef _WIN32
@@ -127,8 +127,8 @@ private:
 void CF_GetClipboard(char *buf, int bufSize)
 {
   if(ClipboardReader clipboard{}) {
-    realloc_cmd_ptr(&buf, &bufSize, clipboard.size());
-    clipboard.read(buf, bufSize);
+    if(realloc_cmd_ptr(&buf, &bufSize, clipboard.size()))
+      clipboard.read(buf, bufSize);
   }
 }
 

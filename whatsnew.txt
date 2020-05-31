@@ -1,3 +1,5 @@
+Fix dump action list (all but custom actions) and (all actions)
+
 Sort files alphabetically when switching to prev/next in folder
 
 ReaScript: add SNM_{Get,Set}LongConfigVar for 64-bit integer values

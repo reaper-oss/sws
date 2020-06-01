@@ -916,13 +916,13 @@ void DoPanTakesOfItemSymmetrically()
 			}
 		}
 	}
+	UpdateTimeline();
 }
 
 void DoPanTakesSymmetricallyWithUndo(COMMAND_T* ct)
 {
 	DoPanTakesOfItemSymmetrically();
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
-	UpdateTimeline();
 }
 
 
@@ -933,7 +933,6 @@ void DoImplodeTakesSetPlaySetSymPans(COMMAND_T* ct)
 	DoSetAllTakesPlay();
 	DoPanTakesOfItemSymmetrically();
 	Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);
-	//UpdateTimeline();
 }
 
 double g_lastTailLen;

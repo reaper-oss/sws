@@ -26,13 +26,14 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "../SnM/SnM_Dlg.h"	
 #include "../reaper/localize.h"
+#include "../Breeder/BR_MidiUtil.h" // IsMidi()
+#include "../SnM/SnM_Dlg.h"	
 #include "../SnM/SnM_Util.h" // SNM_DeletePeakFile()
 
 using namespace std;
 
-typedef struct 
+struct t_renameparams
 {
 	int mode; // 0 for rename take, 1 for rename media source, 2 for both
 	string OldName;
@@ -42,9 +43,9 @@ typedef struct
 	int curTakeInx;
 	bool batchnaming;
 
-} t_renameparams;
+};
 
-t_renameparams g_renameparams;
+t_renameparams g_renameparams = {};
 
 WDL_DLGRET RenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
@@ -112,75 +113,6 @@ void AddToRenameLog(string &oldfilename,string &newfilename)
 #endif
 }
 
-void DoRenameSourceFileDialog666(COMMAND_T* ct)
-{
-	vector<MediaItem_Take*> thetakes;
-	vector<MediaItem_Take*> alltakes;
-	XenGetProjectTakes(alltakes,false,false);
-	XenGetProjectTakes(thetakes,true,true);
-	if (thetakes.size()==0) return;
-	g_renameparams.takesToRename=(int)thetakes.size();
-	g_renameparams.mode=1;
-	bool bChanges = false;
-	for (int i=0;i<(int)thetakes.size();i++)
-	{
-		PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(thetakes[i],"P_SOURCE",0);
-		if (thesrc && strcmp(thesrc->GetType(),"SECTION")!=0 && thesrc->GetFileName() && thesrc->GetFileName()[0])
-		{
-			g_renameparams.curTakeInx=i+1;
-			string oldname;
-			oldname.assign(thesrc->GetFileName());
-			vector<string> fnsplit;
-			SplitFileNameComponents(oldname,fnsplit);
-			g_renameparams.OldName.assign(fnsplit[1]);
-
-			DialogBox(g_hInst,MAKEINTRESOURCE(IDD_RENAMEDLG666), g_hwndParent, (DLGPROC)RenameDlgProc);
-			if (g_renameparams.DialogRC==1)
-				break;
-
-			if (g_renameparams.DialogRC==0)
-			{
-				Main_OnCommand(40100,0); // offline all media
-				string newfilename;
-				newfilename.append(fnsplit[0]);
-				newfilename.append(g_renameparams.NewName);
-				newfilename.append(fnsplit[2]);
-				MoveFile(oldname.c_str(),newfilename.c_str());
-				AddToRenameLog(oldname,newfilename);
-				int j;
-				for (j=0;j<(int)alltakes.size();j++)
-				{
-					PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",0);
-					if (thesrc && thesrc->GetFileName() && strcmp(thesrc->GetType(),"SECTION")!=0)
-					{
-						string fname;
-						fname.assign(thesrc->GetFileName());
-						if (oldname.compare(fname)==0)
-						{
-							PCM_source *newsrc=PCM_Source_CreateFromFile(newfilename.c_str());
-							if (newsrc)
-							{
-								GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",newsrc);
-								delete thesrc;
-
-								// delete old .reapeaks file, #1140
-								SNM_DeletePeakFile(oldname.c_str(), true); // no delete check (peaks files can be absent) 
-							}
-						}
-					}
-				}
-			}
-			Main_OnCommand(40047,0); // build any missing peaks
-			Main_OnCommand(40101,0); // online all media
-		}
-	}
-	if (bChanges)
-	{
-		UpdateTimeline();
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
-	}
-}
-
 void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 {
 	vector<MediaItem_Take*> thetakes;
@@ -188,12 +120,38 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 	XenGetProjectTakes(alltakes,false,false);
 	XenGetProjectTakes(thetakes,true,true);
 	if (thetakes.size()==0) return;
+
+	// store (ueser-)offlined takes so we can restore offlined state later
+	vector<MediaItem_Take*> offlinedTakes;
+	for (size_t i = 0; i < alltakes.size(); i++)
+	{
+		MediaItem_Take* take = alltakes[i];
+		PCM_source* thesrc = (PCM_source*)GetSetMediaItemTakeInfo(take, "P_SOURCE", 0);
+		if (thesrc && !thesrc->IsAvailable())
+			offlinedTakes.push_back(take);
+	}
+
+	// store files which can't be renamed for displaying an error message
+	vector<string> failedFiles;
+
 	g_renameparams.takesToRename=(int)thetakes.size();
-	g_renameparams.mode=2;
+	if (ct->user == 0)// rename media source only
+		g_renameparams.mode = 1;
+	else if (ct->user == 1) // rename media source and take
+		g_renameparams.mode = 2;
+	bool takesRenamedOnly = true;
+	bool isMIDItake, isInProjectMIDI = false;;
+
+	// make sure all file handles created by REAPER are closed before renaming the file
+	Main_OnCommand(40100, 0); // offline all media
 	for (int i=0;i<(int)thetakes.size();i++)
 	{
-		PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(thetakes[i],"P_SOURCE",0);
-		if (thesrc && strcmp(thesrc->GetType(),"SECTION")!=0)
+		PCM_source *thesrc = (PCM_source*)GetSetMediaItemTakeInfo(thetakes[i],"P_SOURCE",0);
+		// skip if only renaming source and take is in-project MIDI (would have no effect)
+		isMIDItake = IsMidi(thetakes[i], &isInProjectMIDI);
+		if (ct->user == 0 && isMIDItake && isInProjectMIDI)
+			thesrc = nullptr;
+		if (thesrc)
 		{
 			char *oldtakename=(char*)GetSetMediaItemTakeInfo(thetakes[i],"P_NAME",0);
 			g_renameparams.OldName.assign(oldtakename);
@@ -203,12 +161,11 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 				break;
 			if (g_renameparams.DialogRC==0)
 			{
-				Main_OnCommand(40100,0); // offline all media
 				// Can only do the filename if it exists
-				if (thesrc->GetFileName() && thesrc->GetFileName()[0])
+				if (GetSourceFilename(thesrc) && !isInProjectMIDI)
 				{
 					string oldname;
-					oldname.assign(thesrc->GetFileName());
+					oldname.assign(GetSourceFilename(thesrc));
 					vector<string> fnsplit;
 					SplitFileNameComponents(oldname,fnsplit);
 					string newfilename;
@@ -221,40 +178,69 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 					if (newfnsplit[2].compare(fnsplit[2])!=0)
 						newfilename.append(fnsplit[2]);
 
-					MoveFile(oldname.c_str(),newfilename.c_str());
+					
+					if (!MoveFile(oldname.c_str(), newfilename.c_str()))
+					{
+						failedFiles.push_back(oldname);
+						continue; // don't rename source if file can't be renamed, would cause mismatch
+					}
+					takesRenamedOnly = false;
 					AddToRenameLog(oldname,newfilename);
 
 					for (int j=0;j<(int)alltakes.size();j++)
 					{
-						PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",0);
-						if (thesrc && thesrc->GetFileName() && strcmp(thesrc->GetType(),"SECTION")!=0)
+						PCM_source *thesrc = (PCM_source*)GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",0);
+						if (thesrc && GetSourceFilename(thesrc))
 						{
 							string fname;
-							fname.assign(thesrc->GetFileName());
+							fname.assign(GetSourceFilename(thesrc));
 							if (oldname.compare(fname)==0)
 							{
-								PCM_source *newsrc=PCM_Source_CreateFromFile(newfilename.c_str());
-								if (newsrc)
-								{
-									GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",newsrc);
-									GetSetMediaItemTakeInfo(alltakes[j],"P_NAME",(char*)g_renameparams.NewName.c_str());
-									delete thesrc;
-
+								{	
+									thesrc->SetFileName(newfilename.c_str());
+									if (ct->user == 1) // also rename takes
+										GetSetMediaItemTakeInfo(alltakes[j],"P_NAME",(char*)g_renameparams.NewName.c_str());
 									SNM_DeletePeakFile(oldname.c_str(), true); // no delete check (peaks files can be absent)
 								}
 							}
 						}
 					}
 				}
-				else
-					GetSetMediaItemTakeInfo(thetakes[i],"P_NAME",(char*)g_renameparams.NewName.c_str());
+				else if (ct->user == 1)
+					GetSetMediaItemTakeInfo(thetakes[i], "P_NAME", (char*)g_renameparams.NewName.c_str());
 			}
-			Main_OnCommand(40047,0); // build any missing peaks
-			Main_OnCommand(40101,0); // online all media
 		}
 	}
+	Main_OnCommand(40101, 0); // online all media
+
+	// restore offlined takes
+	for (size_t i = 0; i < offlinedTakes.size(); i++)
+	{
+		MediaItem_Take* take = offlinedTakes[i];
+		PCM_source* thesrc = (PCM_source*)GetSetMediaItemTakeInfo(take, "P_SOURCE", 0);
+		thesrc->SetAvailable(false);
+	}
+
+	// only create undo point if only takes are renamed
+	// because undoing rename source filename wouldn't work (as we can't undo renaming the actual file)
+	if (takesRenamedOnly)
+		Undo_OnStateChangeEx("Rename takes", 4, -1);
+	Main_OnCommand(40047, 0); // build any missing peaks
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
+
+	// display error message if files couldn't be renamed
+	if (failedFiles.size())
+	{
+		std::ostringstream ss;
+		ss << "The following files couldn't be renamed (maybe they're open in another application?):\n";
+		for (size_t i = 0; i < failedFiles.size(); i++)
+		{
+			if (i > 0)
+				ss << "\n";
+			ss << failedFiles[i];
+		}
+		MessageBox(g_hwndParent, ss.str().c_str(), __LOCALIZE("Rename source files - Error", "sws_mbox"), MB_OK);
+	}
 }
 
 void DoRenameTakeDialog666(COMMAND_T* ct)

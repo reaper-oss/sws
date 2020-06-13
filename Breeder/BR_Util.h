@@ -141,6 +141,7 @@ enum class SourceType {
 	Click,
 	Timecode,
 	Project,
+	VideoEffect,
 };
 SourceType GetSourceType (PCM_source*);
 SourceType GetSourceType (MediaItem_Take*);

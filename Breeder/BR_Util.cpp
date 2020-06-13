@@ -844,6 +844,8 @@ SourceType GetSourceType (PCM_source* source)
 		return SourceType::Timecode;
 	else if (!strcmp(type, "RPP_PROJECT"))
 		return SourceType::Project;
+	else if (!strcmp(type, "VIDEOEFFECT"))
+		return SourceType::VideoEffect;
 	else if (!strcmp(type, ""))
 		return SourceType::Unknown;
 	else

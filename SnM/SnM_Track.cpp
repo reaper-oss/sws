@@ -596,52 +596,55 @@ void RemoveAllEnvsSelTracks(COMMAND_T* _ct)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
-bool GetRemoveAllEnvsSelTracksPrompt() // #1175
-{
-	bool prompt = GetPrivateProfileInt("Misc", "RemoveAllEnvsSelTracksPrompt", 0, g_SNM_IniFn.Get()) ? true : false;
-	if (prompt)
-	{
-		int r = MessageBox(GetMainHwnd(),
-			__LOCALIZE("All envelopes for selected tracks will be removed.\nDo you want to continue?", "sws_DLG_155"),
-			__LOCALIZE("S&M - Question", "sws_DLG_155"),
-			MB_OKCANCEL);
-		if (r == IDCANCEL)
-			return false;
-	}
-	return true;
-}
-
 void RemoveAllEnvsSelTracksNoChunk(COMMAND_T* _ct)
 {
-	const int selTracksCount = CountSelectedTracks(nullptr); // excluding master
-	if (selTracksCount == 0)
-		return;
-
+	const bool prompt = !!GetPrivateProfileInt("Misc", "RemoveAllEnvsSelTracksPrompt", 0, g_SNM_IniFn.Get());
 	bool updated = false;
-	for (int i = 0; i < selTracksCount; i++) {
-		MediaTrack* track = GetSelectedTrack(nullptr, i);
-		if (const int envCount = CountTrackEnvelopes(track)) {
+	TrackEnvelope *tempoEnv = nullptr;
+
+	const int trackCount = GetNumTracks();
+	for (int ti = 0; ti <= trackCount; ti++) { // incl. master
+		MediaTrack *tr = CSurf_TrackFromID(ti, false);
+
+		if (!tr || *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", nullptr) != 1)
+			continue;
+
+		if (ti == 0) // Master track
+			tempoEnv = GetTrackEnvelopeByName(tr, "Tempo map");
+
+		int envIndex = 0;
+		while (CountTrackEnvelopes(tr) > envIndex) {
+			TrackEnvelope* env = GetTrackEnvelope(tr, envIndex);
+
+			if (!env || env == tempoEnv) {
+				++envIndex;
+				continue;
+			}
+
 			if (!updated) {
-				if (!GetRemoveAllEnvsSelTracksPrompt()) // user was prompted and cancelled
-					return;
-				updated = true;
+				if (prompt) {
+					const int r = MessageBox(GetMainHwnd(),
+						__LOCALIZE("All envelopes for selected tracks will be removed.\nDo you want to continue?", "sws_DLG_155"),
+						__LOCALIZE("S&M - Question", "sws_DLG_155"), MB_OKCANCEL);
+					if (r == IDCANCEL)
+						return;
+				}
+
 				PreventUIRefresh(1);
 				Undo_BeginBlock();
 				Main_OnCommand(41148, 0); // required for env selection: Envelope: Show all envelopes for (selected) tracks.
+				updated = true;
 			}
 
-			for (int j = 0; j < envCount; j++) {
-				TrackEnvelope* env = GetTrackEnvelope(track, j);
-				if (const int aiCount = CountAutomationItems(env)) {
-					for (int k = 0; k < aiCount; k++)
-						GetSetAutomationItemInfo(env, k, "D_UISEL", 1, true);
-					Main_OnCommand(42086, 0);  // Envelope: Delete (selected) automation items
-				}
-
-				SetCursorContext(2, env);   // Select envelope
-				DeleteEnvelopePointRange(env, -1000000000, 1000000000);  //  hack to not spawn a dialog on action 40065
-				Main_OnCommand(40065, 0);   // Envelope: Clear (selected) envelope
+			if(const int aiCount = CountAutomationItems(env)) {
+				for(int ai = 0; ai < aiCount; ai++)
+					GetSetAutomationItemInfo(env, ai, "D_UISEL", 1, true);
+				Main_OnCommand(42086, 0);  // Envelope: Delete (selected) automation items
 			}
+
+			SetCursorContext(2, env);    // Select envelope
+			DeleteEnvelopePointRange(env, -1000000000, 1000000000); //  hack to not spawn a dialog on action 40065
+			Main_OnCommand(40065, 0);    // Envelope: Clear (selected) envelope
 		}
 	}
 

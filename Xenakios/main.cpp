@@ -368,6 +368,7 @@ void DoLoopAndPlaySelectedItems(COMMAND_T*)
 }
 
 static bool g_PlayItemsOncePlaying=false;
+static double g_loopStart, g_loopEnd=0.0;
 
 void PlayItemsOnceTimer()
 {
@@ -382,7 +383,10 @@ void PlayItemsOnceTimer()
 		}
 
 		if (!g_PlayItemsOncePlaying)
+		{
 			plugin_register("-timer", (void*)PlayItemsOnceTimer);
+			GetSet_LoopTimeRange(true, true, &g_loopStart, &g_loopEnd, false); // restore orig. loop points
+		}	
 	}
 }
 
@@ -396,8 +400,10 @@ void DoPlayItemsOnce(COMMAND_T*)
 			plugin_register("-timer", (void*)PlayItemsOnceTimer);
 			Main_OnCommand(1016, 0); // Transport Stop
 		}
-
-		Main_OnCommand(40634, 0); // remove loop points
+		else
+			GetSet_LoopTimeRange(false, true, &g_loopStart, &g_loopEnd, false); // store orig. loop points
+	
+		GetSet_LoopTimeRange(true, true, &g_d0, &g_d0, false); // remove loop points
 		DoSetLoopPointsToSelectedItems(false);
 		SetEditCurPos(g_FirstSelectedItemPos, false, false);
 

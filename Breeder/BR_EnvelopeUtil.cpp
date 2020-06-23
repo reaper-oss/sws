@@ -1887,6 +1887,21 @@ bool BR_Envelope::FillProperties () const
 				{
 					m_properties.automationItems.push_back(WDL_FastString(token));
 				}
+				else if (strstr(token, "<EXT"))
+				{
+					int subchunks = 0; // <BIN, https://github.com/reaper-oss/sws/pull/1387#issuecomment-705651041
+
+					do
+					{
+						if (*token == '<')
+							++subchunks;
+						else if (!strcmp(token, ">"))
+							--subchunks;
+					
+						AppendLine(m_properties.EXT, token);
+						token = strtok(NULL, "\n");
+					} while (token && subchunks > 0);
+				}
 
 				token = strtok(NULL, "\n");
 			}
@@ -1918,6 +1933,8 @@ WDL_FastString BR_Envelope::GetProperties ()
 			properties.Append("\n");
 		}
 		if (m_properties.faderMode != 0) properties.AppendFormatted(256, "VOLTYPE %d\n", 1);
+		if (m_properties.EXT.GetLength())
+			properties.Append(m_properties.EXT.Get());
 		return properties;
 	}
 	else

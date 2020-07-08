@@ -258,14 +258,17 @@ HWND CF_GetFocusedFXChain()
   // Original idea by amagalma
   // https://forum.cockos.com/showthread.php?t=207220
 
+  MediaTrack *track;
   int trackIndex, itemIndex, fxIndex;
   switch(GetFocusedFX(&trackIndex, &itemIndex, &fxIndex)) {
-  case 1: {
-    MediaTrack *track = GetTrack(nullptr, trackIndex - 1);
+  case 1:
+    if(trackIndex < 1)
+      track = GetMasterTrack(nullptr);
+    else
+      track = GetTrack(nullptr, trackIndex - 1);
     return CF_GetTrackFXChain(track);
-  }
   case 2: {
-    MediaTrack *track = GetTrack(nullptr, trackIndex - 1);
+    track = GetTrack(nullptr, trackIndex - 1);
     MediaItem *item = GetTrackMediaItem(track, itemIndex);
     MediaItem_Take *take = GetMediaItemTake(item, HIWORD(fxIndex));
     return CF_GetTakeFXChain(take);

@@ -277,6 +277,9 @@ HWND CF_GetFocusedFXChain()
 
 int CF_EnumSelectedFX(HWND fxChain, const int index)
 {
+  if(!fxChain)
+    return -1;
+
   const HWND list = GetDlgItem(fxChain, 1076);
   return ListView_GetNextItem(list, index, LVNI_SELECTED);
 }

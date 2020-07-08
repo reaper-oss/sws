@@ -187,6 +187,18 @@ const char *CF_GetCommandText(const int section, const int command)
   return kbd_getTextFromCmd(command, SectionFromUniqueID(section));
 }
 
+static void CF_RefreshTrackFXChainTitle(MediaTrack *track)
+{
+  // The FX chain is normally updated at the next global timer tick.
+  // GetSetMediaTrackInfo updates it immediately when setting I_FXEN.
+  //
+  // TrackList_AdjustWindows also does the trick (on Windows only since v6)
+  // however it is disabled when PreventUIRefresh is used.
+
+  const bool enabled = GetMediaTrackInfo_Value(track, "I_FXEN");
+  SetMediaTrackInfo_Value(track, "I_FXEN", enabled);
+}
+
 HWND CF_GetTrackFXChain(MediaTrack *track)
 {
   if(!track)
@@ -212,7 +224,7 @@ HWND CF_GetTrackFXChain(MediaTrack *track)
   char guid[64];
   GetSetMediaTrackInfo_String(track, "GUID", guid, false);
   GetSetMediaTrackInfo_String(track, "P_NAME", guid, true);
-  TrackList_AdjustWindows(true); // update title of opened FX chain windows
+  CF_RefreshTrackFXChainTitle(track);
 
   snprintf(chainTitle, sizeof(chainTitle), R"(%s%s %d "%s"%s)",
     __LOCALIZE("FX: ", "fx"), __LOCALIZE("Track", "fx"), trackNumber, guid,
@@ -223,7 +235,7 @@ HWND CF_GetTrackFXChain(MediaTrack *track)
   // restore the original track name
   GetSetMediaTrackInfo_String(track, "P_NAME",
     const_cast<char *>(trackName.c_str()), true);
-  TrackList_AdjustWindows(true);
+  CF_RefreshTrackFXChainTitle(track);
 
   return match;
 }

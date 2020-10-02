@@ -48,7 +48,7 @@
 WDL_PtrList<Cyclaction> g_cas[SNM_MAX_CA_SECTIONS];
 SNM_WindowManager<CyclactionWnd> g_caWndMgr(CA_WND_ID);
 bool g_undos = true; // consolidate undo points
-
+bool g_preventUIRefresh = true;
 
 ///////////////////////////////////////////////////////////////////////////////
 // CA helpers
@@ -649,12 +649,14 @@ void RunCycleAction(COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hw
 				if (g_undos)
 					Undo_BeginBlock2(NULL);
 
-				PreventUIRefresh(1);
+				if (g_preventUIRefresh)
+					PreventUIRefresh(1);
 
 				for (int i=0; i<allCmds.GetSize(); i++)
 					PerformSingleCommand(sec, allCmds.Get(i)->Get(), _val, _valhw, _relmode, _hwnd);
 
-				PreventUIRefresh(-1);
+				if (g_preventUIRefresh)
+					PreventUIRefresh(-1);
 
 				if (g_undos)
 					Undo_EndBlock2(NULL, undoStr, UNDO_STATE_ALL);
@@ -1396,6 +1398,7 @@ enum {
   CMBID_SECTION = LAST_MSG,
   TXTID_SECTION,
   BTNID_UNDO,
+  BTNID_PREVENTUIREFRESH,
   BTNID_APPLY,
   BTNID_CANCEL,
   BTNID_IMPEXP,
@@ -1970,6 +1973,10 @@ void CyclactionWnd::OnInitDlg()
 	m_btnUndo.SetTextLabel(__LOCALIZE("Consolidate undo points","sws_DLG_161"), -1, font);
 	m_parentVwnd.AddChild(&m_btnUndo);
 
+	m_btnPreventUIRefresh.SetID(BTNID_PREVENTUIREFRESH);
+	m_btnPreventUIRefresh.SetTextLabel(__LOCALIZE("Prevent UI refresh","sws_DLG_161"), -1, font);
+	m_parentVwnd.AddChild(&m_btnPreventUIRefresh);
+
 	m_btnApply.SetID(BTNID_APPLY);
 	m_parentVwnd.AddChild(&m_btnApply);
 
@@ -2326,6 +2333,12 @@ void CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				Update(false);
 			}
 			break;
+		case BTNID_PREVENTUIREFRESH:
+			if (!HIWORD(wParam) || HIWORD(wParam)==600) {
+				g_preventUIRefresh = !g_preventUIRefresh;
+				Update(false);
+			}
+			break;
 		case BTNID_APPLY:
 			Apply();
 			break;
@@ -2393,15 +2406,17 @@ void CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _toolti
 	ScreenToClient(m_hwnd, ((LPPOINT)&r)+1);
 	x0 = r.right + SNM_GUI_X_MARGIN_OLD;
 
-	m_btnUndo.SetCheckState(g_undos?1:0);
+	m_btnUndo.SetCheckState(g_undos);
 	SNM_AutoVWndPosition(DT_LEFT, &m_btnUndo, NULL, _r, &x0, _r->top, h, 4);
+
+	m_btnPreventUIRefresh.SetCheckState(g_preventUIRefresh);
+	SNM_AutoVWndPosition(DT_LEFT, &m_btnPreventUIRefresh, NULL, _r, &x0, _r->top, h, 4);
 
 	// right
 	RECT r2 = *_r; r2.left = x0; // tweak to auto-hide the logo when needed
 	x0 = _r->right-10; //JFB!! 10 is tied to the current .rc!
 	if (SNM_AutoVWndPosition(DT_RIGHT, &m_cbSection, NULL, &r2, &x0, _r->top, h, 4))
 		SNM_AutoVWndPosition(DT_RIGHT, &m_txtSection, &m_cbSection, &r2, &x0, _r->top, h, 0);
-
 
 	// 2nd row of controls
 	x0 = _r->left + SNM_GUI_X_MARGIN_OLD;
@@ -2751,7 +2766,8 @@ int CyclactionInit()
 
 	// consolidate undo pref, default==enabled for ascendant compatibility
 	// local pref: comes from the S&M.ini file
-	g_undos = (GetPrivateProfileInt("Cyclactions", "Undos", 1, g_SNM_IniFn.Get()) == 1 ? true : false);
+	g_undos = GetPrivateProfileInt("Cyclactions", "Undos", 1, g_SNM_IniFn.Get()) == 1;
+	g_preventUIRefresh = GetPrivateProfileInt("Cyclactions", "PreventUIRefresh", 1, g_SNM_IniFn.Get()) == 1;
 
 	if (!plugin_register("projectconfig", &s_projectconfig))
 		return 0;
@@ -2766,6 +2782,7 @@ void CyclactionExit()
 {
 	plugin_register("-projectconfig", &s_projectconfig);
 	WritePrivateProfileString("Cyclactions", "Undos", g_undos ? "1" : "0", g_SNM_IniFn.Get());
+	WritePrivateProfileString("Cyclactions", "PreventUIRefresh", g_preventUIRefresh ? "1" : "0", g_SNM_IniFn.Get());
 	g_caWndMgr.Delete();
 }
 

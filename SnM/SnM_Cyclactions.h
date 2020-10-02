@@ -113,6 +113,7 @@ protected:
 
 	WDL_VirtualComboBox m_cbSection;
 	WDL_VirtualIconButton m_btnUndo;
+	WDL_VirtualIconButton m_btnPreventUIRefresh;
 	WDL_VirtualStaticText m_txtSection;
 	SNM_ToolbarButton m_btnApply, m_btnCancel, m_btnImpExp, m_btnActionList;
 	SNM_TwoTinyButtons m_tinyLRbtns;

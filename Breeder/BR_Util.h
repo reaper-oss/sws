@@ -134,7 +134,7 @@ int GetTakeId (MediaItem_Take* take, MediaItem* item = NULL);
 int GetLoopCount (MediaItem_Take* take, double position, int* loopIterationForPosition);
 int GetEffectiveTakeId (MediaItem_Take* take, MediaItem* item, int id, int* effectiveTakeCount); // empty takes could be hidden, so displayed id and real id can differ (pass either take or item and take id)
 enum class SourceType {
-	Unknown = -1,
+	Unknown,
 	Audio,
 	MIDI,
 	Video,

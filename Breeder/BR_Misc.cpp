@@ -950,7 +950,7 @@ void SelectItemsByType (COMMAND_T* ct)
 	double tStart, tEnd;
 	GetSet_LoopTimeRange(false, false, &tStart, &tEnd, false);
 
-	bool checkTimeSel = ((int)ct->user > 0) ? false : ((tStart == tEnd) ? false : true);
+	bool checkTimeSel = ct->user & ObeyTimeSelection ? tStart != tEnd : false;
 	bool update = false;
 
 	PreventUIRefresh(1);
@@ -968,25 +968,16 @@ void SelectItemsByType (COMMAND_T* ct)
 					continue;
 			}
 
-			if (MediaItem_Take* take = GetActiveTake(item))
-			{
-				bool select = false;
-				const SourceType type = GetSourceType(take);
+			const int actionType = ct->user & ~ObeyTimeSelection;
+			MediaItem_Take* take = GetActiveTake(item);
 
-				if      (abs((int)ct->user) == 1) select = type == SourceType::Audio;
-				else if (abs((int)ct->user) == 2) select = type == SourceType::MIDI;
-				else if (abs((int)ct->user) == 3) select = type == SourceType::Video;
-				else if (abs((int)ct->user) == 4) select = type == SourceType::Click;
-				else if (abs((int)ct->user) == 5) select = type == SourceType::Timecode;
-				else if (abs((int)ct->user) == 6) select = type == SourceType::Project;
+			bool select;
+			if (actionType == static_cast<int>(SourceType::Unknown)) // empty tems
+				select = !take;
+			else
+				select = actionType == static_cast<int>(GetSourceType(take));
 
-				if (select)
-				{
-					SetMediaItemInfo_Value(item, "B_UISEL", 1);
-					update = true;
-				}
-			}
-			else if (abs((int)ct->user) == 7)
+			if (select)
 			{
 				SetMediaItemInfo_Value(item, "B_UISEL", 1);
 				update = true;

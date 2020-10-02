@@ -546,7 +546,7 @@ void BR_ContextualToolbar::Cleaup ()
 
 void BR_ContextualToolbar::UpdateInternals ()
 {
-	const std::pair<BR_ToolbarContexts, BR_MouseInfo::Modes> modes[] {
+	const std::pair<BR_ToolbarContext, BR_MouseInfo::Modes> modes[] {
 		{ TRANSPORT,                          BR_MouseInfo::MODE_TRANSPORT   },
 		{ RULER,                              BR_MouseInfo::MODE_RULER       },
 		{ RULER_REGIONS,                      BR_MouseInfo::MODE_RULER       },
@@ -579,6 +579,8 @@ void BR_ContextualToolbar::UpdateInternals ()
 		{ ARRANGE_TRACK_ITEM_EMPTY,           BR_MouseInfo::MODE_ARRANGE     },
 		{ ARRANGE_TRACK_ITEM_CLICK,           BR_MouseInfo::MODE_ARRANGE     },
 		{ ARRANGE_TRACK_ITEM_TIMECODE,        BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_TRACK_ITEM_PROJECT,         BR_MouseInfo::MODE_ARRANGE     },
+		{ ARRANGE_TRACK_ITEM_VIDEOFX,         BR_MouseInfo::MODE_ARRANGE     },
 		{ ARRANGE_TRACK_ITEM_STRETCH_MARKER,  BR_MouseInfo::MODE_ARRANGE     },
 		{ ARRANGE_TRACK_TAKE_ENVELOPE,        BR_MouseInfo::MODE_ARRANGE     },
 		{ ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME, BR_MouseInfo::MODE_ARRANGE     },
@@ -855,12 +857,25 @@ int BR_ContextualToolbar::FindArrangeToolbar (BR_MouseInfo& mouseInfo, ExecuteOn
 		}
 		else
 		{
-			const SourceType type = GetSourceType(take);
-			if      (type == SourceType::Audio)    context = (this->GetMouseAction(ARRANGE_TRACK_ITEM_AUDIO)    == INHERIT_PARENT) ? ARRANGE_TRACK_ITEM : ARRANGE_TRACK_ITEM_AUDIO;
-			else if (type == SourceType::MIDI)     context = (this->GetMouseAction(ARRANGE_TRACK_ITEM_MIDI)     == INHERIT_PARENT) ? ARRANGE_TRACK_ITEM : ARRANGE_TRACK_ITEM_MIDI;
-			else if (type == SourceType::Video)    context = (this->GetMouseAction(ARRANGE_TRACK_ITEM_VIDEO)    == INHERIT_PARENT) ? ARRANGE_TRACK_ITEM : ARRANGE_TRACK_ITEM_VIDEO;
-			else if (type == SourceType::Click)    context = (this->GetMouseAction(ARRANGE_TRACK_ITEM_CLICK)    == INHERIT_PARENT) ? ARRANGE_TRACK_ITEM : ARRANGE_TRACK_ITEM_CLICK;
-			else if (type == SourceType::Timecode) context = (this->GetMouseAction(ARRANGE_TRACK_ITEM_TIMECODE) == INHERIT_PARENT) ? ARRANGE_TRACK_ITEM : ARRANGE_TRACK_ITEM_TIMECODE;
+			// C++11 (on macOS): make this static const with an initializer list
+			std::map<SourceType, BR_ToolbarContext> contextMap;
+			contextMap[SourceType::Audio]       = ARRANGE_TRACK_ITEM_AUDIO;
+			contextMap[SourceType::MIDI]        = ARRANGE_TRACK_ITEM_MIDI;
+			contextMap[SourceType::Video]       = ARRANGE_TRACK_ITEM_VIDEO;
+			contextMap[SourceType::Click]       = ARRANGE_TRACK_ITEM_CLICK;
+			contextMap[SourceType::Timecode]    = ARRANGE_TRACK_ITEM_TIMECODE;
+			contextMap[SourceType::Project]     = ARRANGE_TRACK_ITEM_PROJECT;
+			contextMap[SourceType::VideoEffect] = ARRANGE_TRACK_ITEM_VIDEOFX;
+
+			const auto it = contextMap.find(GetSourceType(take));
+			if (it != contextMap.end()) {
+				const BR_ToolbarContext expectedContext = it->second;
+
+				if (GetMouseAction(expectedContext) == INHERIT_PARENT)
+					context = ARRANGE_TRACK_ITEM;
+				else
+					context = expectedContext;
+			}
 		}
 
 		// Check item options
@@ -1304,7 +1319,7 @@ int BR_ContextualToolbar::GetContextFromIniIndex (int index)
 		case 48: return MIDI_EDITOR_PIANO;                case 49: return MIDI_EDITOR_PIANO_NAMED;            case 50: return MIDI_EDITOR_NOTES;
 		case 51: return MIDI_EDITOR_CC_LANE;              case 52: return MIDI_EDITOR_CC_SELECTOR;            case 53: return INLINE_MIDI_EDITOR;
 		case 54: return INLINE_MIDI_EDITOR_PIANO;         case 55: return UNUSED_CONTEXT;                     case 56: return INLINE_MIDI_EDITOR_NOTES;
-		case 57: return INLINE_MIDI_EDITOR_CC_LANE;
+		case 57: return INLINE_MIDI_EDITOR_CC_LANE;       case 58: return ARRANGE_TRACK_ITEM_PROJECT;         case 59: return ARRANGE_TRACK_ITEM_VIDEOFX;
 	}
 
 	return -666;
@@ -1687,6 +1702,8 @@ void BR_ContextualToolbarsView::GetItemText (SWS_ListItem* item, int iCol, char*
 			else if (context == ARRANGE_TRACK_ITEM_EMPTY)           {description = __LOCALIZE("Empty item",              "sws_DLG_181"); indentation = 3;}
 			else if (context == ARRANGE_TRACK_ITEM_CLICK)           {description = __LOCALIZE("Click source item",       "sws_DLG_181"); indentation = 3;}
 			else if (context == ARRANGE_TRACK_ITEM_TIMECODE)        {description = __LOCALIZE("Timecode generator item", "sws_DLG_181"); indentation = 3;}
+			else if (context == ARRANGE_TRACK_ITEM_PROJECT)         {description = __LOCALIZE("Subproject item",         "sws_DLG_181"); indentation = 3;}
+			else if (context == ARRANGE_TRACK_ITEM_VIDEOFX)         {description = __LOCALIZE("Video precessor item",    "sws_DLG_181"); indentation = 3;}
 			else if (context == ARRANGE_TRACK_ITEM_STRETCH_MARKER)  {description = __LOCALIZE("Item stretch marker",     "sws_DLG_181"); indentation = 2;}
 			else if (context == ARRANGE_TRACK_TAKE_ENVELOPE)        {description = __LOCALIZE("Take envelope",           "sws_DLG_181"); indentation = 2;}
 			else if (context == ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME) {description = __LOCALIZE("Volume envelope",         "sws_DLG_181"); indentation = 3;}

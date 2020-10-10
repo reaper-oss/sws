@@ -188,6 +188,18 @@ const char *CF_GetCommandText(const int section, const int command)
   return kbd_getTextFromCmd(command, SectionFromUniqueID(section));
 }
 
+static void CF_RefreshTrackFXChainTitle(MediaTrack *track)
+{
+  // The FX chain is normally updated at the next global timer tick.
+  // GetSetMediaTrackInfo updates it immediately when setting I_FXEN.
+  //
+  // TrackList_AdjustWindows also does the trick (on Windows only since v6)
+  // however it is disabled when PreventUIRefresh is used.
+
+  const bool enabled = GetMediaTrackInfo_Value(track, "I_FXEN");
+  SetMediaTrackInfo_Value(track, "I_FXEN", enabled);
+}
+
 HWND CF_GetTrackFXChain(MediaTrack *track)
 {
   if(!track)
@@ -213,7 +225,7 @@ HWND CF_GetTrackFXChain(MediaTrack *track)
   char guid[64];
   GetSetMediaTrackInfo_String(track, "GUID", guid, false);
   GetSetMediaTrackInfo_String(track, "P_NAME", guid, true);
-  TrackList_AdjustWindows(true); // update title of opened FX chain windows
+  CF_RefreshTrackFXChainTitle(track);
 
   snprintf(chainTitle, sizeof(chainTitle), R"(%s%s %d "%s"%s)",
     __LOCALIZE("FX: ", "fx"), __LOCALIZE("Track", "fx"), trackNumber, guid,
@@ -224,7 +236,7 @@ HWND CF_GetTrackFXChain(MediaTrack *track)
   // restore the original track name
   GetSetMediaTrackInfo_String(track, "P_NAME",
     const_cast<char *>(trackName.c_str()), true);
-  TrackList_AdjustWindows(true);
+  CF_RefreshTrackFXChainTitle(track);
 
   return match;
 }
@@ -259,14 +271,17 @@ HWND CF_GetFocusedFXChain()
   // Original idea by amagalma
   // https://forum.cockos.com/showthread.php?t=207220
 
+  MediaTrack *track;
   int trackIndex, itemIndex, fxIndex;
   switch(GetFocusedFX(&trackIndex, &itemIndex, &fxIndex)) {
-  case 1: {
-    MediaTrack *track = GetTrack(nullptr, trackIndex - 1);
+  case 1:
+    if(trackIndex < 1)
+      track = GetMasterTrack(nullptr);
+    else
+      track = GetTrack(nullptr, trackIndex - 1);
     return CF_GetTrackFXChain(track);
-  }
   case 2: {
-    MediaTrack *track = GetTrack(nullptr, trackIndex - 1);
+    track = GetTrack(nullptr, trackIndex - 1);
     MediaItem *item = GetTrackMediaItem(track, itemIndex);
     MediaItem_Take *take = GetMediaItemTake(item, HIWORD(fxIndex));
     return CF_GetTakeFXChain(take);
@@ -278,6 +293,9 @@ HWND CF_GetFocusedFXChain()
 
 int CF_EnumSelectedFX(HWND fxChain, const int index)
 {
+  if(!fxChain)
+    return -1;
+
   const HWND list = GetDlgItem(fxChain, 1076);
   return ListView_GetNextItem(list, index, LVNI_SELECTED);
 }

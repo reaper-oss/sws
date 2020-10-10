@@ -178,6 +178,7 @@ private:
 		int armed;
 		int shape, pitchEnvRange, pitchEnvSnap;
 		int faderMode;
+		WDL_FastString EXT; // extension-specific persistent data, since REAPER v5.975
 		BR_EnvType type;
 		double minValue, maxValue, centerValue;
 		int paramId, fxId;

@@ -173,10 +173,10 @@ private:
 	struct EnvProperties
 	{
 		int active, AIoptions; // automation items options, second ACT token in track env. chunk
-		int visible, lane, visUnknown;
+		int visible, lane;
 		int height, heightUnknown;
 		int armed;
-		int shape, shapeUnknown1, shapeUnknown2;
+		int shape, pitchEnvRange, pitchEnvSnap;
 		int faderMode;
 		BR_EnvType type;
 		double minValue, maxValue, centerValue;

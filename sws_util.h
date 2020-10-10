@@ -209,7 +209,6 @@ int IsSwsAction(const char* _actionName);
 HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NULL);;
 
 // Utility functions, sws_util.cpp
-BOOL IsCommCtrlVersion6();
 void SaveWindowPos(HWND hwnd, const char* cKey);
 void RestoreWindowPos(HWND hwnd, const char* cKey, bool bRestoreSize = true);
 void SetWindowPosAtMouse(HWND hwnd);

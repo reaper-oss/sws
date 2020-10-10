@@ -43,40 +43,6 @@ MTRand g_MTRand;
 const GUID GUID_NULL = { 0, 0, 0, "\0\0\0\0\0\0\0" };
 #endif
 
-BOOL IsCommCtrlVersion6()
-{
-#ifndef _WIN32
-	return true;
-#else
-    static BOOL isCommCtrlVersion6 = -1;
-    if (isCommCtrlVersion6 != -1)
-        return isCommCtrlVersion6;
-    
-    //The default value
-    isCommCtrlVersion6 = FALSE;
-    
-    HINSTANCE commCtrlDll = LoadLibrary("comctl32.dll");
-    if (commCtrlDll)
-    {
-        DLLGETVERSIONPROC pDllGetVersion;
-        pDllGetVersion = (DLLGETVERSIONPROC)GetProcAddress(commCtrlDll, "DllGetVersion");
-        
-        if (pDllGetVersion)
-        {
-            DLLVERSIONINFO dvi = {0};
-            dvi.cbSize = sizeof(DLLVERSIONINFO);
-            (*pDllGetVersion)(&dvi);
-            
-            isCommCtrlVersion6 = (dvi.dwMajorVersion == 6);
-        }
-        
-        FreeLibrary(commCtrlDll);
-    }
-    
-    return isCommCtrlVersion6;
-#endif
-}
-
 void SaveWindowPos(HWND hwnd, const char* cKey)
 {
 	// Remember the dialog position

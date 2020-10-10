@@ -110,6 +110,8 @@ public:
 
     bool hasEventType(RprMidiEvent::MessageType);
 
+    std::string poolGuid() const;
+
 private:
     void cleanup();
     bool apply();

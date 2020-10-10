@@ -1060,3 +1060,9 @@ bool RprMidiTake::hasEventType(RprMidiEvent::MessageType messageType)
     }
     return hasEvent(mOtherEvents, messageType);
 }
+
+std::string RprMidiTake::poolGuid() const
+{
+    const std::string &pooledevts = getMidiSourceNode()->getChild(1)->getValue();
+    return StringVector{pooledevts}.at(1);
+}

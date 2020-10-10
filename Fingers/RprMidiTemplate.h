@@ -17,7 +17,7 @@ public:
 
     virtual ~RprMidiTemplate();
 protected:
-    RprNode *getMidiSourceNode() { return mMidiSourceNode; }
+    RprNode *getMidiSourceNode() const { return mMidiSourceNode; }
     void errorOccurred() { mInErrorState = true; }
     bool isReadOnly() const { return mReadOnly; }
 

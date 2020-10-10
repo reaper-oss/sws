@@ -53,6 +53,7 @@ void ToggleItemOnline (COMMAND_T*);
 void ItemSourcePathToClipBoard (COMMAND_T*);
 void DeleteTakeUnderMouse (COMMAND_T*);
 void SelectTrackUnderMouse (COMMAND_T*);
+constexpr int ObeyTimeSelection = 1<<31;
 void SelectItemsByType (COMMAND_T*);
 void SaveCursorPosSlot (COMMAND_T*);
 void RestoreCursorPosSlot (COMMAND_T*);

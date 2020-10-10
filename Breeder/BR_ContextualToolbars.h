@@ -32,7 +32,7 @@ class BR_MouseInfo;
 /******************************************************************************
 * Constants                                                                   *
 ******************************************************************************/
-enum BR_ToolbarContexts
+enum BR_ToolbarContext
 {
 	/* If adding new context group make sure to update IsContextValid() in    *
 	*  BR_ContextualToolbar                                                   *
@@ -87,6 +87,8 @@ enum BR_ToolbarContexts
 	ARRANGE_TRACK_ITEM_EMPTY,
 	ARRANGE_TRACK_ITEM_CLICK,
 	ARRANGE_TRACK_ITEM_TIMECODE,
+	ARRANGE_TRACK_ITEM_PROJECT,
+	ARRANGE_TRACK_ITEM_VIDEOFX,
 	ARRANGE_TRACK_ITEM_STRETCH_MARKER,
 	ARRANGE_TRACK_TAKE_ENVELOPE,
 	ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME,

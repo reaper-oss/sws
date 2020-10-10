@@ -828,32 +828,39 @@ int GetEffectiveTakeId (MediaItem_Take* take, MediaItem* item, int id, int* effe
 	return effectiveId;
 }
 
-int GetTakeType (MediaItem_Take* take)
+SourceType GetSourceType (PCM_source* source)
 {
-	int returnType = -1;
-	if (take)
-	{
-		PCM_source* source = GetMediaItemTake_Source(take);
-		source = (!strcmp(source->GetType(), "SECTION")) ? (source->GetSource()) : (source);
-		if (source)
-		{
-			const char* type = source->GetType();
+	if (!source)
+		return SourceType::Unknown;
 
-			if (!strcmp(type, "MIDIPOOL") || !strcmp(type, "MIDI"))
-				returnType = 1;
-			else if (!strcmp(type, "VIDEO"))
-				returnType = 2;
-			else if (!strcmp(type, "CLICK"))
-				returnType = 3;
-			else if (!strcmp(type, "LTC"))
-				returnType = 4;
-			else if (!strcmp(type, "RPP_PROJECT"))
-				returnType = 5;
-			else if (strcmp(type, ""))
-				returnType = 0;
-		}
-	}
-	return returnType;
+	const char* type = source->GetType();
+
+	if (!strcmp(type, "SECTION"))
+		return GetSourceType(source->GetSource());
+	if (!strcmp(type, "MIDIPOOL") || !strcmp(type, "MIDI"))
+		return SourceType::MIDI;
+	else if (!strcmp(type, "VIDEO"))
+		return SourceType::Video;
+	else if (!strcmp(type, "CLICK"))
+		return SourceType::Click;
+	else if (!strcmp(type, "LTC"))
+		return SourceType::Timecode;
+	else if (!strcmp(type, "RPP_PROJECT"))
+		return SourceType::Project;
+	else if (!strcmp(type, "VIDEOEFFECT"))
+		return SourceType::VideoEffect;
+	else if (!strcmp(type, ""))
+		return SourceType::Unknown;
+	else
+		return SourceType::Audio;
+}
+
+SourceType GetSourceType (MediaItem_Take* take)
+{
+	if (!take)
+		return SourceType::Unknown;
+
+	return GetSourceType(GetMediaItemTake_Source(take));
 }
 
 int GetEffectiveTimebase (MediaItem* item)

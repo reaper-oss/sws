@@ -646,16 +646,18 @@ int BR_Envelope::FindClosest (double position)
 double BR_Envelope::ValueAtPosition (double position, bool fastMode /*= false*/)
 {
 	position -= m_takeEnvOffset;
-	int	id = this->FindPrevious(position, 0);
 
-	bool faderMode = this->IsScaledToFader();
+	const int id = FindPrevious(position, 0);
+	const bool faderMode = IsScaledToFader();
+	const double playRate = m_take ? GetMediaItemTakeInfo_Value(m_take, "D_PLAYRATE") : 1;
+
 	if (!m_pointsEdited && !fastMode)
 	{
 		if (m_sampleRate == -1)
 			m_sampleRate = ConfigVar<int>("projsrate").value_or(-1);
 
 		double value;
-		Envelope_Evaluate(m_envelope, position, m_sampleRate, 1, &value, NULL, NULL, NULL); // slower than our way with high point count (probably because we use binary search while Cockos uses linear) but more accurate
+		Envelope_Evaluate(m_envelope, position * playRate, m_sampleRate, 1, &value, NULL, NULL, NULL); // slower than our way with high point count (probably because we use binary search while Cockos uses linear) but more accurate
 		return ScaleFromEnvelopeMode(GetEnvelopeScalingMode(m_envelope), value);
 	}
 	else
@@ -1687,7 +1689,7 @@ void BR_Envelope::Build (bool takeEnvelopesUseProjectTime)
 			{
 				BR_Envelope::EnvPoint point;
 				GetEnvelopePoint(m_envelope, i, &point.position, &point.value, &point.shape, &point.bezier, &point.selected);
-				point.position /=  playrate;
+				point.position /= playrate;
 
 				if (m_properties.faderMode != 0)
 					point.value = ScaleFromEnvelopeMode(m_properties.faderMode, point.value);

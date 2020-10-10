@@ -500,7 +500,7 @@ bool DoLaunchExternalTool(const char *ExeFilename)
 	free(cFile);
 	return bRet;
 #else
-	MessageBox(g_hwndParent, __LOCALIZE("Not supported on OSX, sorry!", "sws_mbox"), __LOCALIZE("SWS - Error", "sws_mbox"), MB_OK);
+	MessageBox(g_hwndParent, __LOCALIZE("Not supported on OSX and Linux, sorry!", "sws_mbox"), __LOCALIZE("SWS - Error", "sws_mbox"), MB_OK);
 	return false;
 #endif
 }

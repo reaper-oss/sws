@@ -201,7 +201,7 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Render item to new take with tail..." }, "XENAKIOS_RENDERITEMNEWTAKEWITHTAIL", DoRenderItemsWithTail,NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Open associated REAPER project of item" }, "XENAKIOS_OPENASSOCIATED_RPP", DoOpenAssociatedRPP,	NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Take mixer..." }, "XENAKIOS_SHOWTAKEMIXERDLG", DoShowTakeMixerDlg,	NULL, },
-	{ { DEFACCEL, "Xenakios/SWS: Insert media file from clipboard" }, "XENAKIOS_INSERTMEDIAFROMCLIPBOARD", DoInsertMediaFromClipBoard,NULL, },
+	{ { DEFACCEL, "Xenakios/SWS: Insert media file from clipboard (deprecated)" }, "XENAKIOS_INSERTMEDIAFROMCLIPBOARD", DoInsertMediaFromClipBoard,NULL, },
 
 	{ { DEFACCEL, "Xenakios/SWS: Erase from item (time based)" }, "XENAKIOS_HOLDKEYTEST1", DoHoldKeyTest1,NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Erase from item (beat based)" }, "XENAKIOS_HOLDKEYTEST2", DoHoldKeyTest2,NULL, },

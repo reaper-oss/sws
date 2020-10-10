@@ -1526,7 +1526,10 @@ void SetPan(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
+	{
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		UpdateTimeline();
+	}	
 }
 
 void OpenMediaPathInExplorerFinder(COMMAND_T*)

@@ -204,19 +204,51 @@ bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_Fast
 }
 
 int SNM_GetIntConfigVar(const char *varName, const int fallback) {
-	return ConfigVar<int>(varName).value_or(fallback);
+	if (ConfigVar<int> cv{varName})
+		return *cv;
+	else if(ConfigVar<char> cv{varName})
+		return *cv;
+	else
+		return fallback;
 }
 
 bool SNM_SetIntConfigVar(const char *varName, const int newValue) {
-	return ConfigVar<int>(varName).try_set(newValue);
+	if (ConfigVar<int> cv{varName})
+		*cv = newValue;
+	else if (ConfigVar<char> cv{varName}) {
+		if (newValue > std::numeric_limits<char>::max() || newValue < std::numeric_limits<char>::min())
+			return false;
+
+		*cv = newValue;
+	}
+	else
+		return false;
+
+	return true;
 }
 
-double SNM_GetDoubleConfigVar(const char *varName, double fallback) {
-	return ConfigVar<double>(varName).value_or(fallback);
+double SNM_GetDoubleConfigVar(const char *varName, const double fallback) {
+	if (ConfigVar<double> cv{varName})
+		return *cv;
+	else if (ConfigVar<float> cv{varName})
+		return *cv;
+	else
+		return fallback;
 }
 
-bool SNM_SetDoubleConfigVar(const char *varName, double newValue) {
-	return ConfigVar<double>(varName).try_set(newValue);
+bool SNM_SetDoubleConfigVar(const char *varName, const double newValue) {
+	if (ConfigVar<double> cv{varName})
+		*cv = newValue;
+	else if (ConfigVar<float> cv{varName}) {
+		if (newValue > std::numeric_limits<float>::max() || newValue < std::numeric_limits<float>::min())
+			return false;
+
+		*cv = static_cast<float>(newValue);
+	}
+	else
+		return false;
+
+	return true;
 }
 
 bool SNM_GetLongConfigVar(const char *varName, int *highOut, int *lowOut) {

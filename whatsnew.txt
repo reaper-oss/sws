@@ -1,20 +1,54 @@
-ReaScript: Fix automatic resizing of CF_GetClipboard's output buffer
+Contextual toolbars:
++Add new contexts for subproject and video processor items
 
-Fix a potential crash occuring after saving window screensets
+Cycle actions:
++Add a "Prevent UI refresh" checkbox to allow disabling the performance optimization from v2.12.0 (required for some actions, issue 1395)
 
-Fix disappearing notes when using multiple project tabs
+Envelopes:
++Fix reading the value of take envelopes at a given time position when the take's playrate is not 1 (issue 1410)
++Preserve P_EXT envelope data when altering some envelope properties (issue 1385)
++Restore the behavior of "Remove all envelopes for selected tracks" (regression from v2.12.0, issue 1378)
 
-Fix dump action list (all but custom actions) and (all actions)
+MIDI:
++Add support for the "Bank/Program Select" lane to "SWS/FNG: Show only used CC lanes" and "SWS/FNG: Hide unused CC lanes" (issue 1344)
++Fix a potential crash when detecting the mouse cursor context over the piano roll keyboard
++Fix losing CC shapes and duplicating subsequent events when applying a groove or using some FNG actions (report https://forum.cockos.com/showpost.php?p=2242119|here|)
++Fix losing note notation settings when applying a groove
++Skip duplicate pooled MIDI sources when transposing or adjusting velocity using FNG actions (issue 1406)
 
-Sort files alphabetically when switching to prev/next in folder
+Notes:
++Fix a potential crash occuring after saving window screensets (regression from v2.12.0, issue 1359)
++Fix disappearing notes and marker/region subtitles when using multiple project tabs (issue 1141)
 
-ReaScript: add SNM_{Get,Set}LongConfigVar for 64-bit integer values
+Miscellaneous:
++Add actions for selecting video processor items
++Allow customizing the amount of "SWS: Select only track n" actions via [NbOfActions]/SWS_SEL in S&M.ini (issue 1360)
++Always immediately refresh offscreen items when running related actions (issue 1325)
++Fix "Xenakios/SWS: Play selected items once" removing loop selection and creating an extra undo point (report https://forum.cockos.com/showpost.php?p=2307851|here|)
++Fix the "all but custom actions" and "all actions" modes of the dump action list actions (issue 1357)
++Fix the "SWS: Move cursor left/right 1 sample (on grid)" actions (regression from v2.11.0, report https://forum.cockos.com/showpost.php?p=2282414|here|)
++Sort files alphabetically when using "Xenakios/SWS: Switch item source file to prev/next in folder" (issue 1353)
++Update take waveform immediately in "SWS/S&M: Pan active takes of selected items" and "Xenakios/SWS: Implode items to takes and pan symmetrically" (issue 1369)
 
-+Issue 1344: "SWS/FNG: Show only used CC lanes" does not restore "Program/Bank Select" lane
-+Issue 1344: "SWS/FNG: Hide unused CC lanes" hides "Program/Bank Select" lane
-+Issue 1344: "SWS/BR: Show only used CC lanes (detect 14-bit)" does not restore "Program/Bank Select" lane
+ReaScript API:
++Add SNM_{Get,Set}LongConfigVar for accessing 64-bit integer values (report https://forum.cockos.com/showthread.php?t=236594|here|)
++Add support for the master track in CF_GetFocusedFXChain (issue 1394)
++Deprecate SNM_GetSourceType in favor of the native GetMediaSourceType
++Fix automatic resizing of CF_GetClipboard's output buffer (regression from v2.12.0, issue 1365)
++Fix CF_EnumSelectedFX returning 0 instead of -1 on Windows when the chain is nil (report https://forum.cockos.com/showpost.php?p=2313081|here|)
++Fix CF_GetTrackFXChain in REAPER v6 on macOS and Linux (report https://forum.cockos.com/showthread.php?t=239156|here|)
++Implement safe access to 8-bit integer values using SNM_{Get,Set}IntConfigVar
++Implement safe access to 32-bit single-precision floating-point values using SNM_{Get,Set}DoubleConfigVar
 
-Fix _SWS_MOVECURSAMPLEFT and _SWS_MOVECURSAMPRIGHT
+Vertical zoom and track height:
++Fix vertical zoom actions effectively disabling track height lock (report https://forum.cockos.com/showthread.php?t=205372|here|)
++Optionally obey track height lock in the vertical zoom and track height actions (issue 966)
++Remove the actions "Xenakios/SWS/NF: Set selected tracks heights to A/B, respect height locked tracks" that were added in v2.12.0
+
+Windows:
++Add support for Windows 10 Creators Update (1703)'s new Per-Monitor v2 DPI awareness mode (REAPER v6.04+ only, issue 1264)
++Deprecate the Windows-only action "Xenakios/SWS: Insert media file from clipboard" in favor of REAPER v6.13's native feature
++Fix the enabled indicator being wrongly displayed in the item property interpolator (report https://forum.cockos.com/showpost.php?p=2275857|here|)
 
 !v2.12.0 pre-release build
 <strong>Reminder: this new SWS version requires REAPER v5.982+!</strong>

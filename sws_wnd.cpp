@@ -37,12 +37,14 @@
 */
 
 #include "stdafx.h"
+
 #include "./SnM/SnM.h"
 #include "./SnM/SnM_Dlg.h"
 #include "./Breeder/BR_Util.h"
-#include "./reaper/localize.h"
+
+#include <WDL/localize/localize.h>
 #ifndef _WIN32
-#include "WDL/swell/swell-dlggen.h"
+#  include <WDL/swell/swell-dlggen.h>
 #endif
 
 

@@ -49,8 +49,8 @@
 #include "Misc/TrackSel.h"
 #include "Snapshots/Snapshots.h"
 #include "version.h"
-#include "reaper/localize.h"
 
+#include <WDL/localize/localize.h>
 
 void Noop(COMMAND_T* _ct)
 {

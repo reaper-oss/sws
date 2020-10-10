@@ -27,13 +27,14 @@
 
 
 #include "stdafx.h"
+
 #include "../Utility/SectionLock.h"
-#include "WDL/projectcontext.h"
-#include "../reaper/localize.h"
 #include "MarkerListClass.h"
 #include "MarkerListActions.h"
 #include "../SnM/SnM_Project.h"
 
+#include <WDL/localize/localize.h>
+#include <WDL/projectcontext.h>
 
 MarkerItem::MarkerItem(bool bReg, double dPos, double dRegEnd, const char* cName, int num, int color)
 {

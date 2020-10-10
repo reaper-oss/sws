@@ -29,8 +29,8 @@
 // - TODO: use native macro file format?
 //   (CAs have their own format for historical reasons..)
 
-
 #include "stdafx.h"
+
 #include "SnM.h"
 #include "SnM_Cyclactions.h"
 #include "SnM_Dlg.h"
@@ -39,8 +39,9 @@
 #include "../url.h"
 #include "../Console/Console.h"
 #include "../IX/IX.h"
-#include "../reaper/localize.h"
-#include "WDL/projectcontext.h"
+
+#include <WDL/localize/localize.h>
+#include <WDL/projectcontext.h>
 
 #define CA_WND_ID	"SnMCyclaction"
 

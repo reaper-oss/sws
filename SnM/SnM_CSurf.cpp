@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h" 
+
 #include "SnM.h"
 #include "SnM_CSurf.h"
 #include "SnM_LiveConfigs.h"
@@ -35,10 +36,10 @@
 #include "SnM_Resources.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
-#include "../reaper/localize.h"
 #include "../OscPkt/oscpkt.h"
 #include "../OscPkt/udp.h"
 
+#include <WDL/localize/localize.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // SWSTimeSlice:IReaperControlSurface callbacks

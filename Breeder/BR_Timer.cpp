@@ -25,6 +25,7 @@
 / OTHER DEALINGS IN THE SOFTWARE.
 /
 ******************************************************************************/
+
 #include "stdafx.h"
 #include "BR_Timer.h"
 

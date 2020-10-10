@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include "../reaper/localize.h"
 
 #include "RprMidiCCLane.h"
 
@@ -8,6 +7,8 @@
 #include "RprTake.h"
 #include "RprException.h"
 #include "StringUtil.h"
+
+#include <WDL/localize/localize.h>
 
 RprMidiCCLane::RprMidiCCLane(RprTake &midiTake, bool readOnly) : RprMidiTemplate(midiTake, readOnly)
 {

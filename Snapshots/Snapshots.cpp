@@ -26,13 +26,15 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "SnapshotClass.h"
 #include "Snapshots.h"
 #include "SnapshotMerge.h"
 #include "../Prompt.h"
-#include "../reaper/localize.h"
-#include "WDL/projectcontext.h"
 #include "SnM/SnM.h" // dynamic actions
+
+#include <WDL/projectcontext.h>
+#include <WDL/localize/localize.h>
 
 #define SNAP_OPTIONS_KEY "Snapshot Options"
 #define RENAME_MSG	0x10001

@@ -26,11 +26,13 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "SnM.h"
 #include "SnM_Chunk.h"
 #include "SnM_Util.h"
 #include "../cfillion/cfillion.hpp" // CF_LocateInExplorer
-#include "../reaper/localize.h"
+
+#include <WDL/localize/localize.h>
 #include <WDL/sha.h>
 #include <WDL/projectcontext.h>
 

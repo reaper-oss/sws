@@ -30,8 +30,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include "queue/sys/queue.h"
-#include "../reaper/localize.h"
-
+#include <WDL/localize/localize.h>
 
 #define CHECK_ERROR(condition, errorcode, goto_point)                          \
   if ((condition)) {                                                           \

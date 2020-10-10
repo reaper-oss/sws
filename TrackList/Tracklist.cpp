@@ -27,13 +27,15 @@
 
 
 #include "stdafx.h"
-#include "../reaper/localize.h"
+
 #include "../Misc/TrackSel.h"
 #include "../Snapshots/SnapshotClass.h"
 #include "../Snapshots/Snapshots.h"
 #include "TracklistFilter.h"
 #include "Tracklist.h"
 #include "../SnM/SnM_Window.h"
+
+#include <WDL/localize/localize.h>
 
 #define RENAME_MSG		0x10005
 #define LOADSNAP_MSG	0x10100 // Keep space afterwards

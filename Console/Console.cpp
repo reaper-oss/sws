@@ -31,14 +31,15 @@
 
 
 #include "stdafx.h"
+
 #include "../url.h"
-#include "../reaper/localize.h"
 #include "../Freeze/Freeze.h"
 #include "../SnM/SnM.h"
 #include "../SnM/SnM_CSurf.h"
 #include "../SnM/SnM_Util.h"
 #include "Console.h"
 
+#include <WDL/localize/localize.h>
 
 ReaConsoleWnd* g_pConsoleWnd = NULL;
 static WDL_TypedBuf<int> g_selTracks;

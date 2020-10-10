@@ -1,8 +1,9 @@
 #include "stdafx.h"
-#include "../reaper/localize.h"
 
 #include "CommandHandler.h"
 #include "RprException.h"
+
+#include <WDL/localize/localize.h>
 
 static COMMAND_T createSWSCommand(const char* description, const char* id, RprCommand* command);
 static void onSWSCommand(COMMAND_T* cmd);

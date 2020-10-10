@@ -26,7 +26,6 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "reaper/localize.h"
 #include "SnM/SnM_Dlg.h"
 #include "SnM/SnM_Util.h"
 #include "Breeder/BR_Update.h"
@@ -34,7 +33,7 @@
 #include "license.h"
 #include "url.h"
 #include "Prompt.h"
-
+#include <WDL/localize/localize.h>
 
 static HWND s_hwndAbout = NULL;
 

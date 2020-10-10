@@ -25,11 +25,14 @@
 / OTHER DEALINGS IN THE SOFTWARE.
 /
 ******************************************************************************/
+
 #include "stdafx.h"
+
 #include "BR_EnvelopeUtil.h"
 #include "BR_Util.h"
-#include "WDL/lice/lice_bezier.h"
-#include "../reaper/localize.h"
+
+#include <WDL/lice/lice_bezier.h>
+#include <WDL/localize/localize.h>
 
 /******************************************************************************
 * BR_Envelope                                                                 *

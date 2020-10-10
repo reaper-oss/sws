@@ -26,9 +26,11 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "../reaper/localize.h"
+
 #include "ProjectList.h"
 #include "ProjectMgr.h"
+
+#include <WDL/localize/localize.h>
 
 // Globals
 SWS_ProjectListWnd* g_pProjList = NULL;

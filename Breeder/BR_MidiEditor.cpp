@@ -25,7 +25,9 @@
 / OTHER DEALINGS IN THE SOFTWARE.
 /
 ******************************************************************************/
+
 #include "stdafx.h"
+
 #include "BR_MidiEditor.h"
 #include "BR_EnvelopeUtil.h"
 #include "BR_MidiUtil.h"
@@ -38,7 +40,8 @@
 #include "../SnM/SnM_Chunk.h"
 #include "../SnM/SnM_Track.h"
 #include "../SnM/SnM_Util.h"
-#include "../reaper/localize.h"
+
+#include <WDL/localize/localize.h>
 
 /******************************************************************************
 * Globals                                                                     *

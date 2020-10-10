@@ -25,7 +25,9 @@
 / OTHER DEALINGS IN THE SOFTWARE.
 /
 ******************************************************************************/
+
 #include "stdafx.h"
+
 #include "BR_Tempo.h"
 #include "BR_ContinuousActions.h"
 #include "BR_EnvelopeUtil.h"
@@ -35,7 +37,8 @@
 #include "BR_TempoDlg.h"
 #include "BR_Util.h"
 #include "../SnM/SnM_Util.h"
-#include "../reaper/localize.h"
+
+#include <WDL/localize/localize.h>
 
 /******************************************************************************
 * Globals                                                                     *

@@ -26,12 +26,13 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "SnM.h"
 #include "SnM_Project.h"
 #include "SnM_Util.h"
 #include "../Prompt.h"
-#include "../reaper/localize.h"
 
+#include <WDL/localize/localize.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Project helpers

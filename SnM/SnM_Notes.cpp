@@ -38,8 +38,8 @@
 // - use action_help_t? (not finished according to Cockos)
 // - handle concurent item/project notes updates?
 
-
 #include "stdafx.h"
+
 #include "SnM.h"
 #include "SnM_Dlg.h"
 #include "SnM_Notes.h"
@@ -47,9 +47,9 @@
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "SnM_Window.h"
-#include "../reaper/localize.h"
-#include "WDL/projectcontext.h"
 
+#include <WDL/localize/localize.h>
+#include <WDL/projectcontext.h>
 
 #define NOTES_WND_ID				"SnMNotesHelp"
 #define NOTES_INI_SEC				"Notes"

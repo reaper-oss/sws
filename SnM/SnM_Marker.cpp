@@ -26,10 +26,11 @@
 ******************************************************************************/
 
 #include "stdafx.h" 
+
 #include "SnM.h"
 #include "SnM_Marker.h"
-#include "../reaper/localize.h"
 
+#include <WDL/localize/localize.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Marker and region update listener

@@ -1,8 +1,4 @@
 #include "stdafx.h"
-#include "../reaper/localize.h"
-#include "WDL/ptrlist.h"
-
-#include <algorithm>
 
 #include "RprMidiTake.h"
 #include "RprStateChunk.h"
@@ -13,6 +9,10 @@
 #include "RprItem.h"
 #include "TimeMap.h"
 #include "RprException.h"
+
+#include <algorithm>
+#include <WDL/localize/localize.h>
+#include <WDL/ptrlist.h>
 
 WDL_PtrList_DOD<RprMidiTake> g_script_miditakes; // just to validate function parameters
 

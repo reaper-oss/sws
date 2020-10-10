@@ -35,8 +35,10 @@
 // items that are of "normal" length
 
 #include "stdafx.h"
+
 #include "sws_waitdlg.h"
-#include "./reaper/localize.h"
+
+#include <WDL/localize/localize.h>
 
 const char SWS_WAITDLG_WNDPOS_KEY[] = "Wait Dialog Position";
 

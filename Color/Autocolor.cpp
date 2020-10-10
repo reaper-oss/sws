@@ -26,14 +26,16 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "Color.h"
 #include "Autocolor.h"
 #include "../SnM/SnM_ChunkParserPatcher.h"
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Marker.h"
 #include "../SnM/SnM_Util.h"
-#include "../reaper/localize.h"
-#include "WDL/projectcontext.h"
+
+#include <WDL/localize/localize.h>
+#include <WDL/projectcontext.h>
 
 #define PRI_UP_MSG         0x10000
 #define PRI_DOWN_MSG       0x10001
@@ -402,8 +404,8 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 #else
 				UpdateCustomColors();
 
-				int cc = item->m_color;
-				if (SWELL_ChooseColor(m_hwnd,&cc,16,(int *)g_custColors))
+				COLORREF cc = item->m_color;
+				if (SWELL_ChooseColor(m_hwnd,&cc,16,g_custColors))
 				{
 					int x = 0;
 					while ((item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(&x)))

@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "SnM.h"
 #include "SnM_Chunk.h"
 #include "SnM_Item.h"
@@ -35,7 +36,8 @@
 #ifdef _SNM_HOST_AW
 #  include "../Misc/Adam.h"
 #endif
-#include "../reaper/localize.h"
+
+#include <WDL/localize/localize.h>
 
 #include <taglib/tag.h>
 #include <taglib/fileref.h>

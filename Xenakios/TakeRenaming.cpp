@@ -26,9 +26,11 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "../SnM/SnM_Dlg.h"	
-#include "../reaper/localize.h"
+
+#include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h" // SNM_DeletePeakFile()
+
+#include <WDL/localize/localize.h>
 
 using namespace std;
 

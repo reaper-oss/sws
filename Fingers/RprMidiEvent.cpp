@@ -1,12 +1,12 @@
 #include "stdafx.h"
-#include "../reaper/localize.h"
-
-#include <memory>
 
 #include "RprMidiEvent.h"
 #include "RprNode.h"
 
 #include "StringUtil.h"
+
+#include <memory>
+#include <WDL/localize/localize.h>
 
 static std::string toHex(unsigned char hex);
 

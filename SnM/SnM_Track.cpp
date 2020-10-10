@@ -26,14 +26,15 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "SnM.h"
 #include "SnM_Chunk.h"
 #include "SnM_Routing.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
-#include "WDL/projectcontext.h"
-#include "../reaper/localize.h"
 
+#include <WDL/projectcontext.h>
+#include <WDL/localize/localize.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Track helpers (with ReaProject* parameter)

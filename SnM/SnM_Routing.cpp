@@ -26,13 +26,14 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "SnM.h"
 #include "SnM_Chunk.h"
 #include "SnM_Routing.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
-#include "../reaper/localize.h"
 
+#include <WDL/localize/localize.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Cut/copy/paste routings + track with routings

@@ -1,8 +1,4 @@
 #include "stdafx.h"
-#include "../reaper/localize.h"
-
-#include <cstdlib>
-#include <cmath>
 
 #include "MiscCommands.h"
 #include "CommandHandler.h"
@@ -13,6 +9,10 @@
 #include "TimeMap.h"
 #include "RprStateChunk.h"
 #include "../Breeder/BR_Util.h"
+
+#include <cstdlib>
+#include <cmath>
+#include <WDL/localize/localize.h>
 
 static void EmulateMidiHardware(int flag, void *data);
 static void GetEmulationSettings(int flag, void *data);

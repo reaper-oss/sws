@@ -31,6 +31,7 @@
 //       => done in REAPER v4.58: file_in_project_ex2!
 
 #include "stdafx.h"
+
 #include "SnM.h"
 #include "SnM_Chunk.h"
 #include "SnM_Dlg.h"
@@ -44,9 +45,9 @@
 #ifdef _WIN32
 #include "../DragDrop.h"
 #endif
-#include "../reaper/localize.h"
-#include "WDL/projectcontext.h"
 
+#include <WDL/localize/localize.h>
+#include <WDL/projectcontext.h>
 
 #define RES_WND_ID					"SnMResources"
 #define IMG_WND_ID					"SnMImage"

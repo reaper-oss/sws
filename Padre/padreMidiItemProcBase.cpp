@@ -26,8 +26,8 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "../reaper/localize.h"
 
+#include <WDL/localize/localize.h>
 
 MidiNoteKey::MidiNoteKey(int frameOffset, unsigned char status, unsigned char data1)
 : _frameOffset(frameOffset), _status(status), _data1(data1)

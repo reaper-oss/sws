@@ -26,10 +26,12 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h"
-#include "../reaper/localize.h"
-#include "WDL/MersenneTwister.h"
+
+#include <WDL/localize/localize.h>
+#include <WDL/MersenneTwister.h>
 
 using namespace std;
 

@@ -29,8 +29,8 @@
 // for the SWS extension.
 
 #include "stdafx.h"
-#include "./reaper/localize.h"
 
+#include <WDL/localize/localize.h>
 
 void AddToMenuOrdered(HMENU hMenu, const char* text, int id, int iInsertAfter, bool bPos, UINT uiSate)
 {

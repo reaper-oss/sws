@@ -26,8 +26,10 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "../SnM/SnM_Dlg.h"	
-#include "../reaper/localize.h"
+
+#include "../SnM/SnM_Dlg.h"
+
+#include <WDL/localize/localize.h>
 
 char *g_QueryString;
 int g_QueryMaxChars;

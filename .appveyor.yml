@@ -93,6 +93,7 @@ environment:
 
 notifications:
   - provider: GitHubPullRequest
+    on_build_failure: false
     template: |-
       {{#passed}}:white_check_mark:{{/passed}}{{#failed}}:x:{{/failed}} [Build {{&projectName}} {{buildVersion}} {{status}}]({{buildUrl}}) (commit {{commitUrl}} by @{{&commitAuthorUsername}})
       {{#passed}}{{#jobs}}

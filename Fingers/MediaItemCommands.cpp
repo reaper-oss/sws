@@ -278,6 +278,7 @@ static bool convertToInProjectMidi(RprItemCtrPtr &ctr)
 
 void CmdPitchUpMidi::doCommand(int flag)
 {
+    std::set<std::string> pooledGuids;
     RprItemCtrPtr ctr = RprItemCollec::getSelected();
 
     if(!convertToInProjectMidi(ctr))
@@ -287,6 +288,8 @@ void CmdPitchUpMidi::doCommand(int flag)
         if (!ctr->getAt(i).getActiveTake().isMIDI())
             continue;
         RprMidiTake midiItem(ctr->getAt(i).getActiveTake());
+        if(!pooledGuids.insert(midiItem.poolGuid()).second)
+            continue;
         for(int j = 0; j < midiItem.countNotes(); j++) {
             RprMidiNote *note = midiItem.getNoteAt(j);
             note->setPitch(note->getPitch() + m_pitchAmt);
@@ -357,6 +360,7 @@ void CmdIncreaseItemRate::doCommand(int flag)
 
 void CmdVelChangeMidi::doCommand(int flag)
 {
+    std::set<std::string> pooledGuids;
     RprItemCtrPtr ctr = RprItemCollec::getSelected();
 
     if(!convertToInProjectMidi(ctr))
@@ -366,6 +370,8 @@ void CmdVelChangeMidi::doCommand(int flag)
         if (!ctr->getAt(i).getActiveTake().isMIDI())
             continue;
         RprMidiTake midiItem(ctr->getAt(i).getActiveTake());
+        if(!pooledGuids.insert(midiItem.poolGuid()).second)
+            continue;
         for(int j = 0; j < midiItem.countNotes(); j++) {
             RprMidiNote *note = midiItem.getNoteAt(j);
             note->setVelocity(note->getVelocity() + m_velAmt);

@@ -1419,12 +1419,10 @@ void ToggleOffscreenSelItems(COMMAND_T* _ct)
 {
 	int dir = (int)_ct->user;
 
-	// force refresh if not auto
-	if (!g_SNM_ToolbarRefresh) 
-		RefreshOffscreenItems();
+	RefreshOffscreenItems();
 
 	PreventUIRefresh(1);
-	bool updated = (ToggleOffscreenSelItems(dir));
+	bool updated = ToggleOffscreenSelItems(dir);
 	PreventUIRefresh(-1);
   
 	if (updated)
@@ -1457,9 +1455,7 @@ int HasOffscreenSelItems(COMMAND_T* _ct)
 // deselects offscreen items
 void UnselectOffscreenItems(COMMAND_T* _ct)
 {
-	// force refresh if not auto
-	if (!g_SNM_ToolbarRefresh) 
-		RefreshOffscreenItems();
+	RefreshOffscreenItems();
 
 	bool updated = false;
 	PreventUIRefresh(1);

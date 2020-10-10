@@ -650,6 +650,9 @@ WDL_DLGRET ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 
 			HWND hList = GetDlgItem(hwnd,IDC_IIACTPARLIST);
 			ListView_SetExtendedListViewStyleEx(hList, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
+#ifdef _WIN32
+			WDL_UTF8_HookListView(hList);
+#endif
 			LVCOLUMN col;
 			col.mask=LVCF_TEXT|LVCF_WIDTH;
 			col.cx=15;

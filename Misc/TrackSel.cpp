@@ -484,7 +484,7 @@ void SelRouted(COMMAND_T*)
 void SelectTrack(COMMAND_T* ct)
 {
 	for (int i = 0; i <= GetNumTracks(); i++)
-		GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_SELECTED", (int)ct->user == i ? &g_i1 : &g_i0);
+		GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_SELECTED", (int)ct->user + 1 == i ? &g_i1 : &g_i0);
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
@@ -526,40 +526,6 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Select master track" },									"SWS_SELMASTER",		SelMaster,			},
 	{ { DEFACCEL, "SWS: Unselect master track" },								"SWS_UNSELMASTER",		UnselMaster,		},
 	{ { DEFACCEL, "SWS: Toggle master track select" },							"SWS_TOGSELMASTER",		TogSelMaster,		},
-
-	// Raw selection
-	{ { DEFACCEL, "SWS: Select only track 1" },		"SWS_SEL1",		SelectTrack,	NULL, 1, },
-	{ { DEFACCEL, "SWS: Select only track 2" },		"SWS_SEL2",		SelectTrack,	NULL, 2, },
-	{ { DEFACCEL, "SWS: Select only track 3" },		"SWS_SEL3",		SelectTrack,	NULL, 3, },
-	{ { DEFACCEL, "SWS: Select only track 4" },		"SWS_SEL4",		SelectTrack,	NULL, 4, },
-	{ { DEFACCEL, "SWS: Select only track 5" },		"SWS_SEL5",		SelectTrack,	NULL, 5, },
-	{ { DEFACCEL, "SWS: Select only track 6" },		"SWS_SEL6",		SelectTrack,	NULL, 6, },
-	{ { DEFACCEL, "SWS: Select only track 7" },		"SWS_SEL7",		SelectTrack,	NULL, 7, },
-	{ { DEFACCEL, "SWS: Select only track 8" },		"SWS_SEL8",		SelectTrack,	NULL, 8, },
-	{ { DEFACCEL, "SWS: Select only track 9" },		"SWS_SEL9",		SelectTrack,	NULL, 9, },
-	{ { DEFACCEL, "SWS: Select only track 10" },	"SWS_SEL10",	SelectTrack,	NULL, 10, },
-	{ { DEFACCEL, "SWS: Select only track 11" },	"SWS_SEL11",	SelectTrack,	NULL, 11, },
-	{ { DEFACCEL, "SWS: Select only track 12" },	"SWS_SEL12",	SelectTrack,	NULL, 12, },
-	{ { DEFACCEL, "SWS: Select only track 13" },	"SWS_SEL13",	SelectTrack,	NULL, 13, },
-	{ { DEFACCEL, "SWS: Select only track 14" },	"SWS_SEL14",	SelectTrack,	NULL, 14, },
-	{ { DEFACCEL, "SWS: Select only track 15" },	"SWS_SEL15",	SelectTrack,	NULL, 15, },
-	{ { DEFACCEL, "SWS: Select only track 16" },	"SWS_SEL16",	SelectTrack,	NULL, 16, },
-	{ { DEFACCEL, "SWS: Select only track 17" },	"SWS_SEL17",	SelectTrack,	NULL, 17, },
-	{ { DEFACCEL, "SWS: Select only track 18" },	"SWS_SEL18",	SelectTrack,	NULL, 18, },
-	{ { DEFACCEL, "SWS: Select only track 19" },	"SWS_SEL19",	SelectTrack,	NULL, 19, },
-	{ { DEFACCEL, "SWS: Select only track 20" },	"SWS_SEL20",	SelectTrack,	NULL, 20, },
-	{ { DEFACCEL, "SWS: Select only track 21" },	"SWS_SEL21",	SelectTrack,	NULL, 21, },
-	{ { DEFACCEL, "SWS: Select only track 22" },	"SWS_SEL22",	SelectTrack,	NULL, 22, },
-	{ { DEFACCEL, "SWS: Select only track 23" },	"SWS_SEL23",	SelectTrack,	NULL, 23, },
-	{ { DEFACCEL, "SWS: Select only track 24" },	"SWS_SEL24",	SelectTrack,	NULL, 24, },
-	{ { DEFACCEL, "SWS: Select only track 25" },	"SWS_SEL25",	SelectTrack,	NULL, 25, },
-	{ { DEFACCEL, "SWS: Select only track 26" },	"SWS_SEL26",	SelectTrack,	NULL, 26, },
-	{ { DEFACCEL, "SWS: Select only track 27" },	"SWS_SEL27",	SelectTrack,	NULL, 27, },
-	{ { DEFACCEL, "SWS: Select only track 28" },	"SWS_SEL28",	SelectTrack,	NULL, 28, },
-	{ { DEFACCEL, "SWS: Select only track 29" },	"SWS_SEL29",	SelectTrack,	NULL, 29, },
-	{ { DEFACCEL, "SWS: Select only track 30" },	"SWS_SEL30",	SelectTrack,	NULL, 30, },
-	{ { DEFACCEL, "SWS: Select only track 31" },	"SWS_SEL31",	SelectTrack,	NULL, 31, },
-	{ { DEFACCEL, "SWS: Select only track 32" },	"SWS_SEL32",	SelectTrack,	NULL, 32, },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

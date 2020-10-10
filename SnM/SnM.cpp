@@ -46,6 +46,7 @@
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "SnM_Window.h"
+#include "Misc/TrackSel.h"
 #include "Snapshots/Snapshots.h"
 #include "version.h"
 #include "reaper/localize.h"
@@ -760,6 +761,7 @@ static DYN_COMMAND_T s_dynCmdTable[]
 
 	{ "SWS: Recall snapshot %d", "SWSSNAPSHOT_GET", GetSnapshot, 12, SNM_MAX_DYN_ACTIONS, },
 	{ "SWS: Save as snapshot %d", "SWSSNAPSHOT_SAVE", SaveSnapshot, 12, SNM_MAX_DYN_ACTIONS, },
+	{ "SWS: Select only track %d", "SWS_SEL", SelectTrack, 32, SNM_MAX_DYN_ACTIONS, },
 
 //!WANT_LOCALIZE_1ST_STRING_END
 

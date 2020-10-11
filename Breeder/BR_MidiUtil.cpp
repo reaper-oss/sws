@@ -708,15 +708,15 @@ vector<int> GetUsedNamedNotes (HWND midiEditor, MediaItem_Take* take, bool used,
 	/* Not really reliable, user could have changed default draw channel  *
 	*  but without resetting note view settings, view won't get updated   */
 
-	vector<int> allNotesStatus(127, 0);
-	MediaItem_Take* midiTake = (midiEditor) ? MIDIEditor_GetTake(midiEditor) : take;
+	vector<bool> allNotesStatus(128, false);
+	MediaItem_Take* midiTake = midiEditor ? MIDIEditor_GetTake(midiEditor) : take;
 
 	if (named)
 	{
 		MediaTrack* track = GetMediaItemTake_Track(midiTake);
-		for (int i = 0; i < 128; ++i)
-			if (GetTrackMIDINoteNameEx(NULL, track, i, channelForNames))
-				allNotesStatus[i] = 1;
+		for (size_t i = 0; i < allNotesStatus.size(); ++i)
+			if (GetTrackMIDINoteNameEx(NULL, track, static_cast<int>(i), channelForNames))
+				allNotesStatus[i] = true;
 	}
 
 	if (used)
@@ -728,16 +728,16 @@ vector<int> GetUsedNamedNotes (HWND midiEditor, MediaItem_Take* take, bool used,
 			{
 				int pitch;
 				MIDI_GetNote(midiTake, i, NULL, NULL, NULL, NULL, NULL, &pitch, NULL);
-				allNotesStatus[pitch] = 1;
+				allNotesStatus[pitch] = true;
 			}
 		}
 	}
 
 	vector<int> notes;
-	notes.reserve(128);
-	for (int i = 0; i < 128; ++i)
+	notes.reserve(allNotesStatus.size());
+	for (size_t i = 0; i < allNotesStatus.size(); ++i)
 	{
-		if (allNotesStatus[i] == 1)
+		if (allNotesStatus[i])
 			notes.push_back(i);
 	}
 

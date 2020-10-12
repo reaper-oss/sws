@@ -519,7 +519,13 @@ static bool isMidiEvent(const std::string &eventStr) {
         default:
             return false;
     }
+
     return false;
+}
+
+static bool isEventProperty(const std::string &eventStr)
+{
+    return eventStr.rfind("ENV ", 0) == 0; // CC shape/bezier tension
 }
 
 static int clearMidiEventsFromMidiNode(RprNode *parent)
@@ -527,17 +533,21 @@ static int clearMidiEventsFromMidiNode(RprNode *parent)
     int i = 0;
     for(; i < parent->childCount(); ++i)
     {
-        if(isMidiEvent(parent->getChild(i)->getValue()))
-        {
+        const std::string &value = parent->getChild(i)->getValue();
+        if(isMidiEvent(value) || isEventProperty(value))
             break;
-        }
     }
-    int offset = i;
 
-    while (isMidiEvent(parent->getChild(i)->getValue()))
+    const int offset = i;
+    while(true)
     {
+        const std::string &value = parent->getChild(i)->getValue();
+        if(!isMidiEvent(value) && !isEventProperty(value))
+            break;
+
         parent->removeChild(i);
     }
+
     return offset;
 }
 
@@ -557,12 +567,20 @@ static void getMidiEvents(RprNode *midiNode, RprMidiEvents &midiEvents)
     int offset = 0;
     for(int i = 1; i < midiNode->childCount(); i++)
     {
-        if(!isMidiEvent(midiNode->getChild(i)->getValue()))
+        RprNode *subNode = midiNode->getChild(i);
+        const std::string &value = subNode->getValue();
+
+        if(isEventProperty(value))
         {
+            if(!midiEvents.empty())
+                midiEvents.back()->addPropertyNode(subNode);
+
             continue;
         }
+        else if(!isMidiEvent(value))
+            continue;
 
-        RprMidiEventCreator creator(midiNode->getChild(i));
+        RprMidiEventCreator creator(subNode);
         RprMidiEvent *midiEvent = creator.collectEvent();
         offset += midiEvent->getDelta();
         midiEvent->setOffset(offset);

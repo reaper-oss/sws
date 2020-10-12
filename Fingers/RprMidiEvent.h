@@ -41,7 +41,7 @@ public:
     void setMidiMessage(const std::vector<unsigned char> message);
     const std::vector<unsigned char>& getMidiMessage();
 
-    const std::string& getExtendedData() const;
+    void addPropertyNode(const RprNode *);
 
     virtual RprNode *toReaper();
 
@@ -57,10 +57,10 @@ public:
     };
 
 private:
-
     std::vector<unsigned char> mMidiMessage;
-    int mQuantizeOffset;
+    std::list<std::string> mPropertyLines;
 
+    int mQuantizeOffset;
     int mDelta;
     int mOffset;
     bool mMuted;

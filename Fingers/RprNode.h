@@ -3,7 +3,7 @@
 
 class RprNode {
 public:
-    const std::string &getValue();
+    const std::string &getValue() const;
 
     RprNode *getParent();
     void setParent(RprNode *parent);

@@ -242,32 +242,25 @@ typedef struct
 
 vector<t_trackheight_struct> g_vec_trackheighs;
 
-void DoSelTraxHeightA(COMMAND_T* ct)
+void DoSelTraxHeightA(COMMAND_T*)
 {
 	for (int i=0;i<GetNumTracks();i++)
 	{
 		MediaTrack* CurTrack=CSurf_TrackFromID(i+1,false);
-		if (*(int*)GetSetMediaTrackInfo(CurTrack, "I_SELECTED", NULL)) {
-			// ct->user == 1: respect height locked tracks
-			if (ct->user == 0 || (ct->user == 1 && !static_cast<bool>(GetMediaTrackInfo_Value(CurTrack, "B_HEIGHTLOCK"))))
-				GetSetMediaTrackInfo(CurTrack, "I_HEIGHTOVERRIDE", &g_command_params.TrackHeightA);
-		}
-			
+		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
+			GetSetMediaTrackInfo(CurTrack,"I_HEIGHTOVERRIDE",&g_command_params.TrackHeightA);
 	}
 	TrackList_AdjustWindows(false);
 	UpdateTimeline();
 }
 
-void DoSelTraxHeightB(COMMAND_T* ct)
+void DoSelTraxHeightB(COMMAND_T*)
 {
 	for (int i=0;i<GetNumTracks();i++)
 	{
 		MediaTrack* CurTrack=CSurf_TrackFromID(i+1,false);
-		if (*(int*)GetSetMediaTrackInfo(CurTrack, "I_SELECTED", NULL)) {
-			if (ct->user == 0 || (ct->user == 1 && !static_cast<bool>(GetMediaTrackInfo_Value(CurTrack, "B_HEIGHTLOCK"))))
-				GetSetMediaTrackInfo(CurTrack, "I_HEIGHTOVERRIDE", &g_command_params.TrackHeightB);
-		}
-			
+		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
+			GetSetMediaTrackInfo(CurTrack,"I_HEIGHTOVERRIDE",&g_command_params.TrackHeightB);
 	}
 	TrackList_AdjustWindows(false);
 	UpdateTimeline();

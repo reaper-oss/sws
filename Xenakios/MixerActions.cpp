@@ -29,6 +29,7 @@
 #include "../SnM/SnM_Dlg.h"
 #include "../reaper/localize.h"
 #include "Parameters.h"
+#include "../nofish/nofish.h" // NF_IsObeyTrackHeightLockEnabled
 
 using namespace std;
 
@@ -244,10 +245,13 @@ vector<t_trackheight_struct> g_vec_trackheighs;
 
 void DoSelTraxHeight(COMMAND_T* ct)
 {
+	const bool obeyHeightLock = NF_IsObeyTrackHeightLockEnabled();
+
 	for (int i = 0; i < GetNumTracks(); i++)
 	{
 		MediaTrack* CurTrack = CSurf_TrackFromID(i+1, false);
-		if (GetMediaTrackInfo_Value(CurTrack, "I_SELECTED"))
+
+		if (GetMediaTrackInfo_Value(CurTrack, "I_SELECTED") && (!obeyHeightLock || !GetMediaTrackInfo_Value(CurTrack, "B_HEIGHTLOCK")))
 			SetMediaTrackInfo_Value(CurTrack, "I_HEIGHTOVERRIDE", g_command_params.TrackHeight[ct->user]);
 	}
 	TrackList_AdjustWindows(false);
@@ -273,16 +277,18 @@ void DoStoreSelTraxHeights(COMMAND_T*)
 
 void DoRecallSelectedTrackHeights(COMMAND_T*)
 {
-	for (int i=0;i<GetNumTracks();i++)
+	const bool obeyHeightLock = NF_IsObeyTrackHeightLockEnabled();
+
+	for (int i = 0; i < GetNumTracks(); i++)
 	{
-		MediaTrack* CurTrack = CSurf_TrackFromID(i+1,false);
-		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
-		{
-			GUID curGUID=*(GUID*)GetSetMediaTrackInfo(CurTrack,"GUID",NULL);
-			for (int j=0;j<(int)g_vec_trackheighs.size();j++)
-				if (GuidsEqual(&curGUID, &g_vec_trackheighs[j].guid))
-					GetSetMediaTrackInfo(CurTrack,"I_HEIGHTOVERRIDE",&g_vec_trackheighs[j].Heigth);	
-		}
+		MediaTrack* CurTrack = CSurf_TrackFromID(i+1, false);
+		if (!GetMediaTrackInfo_Value(CurTrack, "I_SELECTED") || (obeyHeightLock && GetMediaTrackInfo_Value(CurTrack, "B_HEIGHTLOCK")))
+			continue;
+
+		GUID curGUID = *(GUID*)GetSetMediaTrackInfo(CurTrack, "GUID", NULL);
+		for (int j = 0; j < (int)g_vec_trackheighs.size(); j++)
+			if (GuidsEqual(&curGUID, &g_vec_trackheighs[j].guid))
+				GetSetMediaTrackInfo(CurTrack, "I_HEIGHTOVERRIDE", &g_vec_trackheighs[j].Heigth);
 	}
 	TrackList_AdjustWindows(false);
 	UpdateTimeline();
@@ -682,9 +688,13 @@ void DoToggleTrackHeightAB(COMMAND_T*)
 
 	g_CurTrackHeightIdx = !g_CurTrackHeightIdx;
 	const int newHeight = g_command_params.TrackHeight[g_CurTrackHeightIdx];
+	const bool obeyHeightLock = NF_IsObeyTrackHeightLockEnabled();
 
 	for (size_t i = 0; i < TheTracks.size(); i++)
-		SetMediaTrackInfo_Value(TheTracks[i], "I_HEIGHTOVERRIDE", newHeight);
+	{
+		if (!obeyHeightLock || !GetMediaTrackInfo_Value(TheTracks[i], "B_HEIGHTLOCK"))
+			SetMediaTrackInfo_Value(TheTracks[i], "I_HEIGHTOVERRIDE", newHeight);
+	}
 
 	TrackList_AdjustWindows(false);
 	UpdateTimeline();

@@ -138,6 +138,11 @@ void RprMidiEvent::addAttachedEvent(RprMidiEvent *attachedEvent)
     mAttachedEvents.push_back(attachedEvent);
 }
 
+void RprMidiEvent::addPropertyNode(const RprNode *node)
+{
+    mPropertyLines.push_back(node->getValue());
+}
+
 unsigned char RprMidiEvent::getValue1() const
 {
     return mMidiMessage[1];
@@ -253,6 +258,10 @@ RprNode *RprMidiEvent::toReaper()
             oss << " " << mQuantizeOffset;
         }
     }
+
+    for(const std::string &propertyLine : mPropertyLines)
+        oss << '\n' << propertyLine;
+
     std::auto_ptr<RprNode> node(new RprPropertyNode(oss.str()));
     return node.release();
 }

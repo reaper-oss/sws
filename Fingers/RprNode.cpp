@@ -23,7 +23,7 @@ RprNode* RprPropertyNode::getChild(int index)
     return NULL;
 }
 
-const std::string& RprNode::getValue()
+const std::string& RprNode::getValue() const
 {
     return mValue;
 }

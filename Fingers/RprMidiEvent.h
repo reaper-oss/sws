@@ -44,6 +44,8 @@ public:
     bool isAttachableTo(const RprMidiEvent *) const;
     void addAttachedEvent(RprMidiEvent *);
 
+    void addPropertyNode(const RprNode *);
+
     virtual RprNode *toReaper();
 
     virtual ~RprMidiEvent() {}
@@ -60,6 +62,7 @@ public:
 private:
     std::vector<unsigned char> mMidiMessage;
     std::list<RprMidiEvent *> mAttachedEvents;
+    std::list<std::string> mPropertyLines;
 
     int mQuantizeOffset;
     int mDelta;

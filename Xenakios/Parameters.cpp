@@ -137,9 +137,9 @@ void ReadINIfile()
 	g_command_params.CurPosSecsAmount=atof(resultString);
 
 	GetPrivateProfileString("XENAKIOSCOMMANDS","TRACKHEIGHTA","50",resultString,512,g_XenIniFilename.Get());
-	g_command_params.TrackHeightA=atoi(resultString);
+	g_command_params.TrackHeight[0]=atoi(resultString);
 	GetPrivateProfileString("XENAKIOSCOMMANDS","TRACKHEIGHTB","50",resultString,512,g_XenIniFilename.Get());
-	g_command_params.TrackHeightB=atoi(resultString);
+	g_command_params.TrackHeight[1]=atoi(resultString);
 	
 	GetPrivateProfileString("XENAKIOSCOMMANDS","TRACKLABELDEFAULT","Audio",resultString,512,g_XenIniFilename.Get());
 	g_command_params.DefaultTrackLabel.assign(resultString);
@@ -207,9 +207,9 @@ void UpdateINIfile()
 	sprintf(TextBuf,"%f",g_command_params.CurPosSecsAmount);
 	WritePrivateProfileString("XENAKIOSCOMMANDS","CURPOSSECSAMOUNT",TextBuf,g_XenIniFilename.Get());
 	
-	sprintf(TextBuf,"%d",g_command_params.TrackHeightA);
+	sprintf(TextBuf,"%d",g_command_params.TrackHeight[0]);
 	WritePrivateProfileString("XENAKIOSCOMMANDS","TRACKHEIGHTA",TextBuf,g_XenIniFilename.Get());
-	sprintf(TextBuf,"%d",g_command_params.TrackHeightB);
+	sprintf(TextBuf,"%d",g_command_params.TrackHeight[1]);
 	WritePrivateProfileString("XENAKIOSCOMMANDS","TRACKHEIGHTB",TextBuf,g_XenIniFilename.Get());
 
 	sprintf(TextBuf,"%f",g_command_params.SectionLoopNudgeSecs);
@@ -235,9 +235,9 @@ WDL_DLGRET ExoticParamsDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			sprintf(textBuf,"%.2f",g_command_params.TrackVolumeNudge);
 			SetDlgItemText(hwnd, IDC_TVOL_NUDGE, textBuf);
 			
-			sprintf(textBuf,"%d",g_command_params.TrackHeightA);
+			sprintf(textBuf,"%d",g_command_params.TrackHeight[0]);
 			SetDlgItemText(hwnd, IDC_THGT_A, textBuf);
-			sprintf(textBuf,"%d",g_command_params.TrackHeightB);
+			sprintf(textBuf,"%d",g_command_params.TrackHeight[1]);
 			SetDlgItemText(hwnd, IDC_THGT_B, textBuf);
 
 			sprintf(textBuf,"%.4f",g_command_params.SectionLoopNudgeSecs);
@@ -316,11 +316,10 @@ WDL_DLGRET ExoticParamsDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 					GetDlgItemText(hwnd,IDC_EDITTRSUFFIX,textbuf,100);
 					g_command_params.TrackLabelSuffix.assign(textbuf);
 
-
 					GetDlgItemText(hwnd,IDC_THGT_A,textbuf,100);
-					g_command_params.TrackHeightA=atoi(textbuf);
+					g_command_params.TrackHeight[0]=atoi(textbuf);
 					GetDlgItemText(hwnd,IDC_THGT_B,textbuf,100);
-					g_command_params.TrackHeightB=atoi(textbuf);
+					g_command_params.TrackHeight[1]=atoi(textbuf);
 
 					GetDlgItemText(hwnd,IDC_EDITPIXAM,textbuf,100);
 					g_command_params.PixAmount=atoi(textbuf);

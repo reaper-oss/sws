@@ -242,25 +242,13 @@ typedef struct
 
 vector<t_trackheight_struct> g_vec_trackheighs;
 
-void DoSelTraxHeightA(COMMAND_T*)
+void DoSelTraxHeight(COMMAND_T* ct)
 {
-	for (int i=0;i<GetNumTracks();i++)
+	for (int i = 0; i < GetNumTracks(); i++)
 	{
-		MediaTrack* CurTrack=CSurf_TrackFromID(i+1,false);
-		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
-			GetSetMediaTrackInfo(CurTrack,"I_HEIGHTOVERRIDE",&g_command_params.TrackHeightA);
-	}
-	TrackList_AdjustWindows(false);
-	UpdateTimeline();
-}
-
-void DoSelTraxHeightB(COMMAND_T*)
-{
-	for (int i=0;i<GetNumTracks();i++)
-	{
-		MediaTrack* CurTrack=CSurf_TrackFromID(i+1,false);
-		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
-			GetSetMediaTrackInfo(CurTrack,"I_HEIGHTOVERRIDE",&g_command_params.TrackHeightB);
+		MediaTrack* CurTrack = CSurf_TrackFromID(i+1, false);
+		if (GetMediaTrackInfo_Value(CurTrack, "I_SELECTED"))
+			SetMediaTrackInfo_Value(CurTrack, "I_HEIGHTOVERRIDE", g_command_params.TrackHeight[ct->user]);
 	}
 	TrackList_AdjustWindows(false);
 	UpdateTimeline();
@@ -669,7 +657,7 @@ void DoMaxMixFxPanHeight(COMMAND_T*)
 		GetSetMediaTrackInfo(TheTracks[i],"F_MCP_FXSEND_SCALE",&NewScale);
 		NewScale=0.0;
 		GetSetMediaTrackInfo(TheTracks[i],"F_MCP_SENDRGN_SCALE",&NewScale);
-	}	
+	}
 }
 
 void DoRemoveTimeSelectionLeaveLoop(COMMAND_T*)
@@ -690,23 +678,14 @@ int g_CurTrackHeightIdx=0;
 void DoToggleTrackHeightAB(COMMAND_T*)
 {
 	t_vect_of_Reaper_tracks TheTracks;
-	XenGetProjectTracks(TheTracks,true);
-	int i;
-	int newHei=0;
-		if (g_CurTrackHeightIdx==0)
-		{
-			g_CurTrackHeightIdx=1;
-			newHei=g_command_params.TrackHeightB;
-		} else
-		{
-			g_CurTrackHeightIdx=0;
-			newHei=g_command_params.TrackHeightA;
-		}
-	for (i=0;i<(int)TheTracks.size();i++)
-	{
-		
-		GetSetMediaTrackInfo(TheTracks[i],"I_HEIGHTOVERRIDE",&newHei);
-	}
+	XenGetProjectTracks(TheTracks, true);
+
+	g_CurTrackHeightIdx = !g_CurTrackHeightIdx;
+	const int newHeight = g_command_params.TrackHeight[g_CurTrackHeightIdx];
+
+	for (size_t i = 0; i < TheTracks.size(); i++)
+		SetMediaTrackInfo_Value(TheTracks[i], "I_HEIGHTOVERRIDE", newHeight);
+
 	TrackList_AdjustWindows(false);
 	UpdateTimeline();
 }

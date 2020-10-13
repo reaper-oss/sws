@@ -27,8 +27,6 @@
 
 #pragma once
 
-using namespace std;
-
 typedef struct t_command_params
 {
 	double EditCurRndMean;
@@ -48,8 +46,7 @@ typedef struct t_command_params
 	double RndItemSelProb;
 	int PixAmount;
 	double CurPosSecsAmount;
-	int TrackHeightA;
-	int TrackHeightB;
+	int TrackHeight[2];
 	string DefaultTrackLabel;
 	string TrackLabelPrefix;
 	string TrackLabelSuffix;

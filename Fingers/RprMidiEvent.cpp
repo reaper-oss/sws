@@ -54,6 +54,9 @@ int RprMidiEvent::getOffset() const
 void RprMidiEvent::setOffset(int offset)
 {
     mOffset = offset;
+
+    for(RprMidiEvent *attachedEvent : mAttachedEvents)
+        attachedEvent->setOffset(offset);
 }
 
 RprMidiEvent::RprMidiException::RprMidiException(const char *message) : mMessage(message)
@@ -116,6 +119,23 @@ void RprMidiEvent::setMidiMessage(const std::vector<unsigned char> message)
 const std::vector<unsigned char>& RprMidiEvent::getMidiMessage()
 {
     return mMidiMessage;
+}
+
+bool RprMidiEvent::isAttachableTo(const RprMidiEvent *targetEvent) const
+{
+    // Notations Events are Text Events occuring right after a Note On.
+    // Normal Text Events occur before any Note On at the same time position.
+    // Therefore, this only matches Notation Events attached to a Note On.
+
+    return
+        getOffset() == targetEvent->getOffset() && // same absolute position
+        getMessageType() == NotationEvent &&
+        targetEvent->getMessageType() == RprMidiEvent::NoteOn;
+}
+
+void RprMidiEvent::addAttachedEvent(RprMidiEvent *attachedEvent)
+{
+    mAttachedEvents.push_back(attachedEvent);
 }
 
 unsigned char RprMidiEvent::getValue1() const

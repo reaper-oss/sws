@@ -8,7 +8,7 @@ class RprNode;
 class RprMidiEvent {
 public:
     enum MessageType { NoteOff, NoteOn, KeyPressure, CC, ProgramChange, ChannelPressure, PitchBend,
-                       Sysex, TextEvent, Unknown };
+                       Sysex, TextEvent, NotationEvent = TextEvent, Unknown };
     RprMidiEvent();
 
     bool isSelected() const;
@@ -41,7 +41,8 @@ public:
     void setMidiMessage(const std::vector<unsigned char> message);
     const std::vector<unsigned char>& getMidiMessage();
 
-    const std::string& getExtendedData() const;
+    bool isAttachableTo(const RprMidiEvent *) const;
+    void addAttachedEvent(RprMidiEvent *);
 
     virtual RprNode *toReaper();
 
@@ -57,10 +58,10 @@ public:
     };
 
 private:
-
     std::vector<unsigned char> mMidiMessage;
-    int mQuantizeOffset;
+    std::list<RprMidiEvent *> mAttachedEvents;
 
+    int mQuantizeOffset;
     int mDelta;
     int mOffset;
     bool mMuted;

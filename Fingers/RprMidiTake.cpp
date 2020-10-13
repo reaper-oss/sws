@@ -566,6 +566,10 @@ static void getMidiEvents(RprNode *midiNode, RprMidiEvents &midiEvents)
         RprMidiEvent *midiEvent = creator.collectEvent();
         offset += midiEvent->getDelta();
         midiEvent->setOffset(offset);
+
+        if(!midiEvents.empty() && midiEvent->isAttachableTo(midiEvents.back()))
+            midiEvents.back()->addAttachedEvent(midiEvent);
+
         midiEvents.push_back(midiEvent);
     }
 }

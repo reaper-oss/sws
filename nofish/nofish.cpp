@@ -36,6 +36,13 @@
 #include "../Utility/configvar.h"
 #include "../Misc/Adam.h"
 
+/******************************************************************************
+* Globals (file-scope)                                                        *
+******************************************************************************/
+namespace {
+	int gf_NFObeyTrackHeightLock;
+}
+
 //////////////////////////////////////////////////////////////////
 //                                                              //
 // Bypass FX (except VSTi) for selected tracks                  //
@@ -399,6 +406,23 @@ void ToggleRenderSpeedRealtimeNotLim(COMMAND_T* = nullptr)
 	WritePrivateProfileString("reaper", configStr, tmp, get_ini_file());
 }
 
+// toggle Xenakios track height actions and SWS vertical zoom actions obey track height lock, #966
+static void ToggleObeyTrackHeightLock(COMMAND_T* = nullptr)
+{
+	gf_NFObeyTrackHeightLock = !gf_NFObeyTrackHeightLock;
+	WritePrivateProfileString(SWS_INI, "NFObeyTrackHeightLock", gf_NFObeyTrackHeightLock ? "1" : "0", get_ini_file());
+}
+
+static int IsObeyTrackHeightLockEnabled(COMMAND_T* = nullptr)
+{
+	return gf_NFObeyTrackHeightLock;
+}
+
+bool NF_IsObeyTrackHeightLockEnabled()
+{
+	return IsObeyTrackHeightLockEnabled();
+}
+
 //////////////////////////////////////////////////////////////////
 //                                                              //
 // Register commands                                            //
@@ -435,6 +459,9 @@ static COMMAND_T g_commandTable[] =
 	// toggle Limit apply FX/render stems to realtime
 	{ { DEFACCEL, "SWS/NF: Toggle render speed (apply FX/render stems) realtime/not limited" }, "NF_TOGGLERENDERSPEED_RT_NL", ToggleRenderSpeedRealtimeNotLim, NULL, 0,  IsRenderSpeedRealtime},
 
+	// toggle Xenakios track height actions and SWS vertical zoom actions obey track height lock
+	{ { DEFACCEL, "SWS/NF: Toggle obey track height lock in vertical zoom and track height actions" }, "NF_TOGGLE_OBEY_TRACK_HEIGHT_LOCK", ToggleObeyTrackHeightLock, NULL, 0, IsObeyTrackHeightLockEnabled},
+
 	//!WANT_LOCALIZE_1ST_STRING_END
 
 	{ {}, LAST_COMMAND, },
@@ -443,6 +470,7 @@ static COMMAND_T g_commandTable[] =
 int nofish_Init()
 {
 	SWSRegisterCommands(g_commandTable);
+	gf_NFObeyTrackHeightLock = GetPrivateProfileInt(SWS_INI, "NFObeyTrackHeightLock", 0, get_ini_file()); // disabled by default
 	return 1;
 }
 

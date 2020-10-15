@@ -35,5 +35,7 @@ void NF_RegisterContinuousActions();
 // #514
 void UpdateMIDIGridToolbar();
 
+bool NF_IsObeyTrackHeightLockEnabled();
+
 // register actions
 int nofish_Init();

@@ -49,6 +49,17 @@ RprNode *RprParentNode::getChild(int index) const
     return mChildren.at(index);
 }
 
+RprNode *RprParentNode::findChildByToken(const std::string &token) const
+{
+    for(RprNode *child : mChildren) {
+        const std::string &value = child->getValue();
+        if(value.rfind(token, 0) == 0 && value[token.size()] == '\x20')
+            return child;
+    }
+
+    return nullptr;
+}
+
 void RprParentNode::addChild(RprNode *node)
 {
     node->setParent(this);

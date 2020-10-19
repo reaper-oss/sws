@@ -13,6 +13,7 @@ public:
 
     virtual int childCount() const = 0;
     virtual RprNode *getChild(int index) const = 0;
+    virtual RprNode *findChildByToken(const std::string &) const = 0;
     virtual void addChild(RprNode *node) = 0;
     virtual void addChild(RprNode *node, int index) {}
     virtual void removeChild(int index) = 0;
@@ -32,6 +33,7 @@ public:
 
     int childCount() const override { return 0; }
     RprNode *getChild(int index) const override { return nullptr; }
+    RprNode *findChildByToken(const std::string &) const override { return nullptr; }
     void addChild(RprNode *node) override {}
     void removeChild(int index) override {}
 
@@ -49,6 +51,7 @@ public:
 
     int childCount() const override;
     RprNode *getChild(int index) const override;
+    RprNode *findChildByToken(const std::string &) const override;
     void addChild(RprNode *node) override;
     void addChild(RprNode *node, int index) override;
     void removeChild(int index) override;

@@ -3,24 +3,11 @@
 
 #include "RprNode.h"
 
-int RprPropertyNode::childCount()
-{
-    return 0;
-}
-
-void RprPropertyNode::addChild(RprNode *node)
-{}
-
 void RprPropertyNode::toReaper(std::ostringstream &oss, int indent)
 {
     std::string strIndent(indent, ' ');
     oss << strIndent.c_str() << getValue().c_str();
     oss << std::endl;
-}
-
-RprNode* RprPropertyNode::getChild(int index)
-{
-    return NULL;
 }
 
 const std::string& RprNode::getValue() const
@@ -57,7 +44,7 @@ RprParentNode::RprParentNode(const char *value)
     setValue(value);
 }
 
-RprNode *RprParentNode::getChild(int index)
+RprNode *RprParentNode::getChild(int index) const
 {
     return mChildren.at(index);
 }
@@ -74,7 +61,7 @@ void RprParentNode::addChild(RprNode *node, int index)
     mChildren.insert(mChildren.begin() + index, node);
 }
 
-int RprParentNode::childCount()
+int RprParentNode::childCount() const
 {
     return (int)mChildren.size();
 }
@@ -131,9 +118,6 @@ RprPropertyNode::RprPropertyNode(const std::string &value)
 {
     setValue(value);
 }
-
-void RprPropertyNode::removeChild(int index)
-{}
 
 RprNode *RprParentNode::createItemStateTree(const char *itemState)
 {

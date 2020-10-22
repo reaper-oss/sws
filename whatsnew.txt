@@ -1,3 +1,32 @@
+!v2.12.1.1 pre-release build
+
+Accessibility:
++Support OSARA's shortcut help mode in cycle, continuous and MIDI editor actions
+
+macOS:
++Add macOS ARM64 build
++Fix NF Eraser tool cursor not appearing (report https://forum.cockos.com/showpost.php?p=2359414|here|)
+
+MIDI:
++Fix MIDI CC shape loss after running any of the following actions (REAPER v6+ only, issue 1466):
+ - SWS/BR: Delete tempo marker and preserve position and length of items (including MIDI events)
+ - SWS/BR: Delete tempo marker and preserve position and length of selected items (including MIDI events)
+ - SWS/BR: Enable "Ignore project tempo" for selected MIDI items preserving time position of MIDI events (use tempo at item's start)
++Fix FNG MIDI actions treating only the first selected item in REAPER v6 (regression from v2.12.1, issue 1429)
+
+Miscellaneous:
++Fix SWS/AW: Paste not setting the time selection when "Trim contents behind media items when editing" is enabled (regression from v2.11)
++Obey the "Move edit cursor when pasting/inserting media" preference in SWS/AW: Paste even when "Trim contents behind media items when editing" is disabled
+
+ReaScript API:
++Deprecate BR_GetMediaTrackGUID (use GetSetMediaTrackInfo_String from REAPER instead)
++Deprecate ULT_GetMediaItemNote and ULT_SetMediaItemNote (use GetSetMediaItemInfo_String instead)
++Fix fetching tracks from background project tabs using BR_GetMediaTrackByGUID
++Fix generation of sws_python64.py
++Preserve existing edges when passing negative values to BR_SetItemEdges (issue 1114)
++Prevent NF_AnalyzeTakeLoudness's progress popup from stealing focus from other apps (report https://forum.cockos.com/showpost.php?p=2357872|here|)
++Remove NF_ReadID3v2Tag (use GetMediaFileMetadata from REAPER instead)
+
 !v2.12.1 pre-release build
 
 Contextual toolbars:

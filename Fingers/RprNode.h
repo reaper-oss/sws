@@ -3,7 +3,7 @@
 
 class RprNode {
 public:
-    const std::string &getValue() const;
+    virtual ~RprNode() {}
 
     RprNode *getParent();
     void setParent(RprNode *parent);
@@ -11,14 +11,15 @@ public:
     std::string toReaper();
     virtual void toReaper(std::ostringstream &oss, int indent) = 0;
 
-    virtual int childCount() = 0;
-    virtual RprNode *getChild(int index) = 0;
+    virtual int childCount() const = 0;
+    virtual RprNode *getChild(int index) const = 0;
+    virtual RprNode *findChildByToken(const std::string &) const = 0;
     virtual void addChild(RprNode *node) = 0;
     virtual void addChild(RprNode *node, int index) {}
     virtual void removeChild(int index) = 0;
-    virtual ~RprNode() {}
 
     void setValue(const std::string &value);
+    const std::string &getValue() const;
 
 private:
     std::string mValue;
@@ -28,13 +29,16 @@ private:
 class RprPropertyNode : public RprNode {
 public:
     RprPropertyNode(const std::string &value);
-    int childCount();
-    RprNode *getChild(int index);
-    void addChild(RprNode *node);
-    void removeChild(int index);
     ~RprPropertyNode() {}
+
+    int childCount() const override { return 0; }
+    RprNode *getChild(int index) const override { return nullptr; }
+    RprNode *findChildByToken(const std::string &) const override { return nullptr; }
+    void addChild(RprNode *node) override {}
+    void removeChild(int index) override {}
+
 private:
-    void toReaper(std::ostringstream &oss, int indent);
+    void toReaper(std::ostringstream &oss, int indent) override;
 };
 
 class RprParentNode : public RprNode {
@@ -42,18 +46,19 @@ public:
     static RprNode *createItemStateTree(const char *itemState);
 
     RprParentNode(const char *value);
-    int childCount();
-    RprNode *getChild(int index);
-    void addChild(RprNode *node);
-    void addChild(RprNode *node, int index);
-    void removeChild(int index);
+    RprParentNode(const RprNode&) = delete;
     ~RprParentNode();
-private:
-    RprParentNode();
-    RprParentNode(const RprNode&);
-    RprParentNode& operator=(const RprNode&);
 
-    void toReaper(std::ostringstream &oss, int indent);
+    int childCount() const override;
+    RprNode *getChild(int index) const override;
+    RprNode *findChildByToken(const std::string &) const override;
+    void addChild(RprNode *node) override;
+    void addChild(RprNode *node, int index) override;
+    void removeChild(int index) override;
+
+private:
+    RprParentNode& operator=(const RprNode&);
+    void toReaper(std::ostringstream &oss, int indent) override;
 
     std::vector<RprNode *> mChildren;
 };

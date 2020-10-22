@@ -463,9 +463,8 @@ RprMidiCC::~RprMidiCC()
 
 static int getQNValue(RprNode *midiNode)
 {
-    const std::string &qnString = midiNode->getChild(0)->getValue();
-    StringVector tokens(qnString);
-    return ::atoi(tokens.at(2));
+    const std::string &hasdata = midiNode->findChildByToken("HASDATA")->getValue();
+    return ::atoi(StringVector{hasdata}.at(2));
 }
 
 static bool sortMidiBase(const RprMidiEvent *lhs, const RprMidiEvent *rhs)
@@ -1085,6 +1084,6 @@ bool RprMidiTake::hasEventType(RprMidiEvent::MessageType messageType)
 
 std::string RprMidiTake::poolGuid() const
 {
-    const std::string &pooledevts = getMidiSourceNode()->getChild(1)->getValue();
+    const std::string &pooledevts = getMidiSourceNode()->findChildByToken("POOLEDEVTS")->getValue();
     return StringVector{pooledevts}.at(1);
 }

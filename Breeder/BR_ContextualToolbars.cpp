@@ -1706,7 +1706,7 @@ void BR_ContextualToolbarsView::GetItemText (SWS_ListItem* item, int iCol, char*
 			else if (context == ARRANGE_TRACK_ITEM_CLICK)           {description = __LOCALIZE("Click source item",       "sws_DLG_181"); indentation = 3;}
 			else if (context == ARRANGE_TRACK_ITEM_TIMECODE)        {description = __LOCALIZE("Timecode generator item", "sws_DLG_181"); indentation = 3;}
 			else if (context == ARRANGE_TRACK_ITEM_PROJECT)         {description = __LOCALIZE("Subproject item",         "sws_DLG_181"); indentation = 3;}
-			else if (context == ARRANGE_TRACK_ITEM_VIDEOFX)         {description = __LOCALIZE("Video precessor item",    "sws_DLG_181"); indentation = 3;}
+			else if (context == ARRANGE_TRACK_ITEM_VIDEOFX)         {description = __LOCALIZE("Video processor item",    "sws_DLG_181"); indentation = 3;}
 			else if (context == ARRANGE_TRACK_ITEM_STRETCH_MARKER)  {description = __LOCALIZE("Item stretch marker",     "sws_DLG_181"); indentation = 2;}
 			else if (context == ARRANGE_TRACK_TAKE_ENVELOPE)        {description = __LOCALIZE("Take envelope",           "sws_DLG_181"); indentation = 2;}
 			else if (context == ARRANGE_TRACK_TAKE_ENVELOPE_VOLUME) {description = __LOCALIZE("Volume envelope",         "sws_DLG_181"); indentation = 3;}

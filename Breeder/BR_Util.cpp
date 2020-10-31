@@ -1092,8 +1092,6 @@ bool TrimItem_UseNativeTrimActions(MediaItem* item, double start, double end, bo
 
 	if (start > end)
 		swap(start, end);
-	if (start < 0)
-		start = 0;
 
 	double newLen = end - start;
 	if (newLen <= 0)

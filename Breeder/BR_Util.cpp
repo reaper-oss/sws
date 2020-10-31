@@ -1083,16 +1083,12 @@ bool TrimItem_UseNativeTrimActions(MediaItem* item, double start, double end, bo
 	double itemLen = GetMediaItemInfo_Value(item, "D_LENGTH");
 
 	// If start is negative then keep the current start position
-	if(start < 0)
-	{
+	if (start < 0)
 		start = itemPos;
-	}
 
 	// If end is negative then keep the current end position
-	if(end < 0)
-	{
+	if (end < 0)
 		end = itemPos + itemLen;
-	}
 
 	if (start > end)
 		swap(start, end);

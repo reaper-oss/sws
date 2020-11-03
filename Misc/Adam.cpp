@@ -40,6 +40,11 @@
 
 // Globals for copy and paste
 
+namespace ItemClickMoveCurs { enum {
+  MoveOnTimeChange = 4, MoveOnPaste = 8,
+  ClearLoopOnClick = 32, ClearTimeOnClick = 64,
+}; }
+
 ///////////////////////////////////////////////////////////////////////////////
 // Fills gaps aka Beat Detective
 // for Adam to get started...
@@ -2464,7 +2469,7 @@ void AWPaste(COMMAND_T* t)
 	{
 		// Enable "move edit cursor on paste" so that the time selection can be set properly
 		const ConfigVar<int> itemclickmovecurs("itemclickmovecurs");
-		ConfigVarOverride<int> tmpCursorMode(itemclickmovecurs, *itemclickmovecurs & ~8);
+		ConfigVarOverride<int> tmpCursorMode(itemclickmovecurs, *itemclickmovecurs & ~ItemClickMoveCurs::MoveOnPaste);
 
 		double cursorPos = GetCursorPosition();
 
@@ -2597,26 +2602,44 @@ void AWRelEdgeOff(COMMAND_T* = NULL)        { *ConfigVar<int>("relativeedges") &
 void AWRelEdgeToggle(COMMAND_T* = NULL)     { *ConfigVar<int>("relativeedges") ^= 1;}
 bool IsRelEdgeOn(COMMAND_T* = NULL)         { return (*ConfigVar<int>("relativeedges") & 1)  != 0; }
 
-void AWClrTimeSelClkOn(COMMAND_T* = NULL)           { *ConfigVar<int>("itemclickmovecurs") |= 68;}
-void AWClrTimeSelClkOff(COMMAND_T* = NULL)          { *ConfigVar<int>("itemclickmovecurs") &= ~68;}
+void AWClrTimeSelClkOn(COMMAND_T* = NULL)
+{
+	using namespace ItemClickMoveCurs;
+	*ConfigVar<int>{"itemclickmovecurs"} |= ClearTimeOnClick | MoveOnTimeChange;
+}
+
+void AWClrTimeSelClkOff(COMMAND_T* = NULL)
+{
+	using namespace ItemClickMoveCurs;
+	*ConfigVar<int>{"itemclickmovecurs"} &= ~(ClearTimeOnClick | MoveOnTimeChange);
+}
 
 void AWClrTimeSelClkToggle(COMMAND_T* = NULL)
 {
-	// If "click to clear" and "move cursor on time change" are both ON or both OFF, just toggle
-	if ((*ConfigVar<int>("itemclickmovecurs") & 64 && *ConfigVar<int>("itemclickmovecurs") & 4) || (!(*ConfigVar<int>("itemclickmovecurs") & 64) && !(*ConfigVar<int>("itemclickmovecurs") & 4)))
-		*ConfigVar<int>("itemclickmovecurs") ^= 68;
+	using namespace ItemClickMoveCurs;
 
+	ConfigVar<int> itemclickmovecurs{"itemclickmovecurs"};
+	const int both = MoveOnTimeChange | ClearTimeOnClick;
+	const int values = *itemclickmovecurs & both;
+
+	// If "click to clear" and "move cursor on time change" are both ON or both OFF, just toggle
+	if (values == both || values == 0)
+		*itemclickmovecurs ^= both;
 	// If one of them is different than the other, turn them both ON
 	else
-		*ConfigVar<int>("itemclickmovecurs") |= 68;
+		*itemclickmovecurs |= both;
 }
 
-int IsClrTimeSelClkOn(COMMAND_T* = NULL)        { return (*ConfigVar<int>("itemclickmovecurs") & 68)  != 0; }
+int IsClrTimeSelClkOn(COMMAND_T* = NULL)
+{
+	using namespace ItemClickMoveCurs;
+	return (*ConfigVar<int>("itemclickmovecurs") & (ClearTimeOnClick | MoveOnTimeChange)) != 0;
+}
 
-void AWClrLoopClkOn(COMMAND_T* = NULL)          { *ConfigVar<int>("itemclickmovecurs") |= 32;}
-void AWClrLoopClkOff(COMMAND_T* = NULL)         { *ConfigVar<int>("itemclickmovecurs") &= ~32;}
-void AWClrLoopClkToggle(COMMAND_T* = NULL)      { *ConfigVar<int>("itemclickmovecurs") ^= 32;}
-int IsClrLoopClkOn(COMMAND_T* = NULL)           { return (*ConfigVar<int>("itemclickmovecurs") & 32)  != 0; }
+void AWClrLoopClkOn(COMMAND_T* = NULL)     { *ConfigVar<int>{"itemclickmovecurs"} |= ItemClickMoveCurs::ClearLoopOnClick;  }
+void AWClrLoopClkOff(COMMAND_T* = NULL)    { *ConfigVar<int>{"itemclickmovecurs"} &= ~ItemClickMoveCurs::ClearLoopOnClick; }
+void AWClrLoopClkToggle(COMMAND_T* = NULL) { *ConfigVar<int>{"itemclickmovecurs"} ^= ItemClickMoveCurs::ClearLoopOnClick;  }
+int IsClrLoopClkOn(COMMAND_T* = NULL) { return (*ConfigVar<int>("itemclickmovecurs") & ItemClickMoveCurs::ClearLoopOnClick) != 0; }
 
 void UpdateTimebaseToolbar()
 {

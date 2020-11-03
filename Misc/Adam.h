@@ -28,6 +28,7 @@
 #pragma once
 
 int AdamInit();
+void AdamExit();
 void AWFillGapsAdv(const char* title, char* retVals);
 void UpdateGridToolbar();
 void UpdateTrackTimebaseToolbar();

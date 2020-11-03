@@ -3354,3 +3354,24 @@ int AdamInit()
 
 	return 1;
 }
+
+void WriteAlteredConfigVarsToIni()
+{
+	const char* alteredConfigVars[] = {
+		"projmetroen",
+		"relativeedges",
+		"itemclickmovecurs",
+		"itemtimelock"
+	};
+
+	char tmp[256];
+	for (const auto& configVar : alteredConfigVars) {
+		snprintf(tmp, sizeof(tmp), "%d", *ConfigVar<int>(configVar));
+		WritePrivateProfileString("reaper", configVar, tmp, get_ini_file());
+	}
+}
+
+void AdamExit()
+{
+	WriteAlteredConfigVarsToIni();
+}

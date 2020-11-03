@@ -660,6 +660,7 @@ error:
 				PadreExit();
 				SNM_Exit();
 				BR_Exit();
+				AdamExit();
 			}
 			return 0; // makes REAPER unloading us
 		}

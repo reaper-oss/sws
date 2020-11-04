@@ -1708,7 +1708,7 @@ double GetGridDivSafe ()
 		return *gridDiv;
 }
 
-double GetNextGridDiv (double position)
+double GetNextGridDiv (double position, bool* calcSwing /*= nullptr*/)
 {
 	/* This got a tiny bit complicated, but we're trying to replicate        *
 	*  REAPER behavior as closely as possible...I guess the ultimate test    *
@@ -1831,10 +1831,30 @@ double GetNextGridDiv (double position)
 		}
 	}
 
+	// calculate swing grid
+	if (calcSwing && *calcSwing == true)
+	{
+		int swingmode; double division, swingamt;
+		GetSetProjectGrid(nullptr, false, &division, &swingmode, &swingamt);
+		if (swingmode && swingamt && division > 0.0)
+		{
+			// enable "Grid snap settings follow grid visibility"
+			const ConfigVar<int> projShowGrid("projshowgrid");
+			ConfigVarOverride<int> tempProjShowGrid(projShowGrid, projShowGrid.value_or(0) & (~32768));
+
+			// set "line spacing minimum" to 0
+			// -> 'what you see is what you get'
+			const ConfigVar<int> projGridMin("projgridmin");
+			ConfigVarOverride<int> tempProjGridMin(projGridMin, 0);
+
+			nextGridPosition = SnapToGrid(nullptr, nextGridPosition);
+		}
+	}
+
 	return nextGridPosition;
 }
 
-double GetPrevGridDiv (double position)
+double GetPrevGridDiv (double position, bool* calcSwing /*= nullptr*/)
 {
 	if (position <= 0)
 		return 0;
@@ -1865,7 +1885,7 @@ double GetPrevGridDiv (double position)
 		prevGridDivPos = TimeMap_QNToTime_abs(NULL, TimeMap_timeToQN_abs(NULL, position) - 1.5*GetGridDivSafe());
 		while (true)
 		{
-			double tmp = GetNextGridDiv(prevGridDivPos);
+			double tmp = GetNextGridDiv(prevGridDivPos, calcSwing);
 			if (tmp >= position)
 				break;
 			else
@@ -1875,13 +1895,13 @@ double GetPrevGridDiv (double position)
 	return prevGridDivPos;
 }
 
-double GetClosestGridDiv (double position)
+double GetClosestGridDiv (double position, bool* calcSwing /*= nullptr*/)
 {
 	double gridDiv = 0;
 	if (position > 0)
 	{
-		double prevGridDiv = GetPrevGridDiv(position);
-		double nextGridDiv = GetNextGridDiv(prevGridDiv);
+		double prevGridDiv = GetPrevGridDiv(position, calcSwing);
+		double nextGridDiv = GetNextGridDiv(prevGridDiv, calcSwing);
 		gridDiv = GetClosestVal(position, prevGridDiv, nextGridDiv);
 	}
 	return gridDiv;

@@ -186,9 +186,9 @@ bool InsertStretchMarkerInAllItems (double position, bool doBeatsTimebaseOnly = 
 * Grid                                                                        *
 ******************************************************************************/
 double GetGridDivSafe (); // makes sure grid div is never over MAX_GRID_DIV
-double GetNextGridDiv (double position);    // unlike other functions,
-double GetPrevGridDiv (double position);    // these don't care about
-double GetClosestGridDiv (double position); // grid visibility
+double GetNextGridDiv (double position, bool* calcSwing = nullptr);    // unlike other functions,
+double GetPrevGridDiv (double position, bool* calcSwing = nullptr);    // these don't care about
+double GetClosestGridDiv (double position, bool* calcSwing = nullptr); // grid visibility
 double GetNextGridLine (double position);
 double GetPrevGridLine (double position);
 double GetClosestGridLine (double position);

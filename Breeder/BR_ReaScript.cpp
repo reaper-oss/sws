@@ -246,9 +246,9 @@ void BR_GetArrangeView (ReaProject* proj, double* startPositionOut, double* endP
 	WritePtr(endPositionOut, end);
 }
 
-double BR_GetClosestGridDivision (double position)
+double BR_GetClosestGridDivision (double position, bool* calcSwing)
 {
-	return GetClosestGridDiv(position);
+	return GetClosestGridDiv(position, calcSwing);
 }
 
 void BR_GetCurrentTheme (char* themePathOut, int themePathOut_sz, char* themeNameOut, int themeNameOut_sz)
@@ -505,18 +505,18 @@ MediaTrack* BR_GetMouseCursorContext_Track ()
 	return g_mouseInfo.GetTrack();
 }
 
-double BR_GetNextGridDivision (double position)
+double BR_GetNextGridDivision (double position, bool* calcSwing)
 {
 	if (position >= 0)
-		return GetNextGridDiv(position);
+		return GetNextGridDiv(position, calcSwing);
 	else
 		return 0;
 }
 
-double BR_GetPrevGridDivision (double position)
+double BR_GetPrevGridDivision (double position, bool* calcSwing)
 {
 	if (position > 0)
-		return GetPrevGridDiv(position);
+		return GetPrevGridDiv(position, calcSwing);
 	else
 		return 0;
 }

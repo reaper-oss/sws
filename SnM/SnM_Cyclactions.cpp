@@ -1171,12 +1171,16 @@ void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section 
 	if (!_cyclactions)
 		_cyclactions = g_cas;
 
+	if (!_iniFn)
+		_iniFn = g_SNM_CyclIniFn.Get();
+
 	for (int sec=0; sec < SNM_MAX_CA_SECTIONS; sec++)
 	{
 		if (_section == sec || _section == -1)
 		{
 			WDL_PtrList_DeleteOnDestroy<int> freeCycleIds;
-			WDL_FastString iniSection("; Do not tweak by hand! Use the Cycle Action editor instead\n"); // no localization for ini files..
+			std::ostringstream iniSection;
+			iniSection << "; Do not tweak by hand! Use the Cycle Action editor instead" << '\0'; // no localization for ini files..
 
 			// prepare ids "compression" (i.e. will re-assign ids of new actions for the next load)
 			for (int j=0; j < _cyclactions[sec].GetSize(); j++)
@@ -1189,9 +1193,10 @@ void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section 
 				Cyclaction* a = _cyclactions[sec].Get(j);
 				if (!_cyclactions[sec].Get(j)->IsEmpty()) // skip empty cyclactions
 				{
+					iniSection << "Action";
 					if (!a->m_added)
 					{
-						iniSection.AppendFormatted(CA_MAX_LEN, "Action%d=\"%s\"\n", j+1, a->GetDefinition());
+						iniSection << j+1;
 						maxId = max(j+1, maxId);
 					}
 					else
@@ -1199,22 +1204,24 @@ void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section 
 						a->m_added = false;
 						if (freeCycleIds.GetSize())
 						{
-							int id = *(freeCycleIds.Get(0));
-							iniSection.AppendFormatted(CA_MAX_LEN, "Action%d=\"%s\"\n", id+1, a->GetDefinition());
+							const int id = *(freeCycleIds.Get(0)) + 1;
+							iniSection << id;
 							freeCycleIds.Delete(0, true);
-							maxId = max(id+1, maxId);
+							maxId = max(id, maxId);
 						}
 						else
-						{
-							iniSection.AppendFormatted(CA_MAX_LEN, "Action%d=\"%s\"\n", ++maxId, a->GetDefinition()); 
-						}
+							iniSection << ++maxId;
 					}
+					iniSection << "=\"" << a->GetDefinition() << '"' << '\0';
 				}
 			}
 			// "Nb_Actions" is a bad name now: it is a max id (kept for ascendant comp.)
-			iniSection.AppendFormatted(32, "Nb_Actions=%d\n", maxId);
-			iniSection.AppendFormatted(32, "Version=%d\n", CA_VERSION);
-			SaveIniSection(GetCAIniSection(sec), &iniSection, _iniFn ? _iniFn : g_SNM_CyclIniFn.Get());
+			iniSection << "Nb_Actions=" << maxId << '\0';
+			iniSection << "Version=" << CA_VERSION << '\0';
+
+			const char *iniSectionName = GetCAIniSection(sec);
+			WritePrivateProfileStruct(iniSectionName, nullptr, nullptr, 0, _iniFn); // flush section
+			WritePrivateProfileSection(iniSectionName, iniSection.str().c_str(), _iniFn);
 		}
 	}
 }

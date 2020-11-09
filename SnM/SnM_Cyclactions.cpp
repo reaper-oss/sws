@@ -1219,9 +1219,7 @@ void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section 
 			iniSection << "Nb_Actions=" << maxId << '\0';
 			iniSection << "Version=" << CA_VERSION << '\0';
 
-			const char *iniSectionName = GetCAIniSection(sec);
-			WritePrivateProfileStruct(iniSectionName, nullptr, nullptr, 0, _iniFn); // flush section
-			WritePrivateProfileSection(iniSectionName, iniSection.str().c_str(), _iniFn);
+			SaveIniSection(GetCAIniSection(sec), iniSection.str(), _iniFn);
 		}
 	}
 }

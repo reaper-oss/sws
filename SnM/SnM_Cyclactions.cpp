@@ -1174,13 +1174,21 @@ void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section 
 	if (!_iniFn)
 		_iniFn = g_SNM_CyclIniFn.Get();
 
+	std::ostringstream iniSection;
+	iniSection << "; Do not tweak by hand! Use the Cycle Action editor instead ===" << '\0'; // no localization for ini files...
+	iniSection << "Version=" << CA_VERSION << '\0'; // a section must contain at least one key to avoid corruption on Windows
+	SaveIniSection("Cyclactions", iniSection.str(), _iniFn);
+
+	char iniBuf[128]{};
+
 	for (int sec=0; sec < SNM_MAX_CA_SECTIONS; sec++)
 	{
 		if (_section == sec || _section == -1)
 		{
+			const char *iniSection = GetCAIniSection(sec);
+			WritePrivateProfileStruct(iniSection, nullptr, nullptr, 0, _iniFn); // flush section
+
 			WDL_PtrList_DeleteOnDestroy<int> freeCycleIds;
-			std::ostringstream iniSection;
-			iniSection << "; Do not tweak by hand! Use the Cycle Action editor instead ===" << '\0'; // no localization for ini files..
 
 			// prepare ids "compression" (i.e. will re-assign ids of new actions for the next load)
 			for (int j=0; j < _cyclactions[sec].GetSize(); j++)
@@ -1191,35 +1199,35 @@ void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section 
 			for (int j=0; j < _cyclactions[sec].GetSize(); j++)
 			{
 				Cyclaction* a = _cyclactions[sec].Get(j);
-				if (!_cyclactions[sec].Get(j)->IsEmpty()) // skip empty cyclactions
+				if (_cyclactions[sec].Get(j)->IsEmpty()) // skip empty cyclactions
+					continue;
+
+				int id;
+
+				if (a->m_added)
 				{
-					iniSection << "Action";
-					if (!a->m_added)
+					a->m_added = false;
+					if (freeCycleIds.GetSize())
 					{
-						iniSection << j+1;
-						maxId = max(j+1, maxId);
+						id = *(freeCycleIds.Get(0)) + 1;
+						freeCycleIds.Delete(0, true);
 					}
 					else
-					{
-						a->m_added = false;
-						if (freeCycleIds.GetSize())
-						{
-							const int id = *(freeCycleIds.Get(0)) + 1;
-							iniSection << id;
-							freeCycleIds.Delete(0, true);
-							maxId = max(id, maxId);
-						}
-						else
-							iniSection << ++maxId;
-					}
-					iniSection << "=\"" << a->GetDefinition() << '"' << '\0';
+						id = ++maxId;
 				}
+				else
+					id = j+1;
+
+				maxId = max(id, maxId);
+
+				snprintf(iniBuf, sizeof(iniBuf), "Action%d", id);
+				WritePrivateProfileString(iniSection, iniBuf, a->GetDefinition(), _iniFn);
 			}
 			// "Nb_Actions" is a bad name now: it is a max id (kept for ascendant comp.)
-			iniSection << "Nb_Actions=" << maxId << '\0';
-			iniSection << "Version=" << CA_VERSION << '\0';
-
-			SaveIniSection(GetCAIniSection(sec), iniSection.str(), _iniFn);
+			snprintf(iniBuf, sizeof(iniBuf), "%d", maxId);
+			WritePrivateProfileString(iniSection, "Nb_Actions", iniBuf, _iniFn);
+			snprintf(iniBuf, sizeof(iniBuf), "%d", CA_VERSION);
+			WritePrivateProfileString(iniSection, "Version", iniBuf, _iniFn);
 		}
 	}
 }

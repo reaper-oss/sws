@@ -1180,7 +1180,7 @@ void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section 
 		{
 			WDL_PtrList_DeleteOnDestroy<int> freeCycleIds;
 			std::ostringstream iniSection;
-			iniSection << "; Do not tweak by hand! Use the Cycle Action editor instead" << '\0'; // no localization for ini files..
+			iniSection << "; Do not tweak by hand! Use the Cycle Action editor instead ===" << '\0'; // no localization for ini files..
 
 			// prepare ids "compression" (i.e. will re-assign ids of new actions for the next load)
 			for (int j=0; j < _cyclactions[sec].GetSize(); j++)

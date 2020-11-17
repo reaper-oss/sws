@@ -62,55 +62,44 @@ char* TimeSelection::ItemString(char* str, int maxLen)
 	return str;
 }
 
-void SaveTimeSel(const char *undoMsg, int iSlot, bool bIsLoop)
+void SaveTimeSel(int iSlot, bool bIsLoop)
 {
-	// In order?  nah.  Only 10 max at the moment.
+	// In order?  nah.  Only 32 max at the moment.
 	for (int i = 0; i < g_timeSel.Get()->GetSize(); i++)
 	{
 		TimeSelection* ts = g_timeSel.Get()->Get(i);
 		if (ts->m_iSlot == iSlot && ts->m_bIsLoop == bIsLoop)
 		{
-			if(undoMsg)
-				Undo_BeginBlock2(NULL);
 			delete ts;
 			g_timeSel.Get()->Set(i, new TimeSelection(iSlot, bIsLoop));
-			if(undoMsg)
-				Undo_EndBlock2(NULL, undoMsg, UNDO_STATE_ALL);
+			MarkProjectDirty(NULL);
 			return;
 		}
 	}
 	// Didn't find one
-	if(undoMsg)
-		Undo_BeginBlock2(NULL);
 	g_timeSel.Get()->Add(new TimeSelection(iSlot, bIsLoop));
-	if(undoMsg)
-		Undo_EndBlock2(NULL, undoMsg, UNDO_STATE_ALL);
+	MarkProjectDirty(NULL);
 }
 
-void RestoreTimeSel(const char *undoMsg, int iSlot, bool bIsLoop)
+void RestoreTimeSel(int iSlot, bool bIsLoop)
 {
-	bool updated=false;
+	bool updated = false;
 	for (int i = 0; i < g_timeSel.Get()->GetSize(); i++)
 	{
 		TimeSelection* ts = g_timeSel.Get()->Get(i);
 		if (ts->m_iSlot == iSlot && ts->m_bIsLoop == bIsLoop)
 		{
 			ts->Restore();
-			if(!updated)
-			{
-				if(undoMsg)
-					Undo_BeginBlock2(NULL);
-				updated=true;
-			}
+			updated=true;
 		}
 	}
 	UpdateTimeline();
-	if(updated && undoMsg)
-		Undo_EndBlock2(NULL, undoMsg, UNDO_STATE_ALL);
+	if(updated)
+		MarkProjectDirty(NULL);
 
 }
 
-void RestoreNext(const char *undoMsg, int* iCur, bool bIsLoop)
+void RestoreNext(int* iCur, bool bIsLoop)
 {
 	int iNext = 666;
 	int iFirst = 666;
@@ -132,12 +121,12 @@ void RestoreNext(const char *undoMsg, int* iCur, bool bIsLoop)
 	else if (iFirst != 666)
 		*iCur = iFirst;
 
-	RestoreTimeSel(undoMsg, *iCur, bIsLoop);
+	RestoreTimeSel(*iCur, bIsLoop);
 }
 
-void SaveTimeSel(COMMAND_T* cs) { SaveTimeSel(SWS_CMD_SHORTNAME(cs), (int)cs->user+1, false); }
-void SaveLoopSel(COMMAND_T* cs) { SaveTimeSel(SWS_CMD_SHORTNAME(cs), (int)cs->user, true);  }
-void RestoreTimeSel(COMMAND_T* cs) { RestoreTimeSel(SWS_CMD_SHORTNAME(cs), (int)cs->user+1, false); }
-void RestoreLoopSel(COMMAND_T* cs) { RestoreTimeSel(SWS_CMD_SHORTNAME(cs), (int)cs->user, true); }
-void RestoreTimeNext(COMMAND_T* cs) { static int iCur = -1; RestoreNext(SWS_CMD_SHORTNAME(cs), &iCur, false); }
-void RestoreLoopNext(COMMAND_T* cs) { static int iCur = -1; RestoreNext(SWS_CMD_SHORTNAME(cs), &iCur, true); }
+void SaveTimeSel(COMMAND_T* cs) { SaveTimeSel((int)cs->user+1, false); }
+void SaveLoopSel(COMMAND_T* cs) { SaveTimeSel((int)cs->user, true);  }
+void RestoreTimeSel(COMMAND_T* cs) { RestoreTimeSel((int)cs->user+1, false); }
+void RestoreLoopSel(COMMAND_T* cs) { RestoreTimeSel((int)cs->user, true); }
+void RestoreTimeNext(COMMAND_T* cs) { static int iCur = -1; RestoreNext(&iCur, false); }
+void RestoreLoopNext(COMMAND_T* cs) { static int iCur = -1; RestoreNext(&iCur, true); }

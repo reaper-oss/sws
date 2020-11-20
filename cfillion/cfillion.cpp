@@ -35,11 +35,11 @@
 #include <WDL/localize/localize.h>
 
 #ifdef _WIN32
-  static const unsigned int CLIPBOARD_FORMAT = CF_UNICODETEXT;
+  constexpr unsigned int CLIPBOARD_FORMAT = CF_UNICODETEXT;
 #else
-// on SWELL/generic CF_TEXT may be implemented as a function call which
-// may not be available until after loading is complete
-#  define CLIPBOARD_FORMAT (CF_TEXT)
+// using RegisterClipboardFormat instead of CF_TEXT for compatibility with REAPER v5
+// (prior to WDL commit 0f77b72adf1cdbe98fd56feb41eb097a8fac5681)
+#  define CLIPBOARD_FORMAT RegisterClipboardFormat("SWELL__CF_TEXT")
 #endif
 
 extern WDL_PtrList_DOD<WDL_FastString> g_script_strs;

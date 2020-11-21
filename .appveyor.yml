@@ -35,13 +35,50 @@ for:
       - cmake --build .
       - cpack
     deploy_script: |-
-      if [ "$APPVEYOR_REPO_BRANCH" == "master" ] && [ -n "$DEPLOY_KEY" ]; then
+      if [ "$APPVEYOR_REPO_BRANCH" = "master" ] && [ -n "$DEPLOY_KEY" ]; then
         echo "$DEPLOY_KEY" | base64 -d > deploy_key && chmod 600 deploy_key &&
         scp -i deploy_key -o StrictHostKeyChecking=NO -q sws*.tar.xz \
           swsci@sws-extension.org:/var/www/standingwaterstudios.com/public_html/download/pre-release
       fi
     artifacts:
       - path: build/sws*.tar.xz
+
+  - matrix: { only: [ appveyor_build_worker_image: macos, appveyor_build_worker_image: macos-mojave ] }
+    install:
+      - |-
+        case $ARCH in
+        arm64)
+          DEPLOY_TARGET=11.0
+          curl -fsSLO https://cfillion.ca/files/.xcode/Command_Line_Tools_for_Xcode_12.2.dmg
+          echo 3911b66247e030c7210940cde4230319058bc5c55a81627b8853dab644092c40 Command_Line_Tools_for_Xcode_12.2.dmg | sha256sum -c
+          hdiutil attach Command_Line_Tools_for_Xcode_12.2.dmg > /dev/null
+          sudo installer -pkg '/Volumes/Command Line Developer Tools/Command Line Tools.pkg' -target /
+          ;;
+        *)
+          DEPLOY_TARGET=10.5
+          curl -fsSLO https://github.com/phracker/MacOSX-SDKs/releases/download/10.15/MacOSX10.5.sdk.tar.xz
+          echo a0c9588f4babf2cff55ce5bcd5534c842130554b796fb0ff65add9509b1b8b4f MacOSX10.5.sdk.tar.xz | sha256sum -c
+          sudo tar xf MacOSX10.5.sdk.tar.xz -C /Library/Developer/CommandLineTools/SDKs
+          ;;
+        esac
+      - sudo xcode-select -s /Library/Developer/CommandLineTools
+
+      # authorize control of Finder.app for DMG generation, see appveyor/ci#3216
+      - sqlite3 "$HOME/Library/Application Support/com.apple.TCC/TCC.db" "INSERT INTO access VALUES('kTCCServiceAppleEvents','$(dirname "$0")/appveyor-build-agent',1,1,1,X'fade0c000000002800000001000000080000001469862bbf79a6795b784518beed2ae09bf63e58ef',NULL,0,'com.apple.finder',X'fade0c000000002c00000001000000060000000200000010636f6d2e6170706c652e66696e64657200000003',NULL,1605970638);"
+    build_script:
+      - mkdir build && cd build
+      - cmake .. -DCMAKE_BUILD_TYPE=Release -DNO_INSTALL_PREFIX=YES
+        -DCMAKE_OSX_ARCHITECTURES=$ARCH -DCMAKE_OSX_DEPLOYMENT_TARGET=$DEPLOY_TARGET
+      - cmake --build .
+      - cpack
+    deploy_script: |-
+      if [ "$APPVEYOR_REPO_BRANCH" = "master" ] && [ -n "$DEPLOY_KEY" ]; then
+        echo "$DEPLOY_KEY" | base64 -D > deploy_key && chmod 600 deploy_key &&
+        scp -i deploy_key -o StrictHostKeyChecking=NO -q sws*.dmg \
+          swsci@sws-extension.org:/var/www/standingwaterstudios.com/public_html/download/pre-release
+      fi
+    artifacts:
+      - path: build/sws*.dmg
 
   - matrix: { only: [ appveyor_build_worker_image: &windows Visual Studio 2019 ] }
     install:
@@ -87,6 +124,15 @@ environment:
     - job_name: Windows 32-bit
       appveyor_build_worker_image: *windows
       ARCH: x86
+    - job_name: macOS x86 64-bit
+      appveyor_build_worker_image: macos-mojave
+      ARCH: x86_64
+    - job_name: macOS x86 32-bit
+      appveyor_build_worker_image: macos-mojave
+      ARCH: i386
+    - job_name: macOS ARM 64-bit
+      appveyor_build_worker_image: macos
+      ARCH: arm64
     - job_name: Linux x86 64-bit
       appveyor_build_worker_image: *linux
       ARCH: x86_64

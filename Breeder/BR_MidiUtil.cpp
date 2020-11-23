@@ -653,13 +653,20 @@ void BR_MidiItemTimePos::MidiTake::NoteEvent::InsertEvent (MediaItem_Take* take,
 BR_MidiItemTimePos::MidiTake::CCEvent::CCEvent (MediaItem_Take* take, int id)
 {
 	MIDI_GetCC(take, id, &selected, &muted, &pos, &chanMsg, &chan, &msg2, &msg3);
+	if (MIDI_GetCCShape) // v6.0+
+		MIDI_GetCCShape(take, id, &shape, &beztension);
 	pos = MIDI_GetProjTimeFromPPQPos(take, pos);
 }
 
 void BR_MidiItemTimePos::MidiTake::CCEvent::InsertEvent (MediaItem_Take* take, double offset)
 {
-	double posPPQ = MIDI_GetPPQPosFromProjTime(take, pos + offset);
-	MIDI_InsertCC(take, selected, muted, posPPQ, chanMsg, chan, msg2, msg3);
+	const double posPPQ = MIDI_GetPPQPosFromProjTime(take, pos + offset);
+	const bool ok = MIDI_InsertCC(take, selected, muted, posPPQ, chanMsg, chan, msg2, msg3);
+	if (ok && MIDI_SetCCShape /* v6.0 */ && (shape || beztension)) {
+		int ccCount;
+		MIDI_CountEvts(take, nullptr, &ccCount, nullptr);
+		MIDI_SetCCShape(take, ccCount - 1, shape, beztension, nullptr);
+	}
 }
 
 BR_MidiItemTimePos::MidiTake::SysEvent::SysEvent (MediaItem_Take* take, int id)

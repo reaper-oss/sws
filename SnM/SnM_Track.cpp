@@ -241,7 +241,7 @@ bool GetDefaultGroupFlags(WDL_FastString* _line, int _group)
 {
 	if (_line && _group >= 0 && _group < SNM_MAX_TRACK_GROUPS)
 	{
-		double grpMask = pow(2.0, _group*1.0);
+		double grpMask = pow(2.0, _group < 32 ?_group*1.0 : (static_cast<double>(_group)-32)*1.0);
 		char grpDefault[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 		GetPrivateProfileString("REAPER", "tgrpdef", "", grpDefault, sizeof(grpDefault), get_ini_file());
 		WDL_FastString defFlags(grpDefault);
@@ -250,7 +250,10 @@ bool GetDefaultGroupFlags(WDL_FastString* _line, int _group)
 			defFlags.Append("0");
 		}
 
-		_line->Set("GROUP_FLAGS ");
+		if (_group < 32)
+			_line->Set("GROUP_FLAGS ");
+		else
+			_line->Set("GROUP_FLAGS_HIGH ");
 		LineParser lp(false);
 		if (!lp.parse(defFlags.Get())) {
 			for (int i=0; i < lp.getnumtokens(); i++) {
@@ -277,7 +280,10 @@ bool SetTrackGroup(int _group)
 			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			{
 				SNM_ChunkParserPatcher p(tr);
-				updates += p.RemoveLine("TRACK", "GROUP_FLAGS", 1, 0, "TRACKHEIGHT");
+				if (_group < 32)
+					updates += p.RemoveLine("TRACK", "GROUP_FLAGS", 1, 0, "TRACKHEIGHT");
+				else
+					updates += p.RemoveLine("TRACK", "GROUP_FLAGS_HIGH", 1, 0, "TRACKHEIGHT");
 				int pos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", 0, 0, NULL, NULL, "INQ");
 				if (pos > 0) {
 					pos--; // see SNM_ChunkParserPatcher..
@@ -302,14 +308,29 @@ int FindFirstUnusedGroup()
 		{
 			SNM_ChunkParserPatcher p(tr);
 			WDL_FastString grpLine;
+			// groups 1 to 32
 			if (p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "GROUP_FLAGS", 0, 0, &grpLine, NULL, "TRACKHEIGHT"))
 			{
 				LineParser lp(false);
 				if (!lp.parse(grpLine.Get())) {
 					for (int j=1; j < lp.getnumtokens(); j++) { // skip 1st token GROUP_FLAGS
 						int val = lp.gettoken_int(j);
-						for (int k=0; k < SNM_MAX_TRACK_GROUPS; k++) {
+						for (int k=0; k < 32; k++) {
 							int grpMask = int(pow(2.0, k*1.0));
+							grp[k] |= ((val & grpMask) == grpMask);
+						}
+					}
+				}
+			}
+			// groups 33 to 64
+			if (p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "GROUP_FLAGS_HIGH", 0, 0, &grpLine, NULL, "TRACKHEIGHT"))
+			{
+				LineParser lp(false);
+				if (!lp.parse(grpLine.Get())) {
+					for (int j = 1; j < lp.getnumtokens(); j++) {
+						int val = lp.gettoken_int(j);
+						for (int k = 32; k < SNM_MAX_TRACK_GROUPS; k++) {
+							int grpMask = int(pow(2.0, (static_cast<double>(k)-32)*1.0));
 							grp[k] |= ((val & grpMask) == grpMask);
 						}
 					}

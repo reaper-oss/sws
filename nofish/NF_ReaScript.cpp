@@ -39,14 +39,6 @@
 #include "../SnM/SnM_Project.h" // #974
 #include "../SnM/SnM_Chunk.h" // SNM_FXSummaryParser
 
-#ifdef USE_SYSTEM_TAGLIB
-#  include <taglib/id3v2tag.h>
-#  include <taglib/mpegfile.h>
-#else
-#  include <taglib/mpeg/id3v2/id3v2tag.h>
-#  include <taglib/mpeg/mpegfile.h>
-#endif
-
 // #781, peak/RMS
 double DoGetMediaItemMaxPeakAndMaxPeakPos(MediaItem* item, double* maxPeakPosOut) // maxPeakPosOut == NULL: peak only
 {
@@ -339,32 +331,6 @@ bool NF_TakeFX_GetFXModuleName(MediaItem * item, int fx, char * nameOut, int nam
 
 	snprintf(nameOut, nameOutSz, "%s", module.Get());
 	return found;
-}
-
-bool NF_ReadID3v2Tag(const char* fn, const char* tag, char* tagval, int tagval_sz)
-{
-	if (!fn || !*fn || !tagval || tagval_sz <= 0) return false;
-	if (stricmp(strrchr(fn, '\0') - 4, ".mp3")) return false;
-	*tagval = 0;
-
-	TagLib::MPEG::File f(win32::widen(fn).c_str(), false);
-
-	if (f.isValid() && !f.ID3v2Tag()->isEmpty())
-	{
-		TagLib::String s;
-		TagLib::ID3v2::FrameList l = f.ID3v2Tag()->frameListMap()[tag];
-		if (!l.isEmpty())
-			s = l.front()->toString();
-		
-		if (s.length())
-		{
-			const char* p = s.toCString(true);
-			lstrcpyn(tagval, p, tagval_sz);
-			tagval[tagval_sz - 1] = '\0'; // null-terminate in case of buffer overflow (probably unlikely)
-		}
-	}
-
-	return !!*tagval;
 }
 
 int NF_Win32_GetSystemMetrics(int nIndex)

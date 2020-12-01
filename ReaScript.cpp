@@ -300,7 +300,6 @@ APIdef g_apidefs[] =
 	{ APIFUNC(NF_UpdateSWSMarkerRegionSubWindow), "void", "", "", "Redraw the Notes window (call if you've changed a subtitle via <a href=\"NF_SetSWSMarkerRegionSub\">NF_SetSWSMarkerRegionSub</a> which is currently displayed in the Notes window and you want to appear the new subtitle immediately.)", },
 
 	{ APIFUNC(NF_TakeFX_GetFXModuleName), "bool", "MediaItem*,int,char*,int", "item,fx,nameOut,nameOut_sz", "See BR_TrackFX_GetFXModuleName. fx: counted consecutively across all takes (zero-based).", },
-	{ APIFUNC(NF_ReadID3v2Tag), "bool", "const char*,const char*,char*,int", "fn,tag,tagvalOut,tagvalOut_sz", "Reads an ID3v2 tag ('text information frame'), works with mp3 only. Supported tags e.g.: \"TBPM\" (BPM), \"TCOP\" (Copyright). For other possibly supported tags see <a href=\"http://id3.org/id3v2.4.0-frames\">id3v2.4.0-frames.txt</a> Returns false if tag was not found.", },
 	{ APIFUNC(NF_Win32_GetSystemMetrics), "int", "int", "nIndex", "Equivalent to win32 API GetSystemMetrics().", },
 	{ APIFUNC(NF_GetSWS_RMSoptions), "void", "double*,double*", "targetOut,windowSizeOut", "Get SWS analysis/normalize options. See <a href=\"#NF_SetSWS_RMSoptions\">NF_SetSWS_RMSoptions</a>.", },
 	{ APIFUNC(NF_SetSWS_RMSoptions), "bool", "double,double", "targetLevel,windowSize", "Set SWS analysis/normalize options (same as running action 'SWS: Set RMS analysis/normalize options'). targetLevel: target RMS normalize level (dB), windowSize: window size for peak RMS (sec.)", },

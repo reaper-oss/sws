@@ -133,7 +133,9 @@ bool hookCommandProc2(KbdSectionInfo* sec, int cmdId, int val, int valhw, int re
 {
 	static WDL_PtrList<const char> sReentrantCmds;
 
-	if (BR_GlobalActionHook(cmdId, val, valhw, relmode, hwnd))
+	if (osara_isShortcutHelpEnabled && osara_isShortcutHelpEnabled())
+		return false; // let OSARA handle the command if it was loaded after SWS
+	else if (BR_GlobalActionHook(cmdId, val, valhw, relmode, hwnd))
 		return true;
 
 	// Ignore commands that don't have anything to do with us from this point forward
@@ -459,7 +461,13 @@ static void swsMenuHook(const char* menustr, HMENU hMenu, int flag)
 		SWSCreateExtensionsMenu(hMenu);
 }
 
+static void importExtensionAPI()
+{
+	plugin_register("-timer", (void*)importExtensionAPI);
 
+	// import functions exposed by third-party extensions
+	osara_isShortcutHelpEnabled = (decltype(osara_isShortcutHelpEnabled))plugin_getapi("osara_isShortcutHelpEnabled");
+}
 
 // Fake control surface to get a low priority periodic time slice from Reaper
 // and callbacks for some "track params have changed"
@@ -683,6 +691,7 @@ error:
 		int errcnt=0; // IMPAPI failed if >0
 
 		IMPAPI(plugin_register); // keep those first
+		IMPAPI(plugin_getapi);
 		IMPAPI(IsREAPER);
 
 		IMPAPI(AddExtensionsMainMenu);
@@ -1269,6 +1278,8 @@ error:
 
 		if ((!RegisterExportedFuncs(rec) || !RegisterExportedAPI(rec)))
 			ERR_RETURN("Reascript export failed.");
+
+		rec->Register("timer", (void*)importExtensionAPI);
 
 		AddExtensionsMainMenu();
 		ZoomInit(true); // touchy! only hook REAPER window procs at the very end, i.e. only if everything else went well

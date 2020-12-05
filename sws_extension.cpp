@@ -951,6 +951,7 @@ error:
 		IMPAPI(MIDI_eventlist_Create);
 		IMPAPI(MIDI_eventlist_Destroy);
 		IMPAPI(MIDI_GetCC);
+		IMPAP_OPT(MIDI_GetCCShape); // v6.0
 		IMPAPI(MIDI_GetEvt);
 		IMPAPI(MIDI_GetGrid)
 		IMPAPI(MIDI_GetNote);
@@ -964,6 +965,7 @@ error:
 		IMPAPI(MIDI_InsertNote);
 		IMPAPI(MIDI_InsertTextSysexEvt);
 		IMPAPI(MIDI_SetCC);
+		IMPAP_OPT(MIDI_SetCCShape); // v6.0
 		IMPAPI(MIDI_SetEvt);
 		IMPAPI(MIDI_SetItemExtents); // v5.0pre (no data on exact build in whatsnew, but I'm pretty sure I never saw this in v4)
 		IMPAPI(MIDI_SetNote);

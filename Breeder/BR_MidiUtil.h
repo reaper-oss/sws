@@ -183,8 +183,8 @@ private:
 			CCEvent (MediaItem_Take* take, int id);
 			void InsertEvent (MediaItem_Take* take, double offset);
 			bool selected, muted;
-			double pos;
-			int chanMsg, chan, msg2, msg3;
+			double pos, beztension;
+			int chanMsg, chan, msg2, msg3, shape;
 		};
 		struct SysEvent
 		{

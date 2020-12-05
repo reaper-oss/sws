@@ -970,14 +970,7 @@ bool SetIgnoreTempo (MediaItem* item, bool ignoreTempo, double bpm, int num, int
 			LineParser lp(false);
 			lp.parse(token);
 
-			bool replaceLine = true;
-			if (skipItemsWithSameIgnoreState)
-			{
-				if ((ignoreTempo && !!lp.gettoken_int(1) == true) || (!ignoreTempo && !!lp.gettoken_int(1) == false))
-					replaceLine = false;
-			}
-
-			if (replaceLine)
+			if (!skipItemsWithSameIgnoreState || !!lp.gettoken_int(1) != ignoreTempo)
 			{
 				for (int i = 0; i < lp.getnumtokens(); ++i)
 				{

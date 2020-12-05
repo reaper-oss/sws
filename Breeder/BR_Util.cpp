@@ -1078,17 +1078,25 @@ bool TrimItem_UseNativeTrimActions(MediaItem* item, double start, double end, bo
 	if (!item)
 		return false;
 
+	// Fetch the current start and length for the item
+	double itemPos = GetMediaItemInfo_Value(item, "D_POSITION");
+	double itemLen = GetMediaItemInfo_Value(item, "D_LENGTH");
+
+	// If start is negative then keep the current start position
+	if (start < 0)
+		start = itemPos;
+
+	// If end is negative then keep the current end position
+	if (end < 0)
+		end = itemPos + itemLen;
+
 	if (start > end)
 		swap(start, end);
-	if (start < 0)
-		start = 0;
 
 	double newLen = end - start;
 	if (newLen <= 0)
 		return false;
 
-	double itemPos = GetMediaItemInfo_Value(item, "D_POSITION");
-	double itemLen = GetMediaItemInfo_Value(item, "D_LENGTH");
 
 	if (force || start != itemPos || newLen != itemLen) {
 		// NF: ugly code ahead for fixing

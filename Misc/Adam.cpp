@@ -2597,11 +2597,6 @@ int IsCountPlayOn(COMMAND_T* = NULL)        { return (*ConfigVar<int>("projmetro
 int IsCountRecOn(COMMAND_T* = NULL)     { return (*ConfigVar<int>("projmetroen") & 16) != 0; }
 
 // Editing Preferences
-void AWRelEdgeOn(COMMAND_T* = NULL)         { *ConfigVar<int>("relativeedges") |= 1;}
-void AWRelEdgeOff(COMMAND_T* = NULL)        { *ConfigVar<int>("relativeedges") &= ~1;}
-void AWRelEdgeToggle(COMMAND_T* = NULL)     { *ConfigVar<int>("relativeedges") ^= 1;}
-bool IsRelEdgeOn(COMMAND_T* = NULL)         { return (*ConfigVar<int>("relativeedges") & 1)  != 0; }
-
 void AWClrTimeSelClkOn(COMMAND_T* = NULL)
 {
 	using namespace ItemClickMoveCurs;

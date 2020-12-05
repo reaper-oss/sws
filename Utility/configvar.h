@@ -31,7 +31,7 @@ template<typename T>
 class ConfigVar {
 public:
   ConfigVar(const char *name, ReaProject *project = nullptr)
-    : m_addr{}
+    : m_name{name}, m_addr{}
   {
     int size = 0;
     void *addr = nullptr;
@@ -66,7 +66,10 @@ public:
     return true;
   }
 
+  void save();
+
 private:
+  const char *m_name;
   T *m_addr;
 };
 

@@ -27,6 +27,10 @@ on run argv
           set sws_python to "sws_python64.py"
 
           if not exists item reaper_sws
+            set reaper_sws to "reaper_sws-arm64.dylib"
+          end if
+
+          if not exists item reaper_sws
             set reaper_sws to "reaper_sws-i386.dylib"
             set sws_python to "sws_python32.py"
           end if

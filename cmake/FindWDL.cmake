@@ -25,6 +25,7 @@ add_library(wdl
   $<$<BOOL:${WIN32}>:${WDL_DIR}/win32_utf8.c>
 )
 
+target_compile_definitions(wdl PUBLIC _FILE_OFFSET_BITS=64)
 target_compile_definitions(wdl INTERFACE WDL_NO_DEFINE_MINMAX)
 target_include_directories(wdl INTERFACE ${WDL_INCLUDE_DIR})
 

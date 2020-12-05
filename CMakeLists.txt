@@ -23,7 +23,7 @@ endif()
 
 if(CMAKE_SIZEOF_VOID_P EQUAL "8")
   set(CPUBITS "64")
-  set(REASCRIPT_PYTHON_FLAGS, "-x64")
+  set(REASCRIPT_PYTHON_FLAGS "-x64")
 elseif(CMAKE_SIZEOF_VOID_P EQUAL "4")
   set(CPUBITS "32")
 else()

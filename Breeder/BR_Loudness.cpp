@@ -4220,7 +4220,7 @@ static WDL_DLGRET NFAnalyzeLUFSProgressProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 
 
 #ifdef _WIN32
-		CenterDialog(hwnd, g_hwndParent, HWND_TOPMOST);
+		CenterDialog(hwnd, g_hwndParent, HWND_TOP);
 #else
 		s_positionSet = false;
 #endif
@@ -4236,7 +4236,7 @@ static WDL_DLGRET NFAnalyzeLUFSProgressProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 		// SetWindowPos doesn't seem to work in WM_INITDIALOG on OSX
 		// when creating a dialog with DialogBox so call here
 		if (!s_positionSet)
-			CenterDialog(hwnd, GetParent(hwnd), HWND_TOPMOST);
+			CenterDialog(hwnd, GetParent(hwnd), HWND_TOP);
 		s_positionSet = true;
 	}
 	break;

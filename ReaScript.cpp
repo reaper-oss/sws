@@ -275,8 +275,8 @@ APIdef g_apidefs[] =
 	{ APIFUNC(BR_Win32_StringToHwnd), "void*", "const char*", "string", "[BR] Convert string to HWND. To convert HWND back to string, see BR_Win32_HwndToString.", },
 	{ APIFUNC(BR_Win32_WindowFromPoint), "void*", "int,int", "x,y", "[BR] Equivalent to win32 API WindowFromPoint().", },
 
-	{ APIFUNC(ULT_GetMediaItemNote), "const char*", "MediaItem*", "item", "[ULT] Get item notes.", },
-	{ APIFUNC(ULT_SetMediaItemNote), "void", "MediaItem*,const char*", "item,note", "[ULT] Set item notes.", },
+	{ APIFUNC(ULT_GetMediaItemNote), "const char*", "MediaItem*", "item", "[ULT] Deprecated, see GetSetMediaItemInfo_String (v5.95+). Get item notes.", },
+	{ APIFUNC(ULT_SetMediaItemNote), "void", "MediaItem*,const char*", "item,note", "[ULT] Deprecated, see GetSetMediaItemInfo_String (v5.95+). Set item notes.", },
 
 	// *** nofish stuff ***
 	// #781

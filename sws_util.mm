@@ -206,6 +206,7 @@ static NSCursor* SWS_MakeCursorFromData(unsigned char* data, int hotspot_x, int 
 // IDC_ENV_PEN_GRID, IDC_ENV_PT_ADJ_VERT
 // IDC_MISC_SPEAKER
 // IDC_ZOOM_DRAG, IDC_ZOOM_IN, IDC_ZOOM_OUT, IDC_ZOOM_UNDO
+// IDC_ERASER
 HCURSOR SWS_LoadCursor(int id)
 {
   // bytemaps are (white<<4)|(alpha)
@@ -213,7 +214,7 @@ HCURSOR SWS_LoadCursor(int id)
   const unsigned char W = 0xFF;
   //const unsigned char G = 0xF8;
 
-  static NSCursor* carr[8]; // set to NULL by compiler
+  static NSCursor* carr[9]; // set to NULL by compiler
 
   NSCursor** pc=0;
 
@@ -229,6 +230,7 @@ HCURSOR SWS_LoadCursor(int id)
   if (!found && id == IDC_ZOOM_IN)         found = true; else if (!found) ++index;
   if (!found && id == IDC_ZOOM_OUT)        found = true; else if (!found) ++index;
   if (!found && id == IDC_ZOOM_UNDO)       found = true; else if (!found) ++index;
+  if (!found && id == IDC_ERASER)          found = true; else if (!found) ++index;
 
   if (!found)
     return NULL;
@@ -433,6 +435,33 @@ HCURSOR SWS_LoadCursor(int id)
         0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
       };
       *pc = SWS_MakeCursorFromData(p, 5, 5);
+    }
+    else if (id == IDC_ERASER)
+    {
+      static unsigned char p[32*32] =
+      {
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,B,B,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,W,W,W,B,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,W,W,W,W,W,B,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,W,W,W,W,W,W,W,B,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,W,W,W,W,W,W,W,W,B,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,W,W,W,W,W,W,W,W,W,B,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,W,W,W,W,W,W,W,W,W,W,B,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,W,W,W,W,W,W,W,W,W,B,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,W,W,W,W,W,W,W,W,B,0,0,B,B,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,W,W,W,W,W,W,W,B,0,0,B,B,B,B,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,W,W,W,W,W,B,0,0,B,B,B,B,B,B,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,W,W,W,B,0,0,B,B,B,B,B,B,B,B,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,W,B,0,0,B,B,B,B,B,B,B,B,B,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,0,0,B,B,B,B,B,B,B,B,B,B,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,B,B,B,B,B,B,B,B,B,B,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,B,B,B,B,B,B,B,B,B,B,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,B,B,B,B,B,B,B,B,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,B,B,B,B,B,B,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,B,B,B,B,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,B,B,B,0,0,0,0,0,
+      };
+      *pc = SWS_MakeCursorFromData(p, 15, 2);
     }
 
   }

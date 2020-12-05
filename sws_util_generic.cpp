@@ -49,6 +49,7 @@ void SWS_GetTimeString(int time, char* buf, int bufsize)
 // IDC_ENV_PEN_GRID, IDC_ENV_PT_ADJ_VERT
 // IDC_MISC_SPEAKER
 // IDC_ZOOM_DRAG, IDC_ZOOM_IN, IDC_ZOOM_OUT, IDC_ZOOM_UNDO
+// IDC_ERASER
 HCURSOR SWS_LoadCursor(int id)
 {
   return NULL;

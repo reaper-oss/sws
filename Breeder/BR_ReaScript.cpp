@@ -328,7 +328,7 @@ MediaTrack* BR_GetMediaTrackByGUID (ReaProject* proj, const char* guidStringIn)
 		for (int i = 0; i < CountTracks(proj); ++i)
 		{
 			MediaTrack* track = GetTrack(proj, i);
-			if (GuidsEqual(&guid, TrackToGuid(track)))
+			if (GuidsEqual(&guid, TrackToGuid(proj, track)))
 				return track;
 		}
 	}

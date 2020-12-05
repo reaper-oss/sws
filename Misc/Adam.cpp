@@ -2605,13 +2605,17 @@ bool IsRelEdgeOn(COMMAND_T* = NULL)         { return (*ConfigVar<int>("relativee
 void AWClrTimeSelClkOn(COMMAND_T* = NULL)
 {
 	using namespace ItemClickMoveCurs;
-	*ConfigVar<int>{"itemclickmovecurs"} |= ClearTimeOnClick | MoveOnTimeChange;
+	ConfigVar<int> itemclickmovecurs{"itemclickmovecurs"};
+	*itemclickmovecurs |= ClearTimeOnClick | MoveOnTimeChange;
+	itemclickmovecurs.save();
 }
 
 void AWClrTimeSelClkOff(COMMAND_T* = NULL)
 {
 	using namespace ItemClickMoveCurs;
-	*ConfigVar<int>{"itemclickmovecurs"} &= ~(ClearTimeOnClick | MoveOnTimeChange);
+	ConfigVar<int> itemclickmovecurs{"itemclickmovecurs"};
+	*itemclickmovecurs &= ~(ClearTimeOnClick | MoveOnTimeChange);
+	itemclickmovecurs.save();
 }
 
 void AWClrTimeSelClkToggle(COMMAND_T* = NULL)
@@ -2628,6 +2632,8 @@ void AWClrTimeSelClkToggle(COMMAND_T* = NULL)
 	// If one of them is different than the other, turn them both ON
 	else
 		*itemclickmovecurs |= both;
+
+	itemclickmovecurs.save();
 }
 
 int IsClrTimeSelClkOn(COMMAND_T* = NULL)
@@ -2636,9 +2642,27 @@ int IsClrTimeSelClkOn(COMMAND_T* = NULL)
 	return (*ConfigVar<int>("itemclickmovecurs") & (ClearTimeOnClick | MoveOnTimeChange)) != 0;
 }
 
-void AWClrLoopClkOn(COMMAND_T* = NULL)     { *ConfigVar<int>{"itemclickmovecurs"} |= ItemClickMoveCurs::ClearLoopOnClick;  }
-void AWClrLoopClkOff(COMMAND_T* = NULL)    { *ConfigVar<int>{"itemclickmovecurs"} &= ~ItemClickMoveCurs::ClearLoopOnClick; }
-void AWClrLoopClkToggle(COMMAND_T* = NULL) { *ConfigVar<int>{"itemclickmovecurs"} ^= ItemClickMoveCurs::ClearLoopOnClick;  }
+void AWClrLoopClkOn(COMMAND_T* = NULL)
+{
+	ConfigVar<int> itemclickmovecurs{"itemclickmovecurs"};
+	*itemclickmovecurs |= ItemClickMoveCurs::ClearLoopOnClick;
+	itemclickmovecurs.save();
+}
+
+void AWClrLoopClkOff(COMMAND_T* = NULL)
+{
+	ConfigVar<int> itemclickmovecurs{"itemclickmovecurs"};
+	*itemclickmovecurs &= ~ItemClickMoveCurs::ClearLoopOnClick;
+	itemclickmovecurs.save();
+}
+
+void AWClrLoopClkToggle(COMMAND_T* = NULL)
+{
+	ConfigVar<int> itemclickmovecurs{"itemclickmovecurs"};
+	*itemclickmovecurs ^= ItemClickMoveCurs::ClearLoopOnClick;
+	itemclickmovecurs.save();
+}
+
 int IsClrLoopClkOn(COMMAND_T* = NULL) { return (*ConfigVar<int>("itemclickmovecurs") & ItemClickMoveCurs::ClearLoopOnClick) != 0; }
 
 void UpdateTimebaseToolbar()

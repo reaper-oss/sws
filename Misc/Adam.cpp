@@ -2460,42 +2460,37 @@ void AWPaste(COMMAND_T* t)
 
 	const int pTrimMode = *ConfigVar<int>("autoxfade");
 
-	if (GetCursorContext() == 1)
+	if (GetCursorContext() == 1 && pTrimMode & 2)
 	{
 		// Enable "move edit cursor on paste" so that the time selection can be set properly
 		const ConfigVar<int> itemclickmovecurs("itemclickmovecurs");
 		ConfigVarOverride<int> tmpCursorMode(itemclickmovecurs, *itemclickmovecurs & ~8);
 
-		if (pTrimMode & 2)
-		{
-			double cursorPos = GetCursorPosition();
+		double cursorPos = GetCursorPosition();
 
-			Main_OnCommand(40625, 0); // Set time selection start point
-			Main_OnCommand(40058, 0); // item paste items tracks
-			Main_OnCommand(40626, 0); // time selection set end point
+		Main_OnCommand(40625, 0); // Set time selection start point
+		Main_OnCommand(40058, 0); // item paste items tracks
+		Main_OnCommand(40626, 0); // time selection set end point
 
-			// Select only tracks with selected items
+		// Select only tracks with selected items
 
-			SelTracksWItems();
+		SelTracksWItems();
 
-			Main_OnCommand(40718, 0); // item select all item on selected track in time selection
-			Main_OnCommand(40312, 0); // item remove selected area of item
+		Main_OnCommand(40718, 0); // item select all item on selected track in time selection
+		Main_OnCommand(40312, 0); // item remove selected area of item
 
-			// Go to beginning of selection, this is smoother than using actual action and easier
-			SetEditCurPos(cursorPos, 0, 0);
+		// Go to beginning of selection, this is smoother than using actual action and easier
+		SetEditCurPos(cursorPos, 0, 0);
 
-			DoSelectFirstOfSelectedTracks(NULL);
+		DoSelectFirstOfSelectedTracks(NULL);
 
-			tmpCursorMode.rollback();
+		tmpCursorMode.rollback();
 
-			Main_OnCommand(40058, 0); // Paste items
-			Main_OnCommand(40380, 0); // Set item timebase to project default (wish could copy time base from source item but too hard)
+		Main_OnCommand(40058, 0); // Paste items
+		Main_OnCommand(40380, 0); // Set item timebase to project default (wish could copy time base from source item but too hard)
 
-			// This would be PT style but probably better to just follow preference in preferences
-			//Main_OnCommand(40630, 0); // go to start of time selection
-		}
-		else
-			Main_OnCommand(40058, 0); // Std paste
+		// This would be PT style but probably better to just follow preference in preferences
+		//Main_OnCommand(40630, 0); // go to start of time selection
 	}
 
 	else

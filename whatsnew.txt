@@ -1,4 +1,4 @@
-!v2.12.1.1 pre-release build
+!v2.12.1.1 pre-release build (December 7, 2020)
 
 Accessibility:
 +Support OSARA's shortcut help mode in cycle, continuous and MIDI editor actions
@@ -27,7 +27,7 @@ ReaScript API:
 +Prevent NF_AnalyzeTakeLoudness's progress popup from stealing focus from other apps (report https://forum.cockos.com/showpost.php?p=2357872|here|)
 +Remove NF_ReadID3v2Tag (use GetMediaFileMetadata from REAPER instead)
 
-!v2.12.1 pre-release build
+!v2.12.1 pre-release build (October 16, 2020)
 
 Contextual toolbars:
 +Add new contexts for subproject and video processor items
@@ -81,7 +81,7 @@ Windows:
 +Deprecate the Windows-only action "Xenakios/SWS: Insert media file from clipboard" in favor of REAPER v6.13's native feature
 +Fix the enabled indicator being wrongly displayed in the item property interpolator (report https://forum.cockos.com/showpost.php?p=2275857|here|)
 
-!v2.12.0 pre-release build
+!v2.12.0 pre-release build (May 2, 2020)
 <strong>Reminder: this new SWS version requires REAPER v5.982+!</strong>
 
 Auto color/icon/layout:
@@ -189,7 +189,7 @@ Windows:
 +Add support for silent installs and setting the REAPER install path from the command line (issue 1247)
 +Fix various crashes occuring on Windows XP since v2.10.0 (issue 1332)
 
-!v2.11.0 pre-release build
+!v2.11.0 pre-release build (December 3, 2019)
 <strong>Reminder: this new SWS version requires REAPER v5.979+!</strong>
 
 <strong>Update notice:</strong> The SWS extension filenames have changed in this release. Linux and macOS users should remove the previous version before updating.

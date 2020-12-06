@@ -126,10 +126,33 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 	// Insert header if desired
 	if (bFullHTML)
 	{
-		fputs("<!DOCTYPE html >\n", pOut);
-		fputs("<html lang=\"en\">\n", pOut);
-		fputs("<head><meta charset=\"utf-8\"><title>SWS/S&amp;M Extension - What's new?</title></head>\n", pOut);
-		fputs("<body>\n<h1>", pOut);
+		fputs(R"(<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>SWS/S&amp;M Extension - What's new?</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:700"/>
+  <style>
+  body {
+    background-color: #1c120f;
+    color: #c6c3c3;
+    font: 12px/18px "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+  h1, h3, a {
+    color: #feb56f;
+    text-decoration: none;
+    text-shadow: 1px 1px 2px black;
+  }
+  h1, h3 { font-family: "Yanone Kaffeesatz", sans-serif; }
+  h1 { font-size: 3em; }
+  h3 { font-size: 2em; }
+  a:hover, a:focus { color: #ffcfa1; }
+  hr { border: 2px solid #2b2626; }
+  ul { margin: 0; }
+  </style>
+</head>
+<body>
+<h1>)", pOut);
 		if (_url)
 		{
 			fputs("<a href=\"", pOut);
@@ -165,7 +188,7 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 				else if (cBuf[iPos] == '+'
 					&& (iPos == 0 || cBuf[iPos-1] == '\n')) // '+' at start of file/line?
 				{
-					fputs(bFullHTML ? "<ul style=\"margin-top:0px;margin-bottom:0px;\">\n" : "<ul>\n", pOut);
+					fputs("<ul>\n", pOut);
 					curSection.Push(BULLET);
 				}
 				else

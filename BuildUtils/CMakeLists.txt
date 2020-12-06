@@ -23,6 +23,7 @@ set(WHATSNEW_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/whatsnew.html)
 set(WHATSNEW_SOURCE ${CMAKE_SOURCE_DIR}/whatsnew.txt)
 
 add_executable(makewhatsnew EXCLUDE_FROM_ALL MakeWhatsNew.cpp)
+target_compile_features(makewhatsnew PRIVATE cxx_std_11)
 target_include_directories(makewhatsnew PRIVATE ${WDL_INCLUDE_DIR})
 
 add_custom_command(

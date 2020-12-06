@@ -2463,8 +2463,8 @@ void AWPaste(COMMAND_T* t)
 	if (GetCursorContext() == 1)
 	{
 		// Enable "move edit cursor on paste" so that the time selection can be set properly
-		const ConfigVar<int> pCursorMode("itemclickmovecurs");
-		ConfigVarOverride<int> tmpCursorMode("itemclickmodecurs", *pCursorMode & ~8);
+		const ConfigVar<int> itemclickmovecurs("itemclickmovecurs");
+		ConfigVarOverride<int> tmpCursorMode(itemclickmovecurs, *itemclickmovecurs & ~8);
 
 		if (pTrimMode & 2)
 		{

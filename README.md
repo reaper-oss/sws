@@ -1,7 +1,6 @@
 # SWS Extension
 
 [![Build status](https://ci.appveyor.com/api/projects/status/6jq0uwut3mx14xp4/branch/master?svg=true)](https://ci.appveyor.com/project/reaper-oss/sws/branch/master)
-[![macOS build status](https://travis-ci.com/reaper-oss/sws.svg?branch=master)](https://travis-ci.com/reaper-oss/sws)
 
 The SWS extension is a collection of features that seamlessly integrate into
 REAPER, the Digital Audio Workstation (DAW) software by Cockos, Inc.

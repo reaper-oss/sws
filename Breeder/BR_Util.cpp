@@ -2897,22 +2897,21 @@ MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext, POINT ptScreen)
 				POINT ptloc = ptScreen;
 				ScreenToClient(hwnd,&ptloc);
 				int tracks = GetNumTracks();
-				for (int i = -1; i < tracks; ++i)
+				for (int i = !*ConfigVar<int>{"showmaintrack"}; i <= tracks; ++i)
 				{
-					MediaTrack* chktrack = i<0 ? GetMasterTrack(NULL) : GetTrack(NULL, i);
-					void *p;
-					if (!(p=GetSetMediaTrackInfo(chktrack,"B_SHOWINTCP",NULL)) || !*(bool *)p) 
+					MediaTrack* chktrack = CSurf_TrackFromID(i, false);
+
+					if (!GetMediaTrackInfo_Value(chktrack, "B_SHOWINTCP"))
 						continue;
-					p = GetSetMediaTrackInfo(chktrack,"I_TCPY",NULL);
-					int ypos = p ? *(int *)p : 0;
-					p = GetSetMediaTrackInfo(chktrack,"I_TCPH",NULL);
-					int h = p ? *(int *)p : 0;
+
+					const double ypos = GetMediaTrackInfo_Value(chktrack, "I_TCPY"),
+					             h    = GetMediaTrackInfo_Value(chktrack, "I_TCPH");
+
 					if (ptloc.y >= ypos && ptloc.y < ypos + h)
 					{
 						track = chktrack;
 						break;
 					}
-
 				}
 			}
 		}

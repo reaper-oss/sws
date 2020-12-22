@@ -1,3 +1,9 @@
+!v2.12.1.2 pre-release build (December 23, 2020)
+
++Fix "Float previous/next FX" actions not cycling if the last/first FX is offline (issue 1474)
++Fix detection of the in-mixer master track in REAPER v6
++Fix detection of tracks in the TCP after hiding the master track in REAPER v6 (report https://forum.cockos.com/showpost.php?p=2381122|here|)
+
 !v2.12.1.1 pre-release build (December 7, 2020)
 
 Accessibility:

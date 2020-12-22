@@ -2666,12 +2666,18 @@ HWND GetMixerWnd ()
 	return FindReaperWndByPreparedString(s_name);
 }
 
-HWND GetMixerMasterWnd ()
+HWND GetMixerMasterWnd (HWND mixer)
 {
 	static char* s_name = NULL;
 	if (!s_name)
 		AllocPreparedString(__localizeFunc("Mixer Master", "mixer", 0), &s_name);
-	return FindReaperWndByPreparedString(s_name);
+
+	HWND master = FindReaperWndByPreparedString(s_name);
+
+	if (!master) // v6 in mixer
+		master = FindWindowEx(mixer, nullptr, nullptr, "master");
+
+	return master;
 }
 
 HWND GetMediaExplorerWnd ()
@@ -2931,7 +2937,7 @@ MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext, POINT ptScreen)
 		bool is_container;
 		HWND mcp = GetMcpWnd(is_container);
 		HWND mixer = GetParent(mcp);
-		HWND mixerMaster = GetMixerMasterWnd();
+		HWND mixerMaster = GetMixerMasterWnd(mixer);
 		HWND hwndPParent = GetParent(hwndParent);
 
 		if (is_container)

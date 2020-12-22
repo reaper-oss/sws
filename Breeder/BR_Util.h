@@ -254,7 +254,7 @@ HWND GetArrangeWnd ();
 HWND GetRulerWndAlt ();
 HWND GetTransportWnd ();
 HWND GetMixerWnd ();
-HWND GetMixerMasterWnd ();
+HWND GetMixerMasterWnd (HWND mixer);
 HWND GetMediaExplorerWnd ();
 HWND GetMcpWnd (bool &isContainer);
 HWND GetTcpWnd (bool &isContainer);

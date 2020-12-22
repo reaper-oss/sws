@@ -2666,12 +2666,18 @@ HWND GetMixerWnd ()
 	return FindReaperWndByPreparedString(s_name);
 }
 
-HWND GetMixerMasterWnd ()
+HWND GetMixerMasterWnd (HWND mixer)
 {
 	static char* s_name = NULL;
 	if (!s_name)
 		AllocPreparedString(__localizeFunc("Mixer Master", "mixer", 0), &s_name);
-	return FindReaperWndByPreparedString(s_name);
+
+	HWND master = FindReaperWndByPreparedString(s_name);
+
+	if (!master) // v6 in mixer
+		master = FindWindowEx(mixer, nullptr, nullptr, "master");
+
+	return master;
 }
 
 HWND GetMediaExplorerWnd ()
@@ -2897,22 +2903,21 @@ MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext, POINT ptScreen)
 				POINT ptloc = ptScreen;
 				ScreenToClient(hwnd,&ptloc);
 				int tracks = GetNumTracks();
-				for (int i = -1; i < tracks; ++i)
+				for (int i = !*ConfigVar<int>{"showmaintrack"}; i <= tracks; ++i)
 				{
-					MediaTrack* chktrack = i<0 ? GetMasterTrack(NULL) : GetTrack(NULL, i);
-					void *p;
-					if (!(p=GetSetMediaTrackInfo(chktrack,"B_SHOWINTCP",NULL)) || !*(bool *)p) 
+					MediaTrack* chktrack = CSurf_TrackFromID(i, false);
+
+					if (!GetMediaTrackInfo_Value(chktrack, "B_SHOWINTCP"))
 						continue;
-					p = GetSetMediaTrackInfo(chktrack,"I_TCPY",NULL);
-					int ypos = p ? *(int *)p : 0;
-					p = GetSetMediaTrackInfo(chktrack,"I_TCPH",NULL);
-					int h = p ? *(int *)p : 0;
+
+					const double ypos = GetMediaTrackInfo_Value(chktrack, "I_TCPY"),
+					             h    = GetMediaTrackInfo_Value(chktrack, "I_TCPH");
+
 					if (ptloc.y >= ypos && ptloc.y < ypos + h)
 					{
 						track = chktrack;
 						break;
 					}
-
 				}
 			}
 		}
@@ -2932,7 +2937,7 @@ MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext, POINT ptScreen)
 		bool is_container;
 		HWND mcp = GetMcpWnd(is_container);
 		HWND mixer = GetParent(mcp);
-		HWND mixerMaster = GetMixerMasterWnd();
+		HWND mixerMaster = GetMixerMasterWnd(mixer);
 		HWND hwndPParent = GetParent(hwndParent);
 
 		if (is_container)

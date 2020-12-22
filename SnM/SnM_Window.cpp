@@ -1067,11 +1067,14 @@ void CycleFloatFXWndSelTracks(COMMAND_T* _ct)
 				if (!firstTrFound) {
 					firstTrFound = tr;
 					firstFXFound = (dir < 0 ? (fxCount-1) : 0);
+					while (TrackFX_GetOffline(tr, firstFXFound)
+							&& (dir < 0 ? firstFXFound > 0 : firstFXFound < fxCount-1))
+						firstFXFound += dir;
 				}
 
 				// specific case: make it work even no FX window is focused
 				// (classic pitfall when the action list is focused, see
-				// http://forum.cockos.com/showpost.php?p=708536&postcount=305)
+				// https://forum.cockos.com/showpost.php?p=708536)
 				int prevFocused = GetFocusedTrackFXWnd(tr);
 				if (prevFocused < 0)
 					prevFocused = GetFirstTrackFXWnd(tr, dir);
@@ -1084,7 +1087,7 @@ void CycleFloatFXWndSelTracks(COMMAND_T* _ct)
 
 		// there was no focused window if we're here..
 		// => float only the 1st found one
-		if (firstTrFound) 
+		if (firstTrFound)
 			FloatOnlyJob(firstTrFound, firstFXFound, true);
 	}
 }

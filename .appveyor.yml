@@ -45,29 +45,18 @@ for:
       - path: build/sws*.tar.xz
 
   - matrix: { only: [ appveyor_build_worker_image: macos, appveyor_build_worker_image: macos-mojave ] }
-    install: |-
-      set -e
+    install:
+      - |-
+        case $ARCH in
+        arm64) DEPLOY_TARGET=11.0 XCODE_VERSION=12.3  ;;
+        *)     DEPLOY_TARGET=10.5 XCODE_VERSION=9.4.1 ;;
+        esac
 
-      case $ARCH in
-      arm64)
-        DEPLOY_TARGET=11.0
-        curl -fsSLO https://cfillion.ca/files/.xcode/Command_Line_Tools_for_Xcode_12.2.dmg
-        echo 3911b66247e030c7210940cde4230319058bc5c55a81627b8853dab644092c40 Command_Line_Tools_for_Xcode_12.2.dmg | sha256sum -c
-        hdiutil attach Command_Line_Tools_for_Xcode_12.2.dmg > /dev/null
-        sudo installer -pkg '/Volumes/Command Line Developer Tools/Command Line Tools.pkg' -target /
-        ;;
-      *)
-        DEPLOY_TARGET=10.5
-        curl -fsSLO https://github.com/phracker/MacOSX-SDKs/releases/download/10.15/MacOSX10.5.sdk.tar.xz
-        echo a0c9588f4babf2cff55ce5bcd5534c842130554b796fb0ff65add9509b1b8b4f MacOSX10.5.sdk.tar.xz | sha256sum -c
-        sudo tar xf MacOSX10.5.sdk.tar.xz -C /Library/Developer/CommandLineTools/SDKs
-        ;;
-      esac
+      - sudo xcode-select -s /Applications/Xcode-$XCODE_VERSION.app
 
-      sudo xcode-select -s /Library/Developer/CommandLineTools
 
       # authorize control of Finder.app for DMG generation, see appveyor/ci#3216
-      sqlite3 "$HOME/Library/Application Support/com.apple.TCC/TCC.db" "INSERT INTO access VALUES('kTCCServiceAppleEvents','$(dirname "$0")/appveyor-build-agent',1,1,1,X'fade0c000000002800000001000000080000001469862bbf79a6795b784518beed2ae09bf63e58ef',NULL,0,'com.apple.finder',X'fade0c000000002c00000001000000060000000200000010636f6d2e6170706c652e66696e64657200000003',NULL,1605970638);"
+      - sqlite3 "$HOME/Library/Application Support/com.apple.TCC/TCC.db" "INSERT INTO access VALUES('kTCCServiceAppleEvents','$(dirname "$0")/appveyor-build-agent',1,1,1,X'fade0c000000002800000001000000080000001469862bbf79a6795b784518beed2ae09bf63e58ef',NULL,0,'com.apple.finder',X'fade0c000000002c00000001000000060000000200000010636f6d2e6170706c652e66696e64657200000003',NULL,1605970638);"
     build_script:
       - mkdir build && cd build
       - cmake .. -DCMAKE_BUILD_TYPE=Release -DNO_INSTALL_PREFIX=YES

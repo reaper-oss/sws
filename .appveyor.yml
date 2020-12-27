@@ -54,9 +54,14 @@ for:
 
       - sudo xcode-select -s /Applications/Xcode-$XCODE_VERSION.app
 
+      # compute the code directory hash value for the build agent
+      - AGENT="$(dirname "$0")/appveyor-build-agent"
+      - codesign -D /tmp/agent.sig -s- "$AGENT"
+      - codesign -d -r- -D /tmp/agent.sig "$AGENT" 2>&1 | awk -F ' => ' '/designated/{print $2}' | csreq -r- -b /tmp/csreq.bin
+      - CSREQ="$(xxd -p -c256 /tmp/csreq.bin)"
 
       # authorize control of Finder.app for DMG generation, see appveyor/ci#3216
-      - sqlite3 "$HOME/Library/Application Support/com.apple.TCC/TCC.db" "INSERT INTO access VALUES('kTCCServiceAppleEvents','$(dirname "$0")/appveyor-build-agent',1,1,1,X'fade0c000000002800000001000000080000001469862bbf79a6795b784518beed2ae09bf63e58ef',NULL,0,'com.apple.finder',X'fade0c000000002c00000001000000060000000200000010636f6d2e6170706c652e66696e64657200000003',NULL,1605970638);"
+      - sqlite3 "$HOME/Library/Application Support/com.apple.TCC/TCC.db" "INSERT INTO access VALUES('kTCCServiceAppleEvents','$AGENT',1,1,1,X'$CSREQ',NULL,0,'com.apple.finder',X'fade0c000000002c00000001000000060000000200000010636f6d2e6170706c652e66696e64657200000003',NULL,strftime('%s', 'now'));"
     build_script:
       - mkdir build && cd build
       - cmake .. -DCMAKE_BUILD_TYPE=Release -DNO_INSTALL_PREFIX=YES

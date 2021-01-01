@@ -34,7 +34,7 @@
 
 using namespace std;
 
-typedef struct 
+struct t_renameparams
 {
 	int mode; // 0 for rename take, 1 for rename media source, 2 for both
 	string OldName;
@@ -44,7 +44,7 @@ typedef struct
 	int curTakeInx;
 	bool batchnaming;
 
-} t_renameparams;
+} ;
 
 t_renameparams g_renameparams;
 

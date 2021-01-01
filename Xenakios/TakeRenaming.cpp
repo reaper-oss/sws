@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 
+#include "../Breeder/BR_Util.h" // GetSourceType()
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h" // SNM_DeletePeakFile(), FileOrDirExists()
 
@@ -126,11 +127,16 @@ void DoRenameSourceFileDialog666(COMMAND_T* ct)
 	for (size_t i=0; i<thetakes.size(); i++)
 	{
 		PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(thetakes[i],"P_SOURCE",0);
-		if (thesrc && strcmp(thesrc->GetType(),"SECTION")!=0 && thesrc->GetFileName() && thesrc->GetFileName()[0])
+		if (thesrc)
 		{
 			g_renameparams.curTakeInx=i+1;
+
+			// skip takes which don't have a 'real' source
+			if (!SWS_GetSourceFileName(thesrc) || !SWS_GetSourceFileName(thesrc)[0])
+				continue;
+
 			string oldname;
-			oldname.assign(thesrc->GetFileName());
+			oldname.assign(SWS_GetSourceFileName(thesrc));
 			vector<string> fnsplit;
 			SplitFileNameComponents(oldname,fnsplit);
 			g_renameparams.OldName.assign(fnsplit[1]);
@@ -155,38 +161,30 @@ void DoRenameSourceFileDialog666(COMMAND_T* ct)
 
 				if (!MoveFile(oldname.c_str(), newfilename.c_str()))
 				{
-					if (MessageBox(g_hwndParent, __LOCALIZE("Filename already exists.\nIf you continue the original file will be lost!", "sws_DLG_165"), __LOCALIZE("Xenakios - Warning", "sws_DLG_165"), MB_OKCANCEL) == IDCANCEL)
+					if (MessageBox(g_hwndParent, __LOCALIZE("Filename already exists.\nIf you continue the original file will be lost!\nContinue?", "sws_DLG_165"), __LOCALIZE("Xenakios - Warning", "sws_DLG_165"), MB_OKCANCEL) == IDCANCEL)
 						Main_OnCommand(40101, 0); // online all media
 					continue;
 				}
 				AddToRenameLog(oldname,newfilename);
-				int j;
 				for (size_t j=0;j<alltakes.size();j++)
 				{
 					PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",0);
-					if (thesrc && thesrc->GetFileName() && strcmp(thesrc->GetType(),"SECTION")!=0)
+					if (thesrc && SWS_GetSourceFileName(thesrc))
 					{
 						string fname;
-						fname.assign(thesrc->GetFileName());
+						fname.assign(SWS_GetSourceFileName(thesrc));
 						if (oldname.compare(fname)==0)
 						{
-							PCM_source *newsrc=PCM_Source_CreateFromFile(newfilename.c_str());
-							if (newsrc)
-							{
-								GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",newsrc);
-								delete thesrc;
-
-								// delete old .reapeaks file, #1140
-								SNM_DeletePeakFile(oldname.c_str(), true); // no delete check (peaks files can be absent) 
-							}
+							thesrc->SetFileName(newfilename.c_str());
+							SNM_DeletePeakFile(oldname.c_str(), true);
 						}
 					}
 				}
 			}
-			Main_OnCommand(40047,0); // build any missing peaks
 			Main_OnCommand(40101,0); // online all media
 		}
 	}
+	Main_OnCommand(40047, 0); // build any missing peaks
 }
 
 void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
@@ -201,9 +199,12 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 	for (size_t i=0;i<thetakes.size();i++)
 	{
 		PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(thetakes[i],"P_SOURCE",0);
-		if (thesrc && strcmp(thesrc->GetType(),"SECTION")!=0)
+		if (thesrc)
 		{
 			char *oldtakename=(char*)GetSetMediaItemTakeInfo(thetakes[i],"P_NAME",0);
+			// special case for video processor, since it has no take name initially
+			if (!oldtakename[0] && GetSourceType(thetakes[i]) == SourceType::VideoEffect)
+				oldtakename = "Video processor";
 			g_renameparams.OldName.assign(oldtakename);
 			g_renameparams.curTakeInx=i+1;
 			DialogBox(g_hInst,MAKEINTRESOURCE(IDD_RENAMEDLG666), g_hwndParent, (DLGPROC)RenameDlgProc);
@@ -213,10 +214,10 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 			{
 				Main_OnCommand(40100,0); // offline all media
 				// Can only do the filename if it exists
-				if (thesrc->GetFileName() && thesrc->GetFileName()[0])
+				if (SWS_GetSourceFileName(thesrc) && SWS_GetSourceFileName(thesrc)[0])
 				{
 					string oldname;
-					oldname.assign(thesrc->GetFileName());
+					oldname.assign(SWS_GetSourceFileName(thesrc));
 					vector<string> fnsplit;
 					SplitFileNameComponents(oldname,fnsplit);
 					string newfilename;
@@ -231,7 +232,7 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 
 					if (FileOrDirExists (newfilename.c_str()))
 					{
-						if (MessageBox(g_hwndParent, __LOCALIZE("Filename already exists.\nIf you continue the original file will be lost!", "sws_DLG_165"), __LOCALIZE("Xenakios - Warning", "sws_DLG_165"), MB_OKCANCEL) == IDCANCEL)
+						if (MessageBox(g_hwndParent, __LOCALIZE("Filename already exists.\nIf you continue the original file will be lost!\nContinue?", "sws_DLG_165"), __LOCALIZE("Xenakios - Warning", "sws_DLG_165"), MB_OKCANCEL) == IDCANCEL)
 							Main_OnCommand(40101, 0); // online all media
 						continue;
 					}
@@ -240,21 +241,13 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 					for (size_t j=0;j<alltakes.size();j++)
 					{
 						PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",0);
-						if (thesrc && thesrc->GetFileName() && strcmp(thesrc->GetType(),"SECTION")!=0)
+						if (thesrc)
 						{
-							string fname;
-							fname.assign(thesrc->GetFileName());
-							if (oldname.compare(fname)==0)
+							if (!strcmp(SWS_GetSourceFileName(thesrc), oldname.c_str()))
 							{
-								PCM_source *newsrc=PCM_Source_CreateFromFile(newfilename.c_str());
-								if (newsrc)
-								{
-									GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",newsrc);
-									GetSetMediaItemTakeInfo(alltakes[j],"P_NAME",(char*)g_renameparams.NewName.c_str());
-									delete thesrc;
-
-									SNM_DeletePeakFile(oldname.c_str(), true); // no delete check (peaks files can be absent)
-								}
+								thesrc->SetFileName(newfilename.c_str());
+								GetSetMediaItemTakeInfo(alltakes[j], "P_NAME", (char*)g_renameparams.NewName.c_str());
+								SNM_DeletePeakFile(oldname.c_str(), true);
 							}
 						}
 					}
@@ -262,12 +255,11 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 				else
 					GetSetMediaItemTakeInfo(thetakes[i],"P_NAME",(char*)g_renameparams.NewName.c_str());
 			}
-			Main_OnCommand(40047,0); // build any missing peaks
 			Main_OnCommand(40101,0); // online all media
 		}
 	}
+	Main_OnCommand(40047, 0); // build any missing peaks
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 }
 
 void DoRenameTakeDialog666(COMMAND_T* ct)

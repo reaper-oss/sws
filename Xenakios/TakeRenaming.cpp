@@ -28,7 +28,7 @@
 #include "stdafx.h"
 
 #include "../SnM/SnM_Dlg.h"
-#include "../SnM/SnM_Util.h" // SNM_DeletePeakFile()
+#include "../SnM/SnM_Util.h" // SNM_DeletePeakFile(), FileOrDirExists()
 
 #include <WDL/localize/localize.h>
 
@@ -142,20 +142,24 @@ void DoRenameSourceFileDialog666(COMMAND_T* ct)
 
 			if (g_renameparams.DialogRC==0)
 			{
+				Main_OnCommand(40100,0); // offline all media
 				string newfilename;
 				newfilename.append(fnsplit[0]);
 				newfilename.append(g_renameparams.NewName);
 				newfilename.append(fnsplit[2]);
 
-				if (newfilename == oldname)
-					continue;
-				else if (FileOrDirExists(newfilename.c_str()))
+				// only append file extension if not already contained in new filename, #1140
+				vector<string> newfnsplit;
+				SplitFileNameComponents(newfilename, newfnsplit);
+				if (newfnsplit[2].compare(fnsplit[2]) != 0)
+					newfilename.append(fnsplit[2]);
+
+				if (!MoveFile(oldname.c_str(), newfilename.c_str()))
 				{
-					if (MessageBox(g_hwndParent, __LOCALIZE("Filename already exists!\nOverwrite?", "sws_DLG_165"), __LOCALIZE("Xenakios - Warning", "sws_DLG_165"), MB_OKCANCEL) == IDCANCEL)
-						continue;
+					if (MessageBox(g_hwndParent, __LOCALIZE("Filename already exists.\nIf you continue the original file will be lost!", "sws_DLG_165"), __LOCALIZE("Xenakios - Warning", "sws_DLG_165"), MB_OKCANCEL) == IDCANCEL)
+						Main_OnCommand(40101, 0); // online all media
+					continue;
 				}
-				Main_OnCommand(40100,0); // offline all media
-				MoveFile(oldname.c_str(),newfilename.c_str());
 				AddToRenameLog(oldname,newfilename);
 				int j;
 				for (j=0;j<(int)alltakes.size();j++)
@@ -179,9 +183,9 @@ void DoRenameSourceFileDialog666(COMMAND_T* ct)
 						}
 					}
 				}
-				Main_OnCommand(40047,0); // build any missing peaks
-				Main_OnCommand(40101,0); // online all media
 			}
+			Main_OnCommand(40047,0); // build any missing peaks
+			Main_OnCommand(40101,0); // online all media
 		}
 	}
 	if (bChanges)
@@ -213,6 +217,7 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 				break;
 			if (g_renameparams.DialogRC==0)
 			{
+				Main_OnCommand(40100,0); // offline all media
 				// Can only do the filename if it exists
 				if (thesrc->GetFileName() && thesrc->GetFileName()[0])
 				{
@@ -230,15 +235,12 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 					if (newfnsplit[2].compare(fnsplit[2])!=0)
 						newfilename.append(fnsplit[2]);
 
-					if (newfilename == oldname)
-						continue;
-					else if (FileOrDirExists(newfilename.c_str()))
+					if (FileOrDirExists (newfilename.c_str()))
 					{
-						if (MessageBox(g_hwndParent, __LOCALIZE("Filename already exists!\nOverwrite?", "sws_DLG_165"), __LOCALIZE("Xenakios - Warning", "sws_DLG_165"), MB_OKCANCEL) == IDCANCEL)
-							continue;
+						if (MessageBox(g_hwndParent, __LOCALIZE("Filename already exists.\nIf you continue the original file will be lost!", "sws_DLG_165"), __LOCALIZE("Xenakios - Warning", "sws_DLG_165"), MB_OKCANCEL) == IDCANCEL)
+							Main_OnCommand(40101, 0); // online all media
+						continue;
 					}
-					Main_OnCommand(40100,0); // offline all media
-					MoveFile(oldname.c_str(),newfilename.c_str());
 					AddToRenameLog(oldname,newfilename);
 
 					for (int j=0;j<(int)alltakes.size();j++)
@@ -262,12 +264,12 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 							}
 						}
 					}
-					Main_OnCommand(40047,0); // build any missing peaks
-					Main_OnCommand(40101,0); // online all media
 				}
 				else
 					GetSetMediaItemTakeInfo(thetakes[i],"P_NAME",(char*)g_renameparams.NewName.c_str());
 			}
+			Main_OnCommand(40047,0); // build any missing peaks
+			Main_OnCommand(40101,0); // online all media
 		}
 	}
 	UpdateTimeline();

@@ -40,7 +40,7 @@ typedef struct
 	string OldName;
 	string NewName;
 	int DialogRC;
-	int takesToRename;
+	size_t takesToRename;
 	int curTakeInx;
 	bool batchnaming;
 
@@ -57,13 +57,13 @@ WDL_DLGRET RenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	if (Message == WM_INITDIALOG)
 	{
 		if (g_renameparams.mode==0 && !g_renameparams.batchnaming)
-			sprintf(buf,"Rename take [%d / %d]", g_renameparams.curTakeInx, g_renameparams.takesToRename);		
+			sprintf(buf,"Rename take [%d / %zu]", g_renameparams.curTakeInx, g_renameparams.takesToRename);		
 		else if (g_renameparams.mode==0 && g_renameparams.batchnaming)
-			sprintf(buf,"Rename %d takes", g_renameparams.takesToRename);
+			sprintf(buf,"Rename %zu takes", g_renameparams.takesToRename);
 		else if (g_renameparams.mode==1)
-			sprintf(buf,"Rename take source file [%d / %d]",g_renameparams.curTakeInx, g_renameparams.takesToRename);
+			sprintf(buf,"Rename take source file [%d / %zu]",g_renameparams.curTakeInx, g_renameparams.takesToRename);
 		else if (g_renameparams.mode == 2)
-			sprintf(buf,"Rename take and source file [%d / %d]",g_renameparams.curTakeInx, g_renameparams.takesToRename);
+			sprintf(buf,"Rename take and source file [%d / %zu]",g_renameparams.curTakeInx, g_renameparams.takesToRename);
 
 		SetWindowText(hwnd, buf);
 
@@ -121,10 +121,9 @@ void DoRenameSourceFileDialog666(COMMAND_T* ct)
 	XenGetProjectTakes(alltakes,false,false);
 	XenGetProjectTakes(thetakes,true,true);
 	if (thetakes.size()==0) return;
-	g_renameparams.takesToRename=(int)thetakes.size();
+	g_renameparams.takesToRename=thetakes.size();
 	g_renameparams.mode=1;
-	bool bChanges = false;
-	for (int i=0;i<(int)thetakes.size();i++)
+	for (size_t i=0; i<thetakes.size(); i++)
 	{
 		PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(thetakes[i],"P_SOURCE",0);
 		if (thesrc && strcmp(thesrc->GetType(),"SECTION")!=0 && thesrc->GetFileName() && thesrc->GetFileName()[0])
@@ -162,7 +161,7 @@ void DoRenameSourceFileDialog666(COMMAND_T* ct)
 				}
 				AddToRenameLog(oldname,newfilename);
 				int j;
-				for (j=0;j<(int)alltakes.size();j++)
+				for (size_t j=0;j<alltakes.size();j++)
 				{
 					PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",0);
 					if (thesrc && thesrc->GetFileName() && strcmp(thesrc->GetType(),"SECTION")!=0)
@@ -188,11 +187,6 @@ void DoRenameSourceFileDialog666(COMMAND_T* ct)
 			Main_OnCommand(40101,0); // online all media
 		}
 	}
-	if (bChanges)
-	{
-		UpdateTimeline();
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
-	}
 }
 
 void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
@@ -202,9 +196,9 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 	XenGetProjectTakes(alltakes,false,false);
 	XenGetProjectTakes(thetakes,true,true);
 	if (thetakes.size()==0) return;
-	g_renameparams.takesToRename=(int)thetakes.size();
+	g_renameparams.takesToRename=thetakes.size();
 	g_renameparams.mode=2;
-	for (int i=0;i<(int)thetakes.size();i++)
+	for (size_t i=0;i<thetakes.size();i++)
 	{
 		PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(thetakes[i],"P_SOURCE",0);
 		if (thesrc && strcmp(thesrc->GetType(),"SECTION")!=0)
@@ -243,7 +237,7 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 					}
 					AddToRenameLog(oldname,newfilename);
 
-					for (int j=0;j<(int)alltakes.size();j++)
+					for (size_t j=0;j<alltakes.size();j++)
 					{
 						PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",0);
 						if (thesrc && thesrc->GetFileName() && strcmp(thesrc->GetType(),"SECTION")!=0)
@@ -282,9 +276,9 @@ void DoRenameTakeDialog666(COMMAND_T* ct)
 	XenGetProjectTakes(thetakes,true,true);
 	if (thetakes.size()==0) return;
 	g_renameparams.batchnaming=false;
-	g_renameparams.takesToRename=(int)thetakes.size();
+	g_renameparams.takesToRename=thetakes.size();
 	g_renameparams.mode=0;
-	for (int i = 0; i < (int)thetakes.size(); i++)
+	for (size_t i = 0; i < thetakes.size(); i++)
 	{
 		char *oldtakename=(char*)GetSetMediaItemTakeInfo(thetakes[i],"P_NAME",0);
 		g_renameparams.OldName.assign(oldtakename);
@@ -304,14 +298,14 @@ void DoRenameTakeAllDialog666(COMMAND_T* ct)
 	vector<MediaItem_Take*> thetakes;
 	XenGetProjectTakes(thetakes,true,true);
 	if (thetakes.size()==0) return;
-	g_renameparams.takesToRename=(int)thetakes.size();
+	g_renameparams.takesToRename=thetakes.size();
 	g_renameparams.mode=0;
 	g_renameparams.batchnaming=true;
 	g_renameparams.OldName.assign(__LOCALIZE("New take name","sws_DLG_144"));
 	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_RENAMEDLG666), g_hwndParent, (DLGPROC)RenameDlgProc);
 	if (g_renameparams.DialogRC==0)
 	{
-		for (int i = 0; i < (int)thetakes.size(); i++)
+		for (size_t i = 0; i < thetakes.size(); i++)
 		{
 			if (g_renameparams.DialogRC==0)
 				GetSetMediaItemTakeInfo(thetakes[i],"P_NAME",(char*)g_renameparams.NewName.c_str());

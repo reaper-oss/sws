@@ -331,5 +331,9 @@ void GrooveDialog::OnInitDlg()
     SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_STRENGTH), GWLP_USERDATA, 0xdeadf00b);
     SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_VELSTRENGTH), GWLP_USERDATA, 0xdeadf00b);
 
+#ifdef _WIN32
+    WDL_UTF8_HookListBox(GetDlgItem(m_hwnd, IDC_GROOVELIST));
+#endif
+
     RefreshGrooveList();
 }

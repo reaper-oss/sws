@@ -938,7 +938,7 @@ int GetMacroOrScript(const char* _custId, int _sectionUniqueId, WDL_PtrList<WDL_
 								WDL_FastString* cmd = new WDL_FastString;
 								const char* p = FindFirstRN(lp.gettoken_str(i)); // there are some "\r\n" sometimes
 								cmd->Set(lp.gettoken_str(i), p ? (int)(p-lp.gettoken_str(i)) : 0);
-								_outCmds->Add(new WDL_FastString(cmd));
+								_outCmds->Add(cmd);
 							}
 						}
 					}

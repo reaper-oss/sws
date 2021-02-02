@@ -35,7 +35,7 @@
 #include <WDL/localize/localize.h>
 
 #ifdef _WIN32
-  constexpr unsigned int CLIPBOARD_FORMAT = CF_UNICODETEXT;
+  constexpr unsigned int CLIPBOARD_FORMAT { CF_UNICODETEXT };
 #else
 // using RegisterClipboardFormat instead of CF_TEXT for compatibility with REAPER v5
 // (prior to WDL commit 0f77b72adf1cdbe98fd56feb41eb097a8fac5681)
@@ -47,15 +47,16 @@ extern WDL_PtrList_DOD<WDL_FastString> g_script_strs;
 void CF_SetClipboard(const char *buf)
 {
 #ifdef _WIN32
-  const int length = MultiByteToWideChar(CP_UTF8, 0, buf, -1, nullptr, 0);
-  const size_t size = length * sizeof(wchar_t);
+  const int length { MultiByteToWideChar(CP_UTF8, 0, buf, -1, nullptr, 0) };
+  const size_t size { length * sizeof(wchar_t) };
 #else
-  const size_t size = strlen(buf) + 1;
+  const size_t size { strlen(buf) + 1 };
 #endif
 
-  HANDLE mem = GlobalAlloc(GMEM_MOVEABLE, size);
+  HANDLE mem { GlobalAlloc(GMEM_MOVEABLE, size) };
 #ifdef _WIN32
-  MultiByteToWideChar(CP_UTF8, 0, buf, -1, (wchar_t *)GlobalLock(mem), length);
+  MultiByteToWideChar(CP_UTF8, 0, buf, -1,
+    static_cast<wchar_t *>(GlobalLock(mem)), length);
 #else
   memcpy(GlobalLock(mem), buf, size);
 #endif
@@ -154,8 +155,8 @@ bool CF_ShellExecute(const char *file, const char *args)
 #ifdef _WIN32
   static_assert(&ShellExecute == &ShellExecuteUTF8,
     "ShellExecute is not aliased to ShellExecuteUTF8");
-  HINSTANCE ret = ShellExecute(nullptr, "open", file, args, nullptr, SW_SHOW);
-  return ret > (HINSTANCE)32;
+  HINSTANCE ret { ShellExecute(nullptr, "open", file, args, nullptr, SW_SHOW) };
+  return ret > reinterpret_cast<HINSTANCE>(32);
 #else
   return ShellExecute(nullptr, "open", file, args, nullptr, SW_SHOW);
 #endif
@@ -177,8 +178,8 @@ void CF_GetSWSVersion(char *buf, const int bufSize)
 
 int CF_EnumerateActions(const int section, const int idx, char *nameBuf, const int nameBufSize)
 {
-  const char *name = "";
-  const int cmdId = kbd_enumerateActions(SectionFromUniqueID(section), idx, &name);
+  const char *name {};
+  const int cmdId { kbd_enumerateActions(SectionFromUniqueID(section), idx, &name) };
   snprintf(nameBuf, nameBufSize, "%s", name);
   return cmdId;
 }
@@ -196,7 +197,7 @@ static void CF_RefreshTrackFXChainTitle(MediaTrack *track)
   // TrackList_AdjustWindows also does the trick (on Windows only since v6)
   // however it is disabled when PreventUIRefresh is used.
 
-  const bool enabled = GetMediaTrackInfo_Value(track, "I_FXEN");
+  const double enabled { GetMediaTrackInfo_Value(track, "I_FXEN") };
   SetMediaTrackInfo_Value(track, "I_FXEN", enabled);
 }
 
@@ -214,11 +215,11 @@ HWND CF_GetTrackFXChain(MediaTrack *track)
     return FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
   }
 
-  const int trackNumber =
-    static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"));
-  const std::string trackName =
-    static_cast<char *>(GetSetMediaTrackInfo(track, "P_NAME", nullptr));
-  const bool isFolder = GetMediaTrackInfo_Value(track, "I_FOLDERDEPTH") > 0;
+  const int trackNumber
+    { static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER")) };
+  const std::string trackName
+    { static_cast<char *>(GetSetMediaTrackInfo(track, "P_NAME", nullptr)) };
+  const bool isFolder { GetMediaTrackInfo_Value(track, "I_FOLDERDEPTH") > 0 };
 
   // HACK: rename the track to uniquely identify its FX chain window across all
   // opened projects
@@ -231,7 +232,7 @@ HWND CF_GetTrackFXChain(MediaTrack *track)
     __LOCALIZE("FX: ", "fx"), __LOCALIZE("Track", "fx"), trackNumber, guid,
     isFolder ? __LOCALIZE(" (folder)", "fx") : "");
 
-  HWND match = GetReaHwndByTitle(chainTitle);
+  HWND match { GetReaHwndByTitle(chainTitle) };
 
   // restore the original track name
   GetSetMediaTrackInfo_String(track, "P_NAME",
@@ -246,7 +247,7 @@ HWND CF_GetTakeFXChain(MediaItem_Take *take)
   if(!take)
     return nullptr;
 
-  const std::string takeName = GetTakeName(take);
+  const std::string takeName { GetTakeName(take) };
 
   // HACK: Using the GUID to uniquely identify the take's FX chain window. The
   // FX chain window does have some user data attached to it but it does not
@@ -259,7 +260,7 @@ HWND CF_GetTakeFXChain(MediaItem_Take *take)
   snprintf(chainTitle, sizeof(chainTitle), R"(%s%s "%s")",
     __LOCALIZE("FX: ", "fx"), __LOCALIZE("Item", "fx"), guid);
 
-  HWND match = GetReaHwndByTitle(chainTitle);
+  HWND match { GetReaHwndByTitle(chainTitle) };
   GetSetMediaItemTakeInfo_String(take, "P_NAME",
     const_cast<char *>(takeName.c_str()), true);
 
@@ -282,8 +283,8 @@ HWND CF_GetFocusedFXChain()
     return CF_GetTrackFXChain(track);
   case 2: {
     track = GetTrack(nullptr, trackIndex - 1);
-    MediaItem *item = GetTrackMediaItem(track, itemIndex);
-    MediaItem_Take *take = GetMediaItemTake(item, HIWORD(fxIndex));
+    MediaItem *item { GetTrackMediaItem(track, itemIndex) };
+    MediaItem_Take *take { GetMediaItemTake(item, HIWORD(fxIndex)) };
     return CF_GetTakeFXChain(take);
   }
   default:
@@ -296,7 +297,7 @@ int CF_EnumSelectedFX(HWND fxChain, const int index)
   if(!fxChain)
     return -1;
 
-  const HWND list = GetDlgItem(fxChain, 1076);
+  const HWND list { GetDlgItem(fxChain, 1076) };
   return ListView_GetNextItem(list, index, LVNI_SELECTED);
 }
 
@@ -336,7 +337,7 @@ bool CF_GetMediaSourceMetadata(PCM_source *source, const char *name,
 
 bool CF_GetMediaSourceRPP(PCM_source *source, char *buf, const int bufSize)
 {
-  char *rpp = nullptr;
+  char *rpp {};
 
   if(source)
     source->Extended(PCM_SOURCE_EXT_GETASSOCIATED_RPP, &rpp, nullptr, nullptr);
@@ -353,9 +354,9 @@ int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time,
   if(!source)
     return 0;
 
-  REAPER_cue cue{};
-  const int add = source->Extended(PCM_SOURCE_EXT_ENUMCUES_EX,
-    reinterpret_cast<void *>(static_cast<intptr_t>(index)), &cue, nullptr);
+  REAPER_cue cue {};
+  const int add { source->Extended(PCM_SOURCE_EXT_ENUMCUES_EX,
+    reinterpret_cast<void *>(static_cast<intptr_t>(index)), &cue, nullptr) };
 
   if(time)
     *time = cue.m_time;

@@ -1,3 +1,12 @@
+!v2.12.1.3 featured build (February 6, 2021)
+
+<strong>Reminder:</strong> This version requires REAPER v5.982 or newer.
+<strong>Update notice:</strong> The SWS extension filenames have changed since the previous featured build (v2.10). Linux and macOS users of SWS prior to v2.11 should remove the previous version before updating.
+
++Fix groove filenames containing special characters being wrongly displayed on Windows
++Fix using BR_EnvGetParentTrack in Python ReaScripts (issue #813)
++Prompt before overwriting files in "Xenakios/SWS: Rename take (and) source files" actions (issue 407, issue 1498)
+
 !v2.12.1.2 pre-release build (December 23, 2020)
 
 +Fix "Float previous/next FX" actions not cycling if the last/first FX is offline (issue 1474)

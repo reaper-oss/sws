@@ -58,12 +58,11 @@ endif()
 
 # Detect TagLib's version
 if(EXISTS "${TagLib_INCLUDE_DIR}/taglib.h")
-  file(STRINGS "${TagLib_INCLUDE_DIR}/taglib.h" TagLib_H REGEX "${TagLib_VERSION_REGEX}")
+  file(STRINGS "${TagLib_INCLUDE_DIR}/taglib.h" TagLib_H REGEX "^#define")
 
   foreach(segment MAJOR MINOR PATCH)
-    set(regex "#define TAGLIB_${segment}_VERSION ([0-9]+)")
-    string(REGEX MATCH "${regex}" match "${TagLib_H}")
-    string(REGEX REPLACE "${regex}" "\\1" TagLib_VERSION_${segment} "${match}")
+    set(regex "^.+TAGLIB_${segment}_VERSION ([0-9]+).+$")
+    string(REGEX REPLACE "${regex}" "\\1" TagLib_VERSION_${segment} "${TagLib_H}")
   endforeach()
 
   set(TagLib_VERSION

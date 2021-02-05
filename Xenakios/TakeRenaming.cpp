@@ -142,11 +142,19 @@ void DoRenameSourceFileDialog666(COMMAND_T* ct)
 
 			if (g_renameparams.DialogRC==0)
 			{
-				Main_OnCommand(40100,0); // offline all media
 				string newfilename;
 				newfilename.append(fnsplit[0]);
 				newfilename.append(g_renameparams.NewName);
 				newfilename.append(fnsplit[2]);
+
+				if (newfilename == oldname)
+					continue;
+				else if (FileOrDirExists(newfilename.c_str()))
+				{
+					if (MessageBox(g_hwndParent, __LOCALIZE("Filename already exists!\nOverwrite?", "sws_DLG_165"), __LOCALIZE("Xenakios - Warning", "sws_DLG_165"), MB_OKCANCEL) == IDCANCEL)
+						continue;
+				}
+				Main_OnCommand(40100,0); // offline all media
 				MoveFile(oldname.c_str(),newfilename.c_str());
 				AddToRenameLog(oldname,newfilename);
 				int j;
@@ -171,9 +179,9 @@ void DoRenameSourceFileDialog666(COMMAND_T* ct)
 						}
 					}
 				}
+				Main_OnCommand(40047,0); // build any missing peaks
+				Main_OnCommand(40101,0); // online all media
 			}
-			Main_OnCommand(40047,0); // build any missing peaks
-			Main_OnCommand(40101,0); // online all media
 		}
 	}
 	if (bChanges)
@@ -205,7 +213,6 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 				break;
 			if (g_renameparams.DialogRC==0)
 			{
-				Main_OnCommand(40100,0); // offline all media
 				// Can only do the filename if it exists
 				if (thesrc->GetFileName() && thesrc->GetFileName()[0])
 				{
@@ -223,6 +230,14 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 					if (newfnsplit[2].compare(fnsplit[2])!=0)
 						newfilename.append(fnsplit[2]);
 
+					if (newfilename == oldname)
+						continue;
+					else if (FileOrDirExists(newfilename.c_str()))
+					{
+						if (MessageBox(g_hwndParent, __LOCALIZE("Filename already exists!\nOverwrite?", "sws_DLG_165"), __LOCALIZE("Xenakios - Warning", "sws_DLG_165"), MB_OKCANCEL) == IDCANCEL)
+							continue;
+					}
+					Main_OnCommand(40100,0); // offline all media
 					MoveFile(oldname.c_str(),newfilename.c_str());
 					AddToRenameLog(oldname,newfilename);
 
@@ -247,12 +262,12 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 							}
 						}
 					}
+					Main_OnCommand(40047,0); // build any missing peaks
+					Main_OnCommand(40101,0); // online all media
 				}
 				else
 					GetSetMediaItemTakeInfo(thetakes[i],"P_NAME",(char*)g_renameparams.NewName.c_str());
 			}
-			Main_OnCommand(40047,0); // build any missing peaks
-			Main_OnCommand(40101,0); // online all media
 		}
 	}
 	UpdateTimeline();

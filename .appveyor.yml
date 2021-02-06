@@ -39,7 +39,7 @@ for:
       if [ "$APPVEYOR_REPO_BRANCH" = "master" ] && [ -n "$DEPLOY_KEY" ]; then
         echo "$DEPLOY_KEY" | base64 -d > deploy_key && chmod 600 deploy_key &&
         scp -i deploy_key -o StrictHostKeyChecking=NO -q sws*.tar.xz \
-          swsci@sws-extension.org:/var/www/standingwaterstudios.com/public_html/download/pre-release
+          swsci@sws-extension.org:/var/www/standingwaterstudios.com/download/pre-release
       fi
     artifacts:
       - path: build/sws*.tar.xz
@@ -72,7 +72,7 @@ for:
       if [ "$APPVEYOR_REPO_BRANCH" = "master" ] && [ -n "$DEPLOY_KEY" ]; then
         echo "$DEPLOY_KEY" | base64 -D > deploy_key && chmod 600 deploy_key &&
         scp -i deploy_key -o StrictHostKeyChecking=NO -q sws*.dmg \
-          swsci@sws-extension.org:/var/www/standingwaterstudios.com/public_html/download/pre-release
+          swsci@sws-extension.org:/var/www/standingwaterstudios.com/download/pre-release
       fi
     artifacts:
       - path: build/sws*.dmg
@@ -105,7 +105,7 @@ for:
             icacls deploy_key /c /t /Remove Administrator "Authenticated Users" BUILTIN\Administrators BUILTIN Everyone System Users > $null
             scp -i deploy_key -o StrictHostKeyChecking=NO -q sws*.exe version.h `
               BuildUtils/SWS_Template.ReaperLangPack BuildUtils/whatsnew.html `
-              swsci@sws-extension.org:/var/www/standingwaterstudios.com/public_html/download/pre-release
+              swsci@sws-extension.org:/var/www/standingwaterstudios.com/download/pre-release
           }
     artifacts:
       - path: build\sws*.exe

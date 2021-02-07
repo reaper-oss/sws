@@ -145,7 +145,7 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
   }
   h1, h3 { font-family: "Yanone Kaffeesatz", sans-serif; }
   h1 { font-size: 3em; }
-  h3 { font-size: 2em; }
+  h3 { font-size: 2em; display: block }
   a:hover, a:focus { color: #ffcfa1; }
   hr { border: 2px solid #2b2626; }
   ul { margin: 0; }

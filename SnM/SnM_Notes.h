@@ -177,6 +177,7 @@ private:
 
 	NotesMarkerRegionListener m_mkrRgnListener;
 	HWND m_edit;
+	bool m_settingText;
 };
 
 #ifdef WANT_ACTION_HELP

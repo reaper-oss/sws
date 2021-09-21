@@ -1,3 +1,67 @@
+!v2.13 pre-release build (December 20, 2021)
+
+Actions:
++Add "Play/stop or Play/pause (obey 'SWS/NF: Toggle Play/stop or Play/pause' toggle state)" and "Toggle Play/stop (off) or Play/pause (on)" actions
++Add a "Add all regions to current playlist" action
++Allow customizing the amount of "SWS: Save/Restore time/loop selection" actions via [NbOfActions]/SWS_SAVETIME/RESTTIME/SAVELOOP/RESTLOOP in S&M.ini (issue 1405)
++Fix "Xenakios/SWS: Rename take (and) source files" actions if take is a section or is reversed (post https://forum.cockos.com/showpost.php?p=2300847|2300847|)
++Fix arrange view corruption when running "Play from mouse cursor position (perform until shortcut released)" with the mouse outside of the arrange view (issue 1551)
++Persist "link time selection and edit cursor" and "clear loop points on click in ruler" settings (issue 1442)
++Rename various "select region" actions to "time-select region"
++Restore compatibility with REAPER v5 of various clipboard actions on Linux and macOS
++Smart split actions: add support for REAPER v6.24+ razor edit areas (issue 1528)
++SWS/FNG: Set selected MIDI items name to first note: fix potential crash if MIDI octave display offset is set to a negative value (post https://forum.cockos.com/showpost.php?p=2421440|2421440|)
++Track grouping: support groups 33 to 64 (issue 1470)
+
+Auto color/icon/layout:
++Add new filters matching tracks having an instrument plugin or hardware audio/MIDI input/outputs
+
+Custom colors:
++Fix saving colors to the user palette on macOS 10.14 and newer (thread https://forum.cockos.com/showthread.php?t=205542|205542|, issue 1564)
+
+Cycle actions:
++Fix data loss when saving action section data larger than around 1MB on Windows (issue 1451)
++Fix S&M_Cycleaction.ini corruption when writing lines longer than 8191 bytes (issue 1439)
++Remove 8192 characters length limit in warning messages (issue 1438)
++Show a diagnostic message when a cycle action fails to be registered (issue 1436)
+
+Linux:
++Implement custom SWS cursors
+
+List view:
++Fix dragging cycle action commands or region playlists when scrolled (issue 1456)
++Fix list column context menu being shown even when right-clicking above the list on Linux and Windows (issue 1506)
+
+Loudness:
++Add dual mono scanning mode (issue 1209)
+
+Miscellaneous:
++Update TagLib to https://github.com/taglib/taglib/releases/tag/v1.12|v1.12|
+
+Notes:
++Fix notes being cleared when opening the window on Linux (issue 1546)
++Load font size from [Notes]/Fontsize in S&M.ini (issue 1157, issue 1517)
+
+MIDI Editor:
++Support REAPER v6.38's new custom note order/visibility mode (issue 1561)
+
+ReaConsole:
++Add new 'W' command to write non-persistent data via SetExtState() which can be used to create reusable scripts. Command is in the form 'W <section> <key> <any arbitrary string value>'
+
+ReaScript API:
++Add a return value for whether the source cue is a chapter marker to CF_EnumMediaSourceCues
++Add CF_GetMediaSourceBitRate (exposing REAPER v6.19's new PCM_SOURCE_EXT_GETBITRATE API, issue 1134)
++Add CF_GetTrackFXChainEx for accessing input/monitoring FX chains and chains from tracks in background projects (issue 1578)
++Add NF_ functions for getting, setting and clearing global/project/track selection actions (issue 974)
++Add NF_ReadAudioFileBitrate (supports more file types)
++Add SNM_SetStringConfigVar (issue 987)
++Deprecate {BR_TrackFX,NF_TakeFX}_GetFXModuleName (use {TrackFX,TakeFX}_GetNamedConfigParm from REAPER v6.37+ instead)
++Support deletion of a key by passing an empty value to BR_Win32_WritePrivateProfileString
+
+Vertical zoom and track height:
++Fix a crash when all tracks in the project are locked
++Obey track height lock on the selected tracks/selected item's tracks (issue 1577)
+
 !v2.12.1.3 featured build (February 6, 2021)
 
 <strong>Reminder:</strong> This version requires REAPER v5.982 or newer.

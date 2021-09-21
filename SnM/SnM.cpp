@@ -765,10 +765,10 @@ static DYN_COMMAND_T s_dynCmdTable[]
 	{ "SWS: Select only track %d", "SWS_SEL", SelectTrack, 32, SNM_MAX_DYN_ACTIONS, },
 
 	// save/restore time & loop selection
-	{ "SWS: Save time selection, slot %d", "SWS_SAVETIME", SaveTimeSel, 16, SNM_MAX_DYN_ACTIONS},
-	{ "SWS: Restore time selection, slot %d", "SWS_RESTTIME", RestoreTimeSel, 16, SNM_MAX_DYN_ACTIONS},
-	{ "SWS: Save loop selection, slot %d", "SWS_SAVELOOP", SaveLoopSel, 16, SNM_MAX_DYN_ACTIONS},
-	{ "SWS: Restore loop selection, slot %d", "SWS_RESTLOOP", RestoreLoopSel, 16, SNM_MAX_DYN_ACTIONS},
+	{ "SWS: Save time selection, slot %d", "SWS_SAVETIME", SaveTimeSel, 5, SNM_MAX_DYN_ACTIONS},
+	{ "SWS: Restore time selection, slot %d", "SWS_RESTTIME", RestoreTimeSel, 5, SNM_MAX_DYN_ACTIONS},
+	{ "SWS: Save loop selection, slot %d", "SWS_SAVELOOP", SaveLoopSel, 5, SNM_MAX_DYN_ACTIONS},
+	{ "SWS: Restore loop selection, slot %d", "SWS_RESTLOOP", RestoreLoopSel, 5, SNM_MAX_DYN_ACTIONS},
 
 //!WANT_LOCALIZE_1ST_STRING_END
 

@@ -135,7 +135,8 @@ bool g_internalMkrRgnChange = false;
 // (use the S&M one instead - already registered via SNM_WindowManager::Init())
 NotesWnd::NotesWnd()
 	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes","sws_DLG_152"), ""),
-	m_edit{nullptr} // NotesWnd may be constructed without being open
+	m_edit { nullptr }, // NotesWnd may be constructed without being open
+	m_settingText { false }
 {
 	m_id.Set(NOTES_WND_ID);
 	// must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
@@ -245,7 +246,9 @@ void NotesWnd::SetText(const char* _str, bool _addRN) {
 	if (_str) {
 		if (_addRN) GetStringWithRN(_str, g_lastText, sizeof(g_lastText));
 		else lstrcpyn(g_lastText, _str, sizeof(g_lastText));
+		m_settingText = true;
 		SetWindowText(m_edit, g_lastText);
+		m_settingText = false;
 	}
 }
 
@@ -312,7 +315,9 @@ void NotesWnd::SetWrapText(const bool wrap)
 	GetWindowText(m_edit, buf, sizeof(buf));
 	m_edit = GetDlgItem(m_hwnd, wrap ? IDC_EDIT2 : IDC_EDIT1);
 	SetFontsizeFrominiFile();
+	m_settingText = true;
 	SetWindowText(m_edit, buf);
+	m_settingText = false;
 
 #ifdef _WIN32
 	// avoid flickering on Windows
@@ -332,7 +337,7 @@ void NotesWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	{
 		case IDC_EDIT1:
 		case IDC_EDIT2:
-			if (HIWORD(wParam)==EN_CHANGE)
+			if (HIWORD(wParam)==EN_CHANGE && !m_settingText)
 				SaveCurrentText(g_notesType, MarkProjectDirty==NULL); // MarkProjectDirty() avail. since v4.55pre2
 			break;
 #ifdef WANT_ACTION_HELP

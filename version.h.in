@@ -1,6 +1,8 @@
-#define SWS_VERSION 2,12,1,3
-#define SWS_VERSION_STR "2, 12, 1, 3\0"
-#define SWS_VERSION_TYPE "Featured"
+#define SWS_VERSION 2,13,0,0
+#define SWS_VERSION_STR "2, 13, 0, 0\0"
+#define SWS_VERSION_TYPE SWS_VERSION_UNSTABLE
+#define SWS_VERSION_STABLE   "Featured"
+#define SWS_VERSION_UNSTABLE "Pre-release"
 #define GIT_COMMIT "@GIT_COMMIT@"
 #cmakedefine GIT_BRANCH "@GIT_BRANCH@"
 #define REA_VERSION 5,9,8,2

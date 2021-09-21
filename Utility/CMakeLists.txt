@@ -4,4 +4,5 @@ PRIVATE
   configvar.cpp
   envelope.cpp
   hidpi.cpp
+  RazorEditArea.cpp
 )

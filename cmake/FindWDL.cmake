@@ -1,4 +1,4 @@
-if(WDL_FOUND)
+if(TARGET wdl)
   return()
 endif()
 

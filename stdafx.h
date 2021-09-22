@@ -70,7 +70,7 @@
 #include <ctime>
 #include <limits>
 
-#include "reaper/reaper_plugin.h"
+#include <reaper_plugin.h>
 #include "reaper/sws_rpf_wrapper.h"
 #include "reaper/icontheme.h"
 

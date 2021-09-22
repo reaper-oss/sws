@@ -1,4 +1,4 @@
-if(PNG_FOUND)
+if(TARGET png)
   return()
 endif()
 

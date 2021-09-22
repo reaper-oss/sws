@@ -1,4 +1,4 @@
-if(JNetLib_FOUND)
+if(TARGET jnetlib)
   return()
 endif()
 

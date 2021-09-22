@@ -41,16 +41,6 @@ endif()
 
 STRING(TOLOWER "${ARCH_NAME}" ARCH_NAME)
 
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/reaper_plugin_functions.h")
-  message(FATAL_ERROR
-    "reaper_plugin_functions.h cannot be found in "
-    "${CMAKE_CURRENT_SOURCE_DIR}/vendor.\n"
-
-    "Generate it using the following REAPER action: "
-    "[developer] Write C++ API functions header."
-  )
-endif()
-
 set(CMAKE_CXX_VISIBILITY_PRESET "hidden")
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME sws) # avoid an empty "Unspecified" component
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -159,6 +149,7 @@ target_compile_features(sws PRIVATE cxx_std_11)
 target_include_directories(sws PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/vendor
+  ${CMAKE_CURRENT_SOURCE_DIR}/vendor/reaper-sdk/sdk
   ${CMAKE_CURRENT_BINARY_DIR}
 )
 
@@ -224,6 +215,7 @@ if(MSVC)
   add_library(pch OBJECT stdafx.cpp)
   target_include_directories(pch PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/vendor
+    ${CMAKE_CURRENT_SOURCE_DIR}/vendor/reaper-sdk/sdk
     ${WDL_INCLUDE_DIR}
   )
   add_dependencies(sws pch)

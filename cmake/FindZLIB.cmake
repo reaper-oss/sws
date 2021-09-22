@@ -1,4 +1,4 @@
-if(ZLIB_FOUND)
+if(TARGET z)
   return()
 endif()
 

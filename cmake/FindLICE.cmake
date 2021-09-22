@@ -1,4 +1,4 @@
-if(LICE_FOUND)
+if(TARGET lice)
   return()
 endif()
 

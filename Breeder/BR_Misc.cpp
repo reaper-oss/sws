@@ -247,91 +247,104 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 	}
 	else
 	{
-		PreventUIRefresh(1);
+		bool rv = false;
 
-		RegisterCsurfPlayState(false, MousePlaybackPlayState); // deregister Csurf before setting playstate so it doesn't mess with our flags
-		if (g_mousePlaybackRestorePlaystate)
+		if (g_mousePlaybackActive) // only if we successfully inited
 		{
-			if (s_playPos != -1)
+			PreventUIRefresh(1);
+
+			RegisterCsurfPlayState(false, MousePlaybackPlayState); // deregister Csurf before setting playstate so it doesn't mess with our flags
+			if (g_mousePlaybackRestorePlaystate)
 			{
-				StartPlayback(s_proj, s_playPos);
-			}
-			else if (s_pausePos != -1)
-			{
-				OnPauseButtonEx(s_proj);
-				SetEditCurPos2(s_proj, s_pausePos, true, false);
+				if (s_playPos != -1)
+				{
+					StartPlayback(s_proj, s_playPos);
+				}
+				else if (s_pausePos != -1)
+				{
+					OnPauseButtonEx(s_proj);
+					SetEditCurPos2(s_proj, s_pausePos, true, false);
+				}
+				else
+				{
+					OnStopButtonEx(s_proj);
+				}
 			}
 			else
 			{
 				OnStopButtonEx(s_proj);
 			}
-		}
-		else
-		{
-			OnStopButtonEx(s_proj);
+
+			// Restore tracks' solo and mute state
+			if (s_trackSoloMuteState)
+			{
+				for (size_t i = 0; i < s_trackSoloMuteState->size(); ++i)
+				{
+					if (MediaTrack* track = GuidToTrack(&s_trackSoloMuteState->at(i).first))
+					{
+						SetMediaTrackInfo_Value(track, "I_SOLO", s_trackSoloMuteState->at(i).second >> 8);
+						SetMediaTrackInfo_Value(track, "B_MUTE", s_trackSoloMuteState->at(i).second &  0xF);
+					}
+				}
+			}
+
+			// Restore items' mute state
+			if (s_itemMuteState)
+			{
+				for (size_t i = 0; i < s_itemMuteState->size(); ++i)
+				{
+					if (MediaItem* item = GuidToItem(&s_itemMuteState->at(i).first))
+						SetMediaItemInfo_Value(item, "B_MUTE", s_itemMuteState->at(i).second);
+				}
+			}
+
+			if (g_mousePlaybackRestoreView)
+			{
+				const int viewAdvance = ConfigVar<int>("viewadvance").value_or(0);
+				if ((GetBit(viewAdvance, 3) || g_mousePlaybackForceMoveView) && (int)ct->user > 0) // Move view to edit cursor on stop (analogously applied here when starting playback from mouse cursor)
+				{
+					double arrangeStart, arrangeEnd;
+					GetSetArrangeView(s_proj, false, &arrangeStart, &arrangeEnd);
+					if (s_arrangeStart != arrangeStart || s_arrangeEnd != arrangeEnd)
+					{
+						double startPosNormalized = (s_startPos - s_arrangeStart) / (s_arrangeEnd - s_arrangeStart);
+						double currentArrangeLen  = arrangeEnd - arrangeStart;
+
+						if ((arrangeStart = s_startPos - (currentArrangeLen * startPosNormalized)) < 0)
+							arrangeStart = 0;
+						arrangeEnd = arrangeStart + currentArrangeLen;
+						GetSetArrangeView(s_proj, true, &arrangeStart, &arrangeEnd);
+					}
+				}
+			}
+
+			PreventUIRefresh(-1);
+			if (HWND midiTrackList = GetTrackView(MIDIEditor_GetActive()))
+				InvalidateRect(midiTrackList, NULL, false); // makes sure solo buttons are refreshed in MIDI editor track list
+
+			if (GetProjectStateChangeCount(s_proj) > s_projStateCount)
+			{
+				if (s_trackSoloMuteState && !s_itemMuteState)
+					Undo_OnStateChangeEx2(s_proj, __LOCALIZE("Restore tracks solo/mute state", "sws_undo"), UNDO_STATE_TRACKCFG, -1);
+				else if (!s_trackSoloMuteState && s_itemMuteState)
+					Undo_OnStateChangeEx2(s_proj, __LOCALIZE("Restore items mute state", "sws_undo"), UNDO_STATE_ITEMS, -1);
+				else if (s_trackSoloMuteState && s_itemMuteState)
+					Undo_OnStateChangeEx2(s_proj, __LOCALIZE("Restore tracks and items solo/mute state", "sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
+			}
+			rv = true;
 		}
 
-		// Restore tracks' solo and mute state
 		if (s_trackSoloMuteState)
 		{
-			for (size_t i = 0; i < s_trackSoloMuteState->size(); ++i)
-			{
-				if (MediaTrack* track = GuidToTrack(&s_trackSoloMuteState->at(i).first))
-				{
-					SetMediaTrackInfo_Value(track, "I_SOLO", s_trackSoloMuteState->at(i).second >> 8);
-					SetMediaTrackInfo_Value(track, "B_MUTE", s_trackSoloMuteState->at(i).second &  0xF);
-				}
-			}
+			delete s_trackSoloMuteState;
+			s_trackSoloMuteState = NULL;
 		}
 
-		// Restore items' mute state
 		if (s_itemMuteState)
 		{
-			for (size_t i = 0; i < s_itemMuteState->size(); ++i)
-			{
-				if (MediaItem* item = GuidToItem(&s_itemMuteState->at(i).first))
-					SetMediaItemInfo_Value(item, "B_MUTE", s_itemMuteState->at(i).second);
-			}
+			delete s_itemMuteState;
+			s_itemMuteState = NULL;
 		}
-
-		if (g_mousePlaybackRestoreView)
-		{
-			const int viewAdvance = ConfigVar<int>("viewadvance").value_or(0);
-			if ((GetBit(viewAdvance, 3) || g_mousePlaybackForceMoveView) && (int)ct->user > 0) // Move view to edit cursor on stop (analogously applied here when starting playback from mouse cursor)
-			{
-				double arrangeStart, arrangeEnd;
-				GetSetArrangeView(s_proj, false, &arrangeStart, &arrangeEnd);
-				if (s_arrangeStart != arrangeStart || s_arrangeEnd != arrangeEnd)
-				{
-					double startPosNormalized = (s_startPos - s_arrangeStart) / (s_arrangeEnd - s_arrangeStart);
-					double currentArrangeLen  = arrangeEnd - arrangeStart;
-
-					if ((arrangeStart = s_startPos - (currentArrangeLen * startPosNormalized)) < 0)
-						arrangeStart = 0;
-					arrangeEnd = arrangeStart + currentArrangeLen;
-					GetSetArrangeView(s_proj, true, &arrangeStart, &arrangeEnd);
-				}
-			}
-		}
-
-		PreventUIRefresh(-1);
-		if (HWND midiTrackList = GetTrackView(MIDIEditor_GetActive()))
-			InvalidateRect(midiTrackList, NULL, false); // makes sure solo buttons are refreshed in MIDI editor track list
-
-		if (GetProjectStateChangeCount(s_proj) > s_projStateCount)
-		{
-			if (s_trackSoloMuteState && !s_itemMuteState)
-				Undo_OnStateChangeEx2(s_proj, __LOCALIZE("Restore tracks solo/mute state", "sws_undo"), UNDO_STATE_TRACKCFG, -1);
-			else if (!s_trackSoloMuteState && s_itemMuteState)
-				Undo_OnStateChangeEx2(s_proj, __LOCALIZE("Restore items mute state", "sws_undo"), UNDO_STATE_ITEMS, -1);
-			else if (s_trackSoloMuteState && s_itemMuteState)
-				Undo_OnStateChangeEx2(s_proj, __LOCALIZE("Restore tracks and items solo/mute state", "sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
-		}
-
-		delete s_trackSoloMuteState;
-		delete s_itemMuteState;
-		s_trackSoloMuteState = NULL;
-		s_itemMuteState      = NULL;
 
 		g_activeCommand                 = NULL;
 		g_mousePlaybackActive           = false;
@@ -348,7 +361,7 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 
 		s_projStateCount = 0;
 		s_proj           = NULL;
-		return true;
+		return rv;
 	}
 }
 

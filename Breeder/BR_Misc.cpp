@@ -208,7 +208,14 @@ static bool MousePlaybackInit (COMMAND_T* ct, bool init)
 
 			s_itemMuteState = new vector<pair<GUID,int> >;
 			if (!s_itemMuteState)
+			{
+				if (s_trackSoloMuteState)
+				{
+					delete s_trackSoloMuteState;
+					s_trackSoloMuteState = NULL;
+				}
 				return false;
+			}
 
 			int count = CountTrackMediaItems(trackToSolo);
 			for (int i = 0; i < count; ++i)

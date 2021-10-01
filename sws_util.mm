@@ -97,7 +97,7 @@ int GetCustomColors(COLORREF custColors[])
 void SetCustomColors(COLORREF custColors[])
 {
 	NSColorPanel* cp = [NSColorPanel sharedColorPanel];
-	id cswatch = [cp valueForKey:@"_colorSwatch"];
+	id cswatch = [cp valueForKey:@"_colorSwatch"]; // NSColorPanelFavoritesList
 
 	if ([cswatch respondsToSelector:@selector(readColors)])
 	{
@@ -112,20 +112,17 @@ void SetCustomColors(COLORREF custColors[])
 		}
 		[cswatch performSelector:@selector(writeColors)];
 	}
-  	else if ([cswatch respondsToSelector:@selector(savedColors)])
+	else if (id NSFavoriteColorsStore = NSClassFromString(@"NSFavoriteColorsStore"))
 	{
-		// high sierra -- this part doesn't seem to work yet, sadly
-		NSArray *colors = [cswatch performSelector:@selector(savedColors)];
-		NSMutableArray *newColors = colors ? [NSMutableArray arrayWithArray:colors] : [NSMutableArray arrayWithCapacity:16];
+		// High Sierra to at least Big Sur (undocumented API)
+		id cstore = [NSFavoriteColorsStore performSelector:@selector(defaultListCompatibleStore)];
+
 		for (int i = 0; i < 16; i++)
 		{
 			NSColor* col = [NSColor colorWithCalibratedRed:(custColors[i]>>16)/255.0 green:((custColors[i]&0xFF00)>>8)/255.0 blue:(custColors[i]&0xFF)/255.0 alpha:1.0];
-			if (i < [newColors count])
-				[newColors replaceObjectAtIndex:i withObject:col];
-			else
-				[newColors addObject:col];
+			id index = [cswatch performSelector:@selector(storeIndexForColorIndex:) withObject:reinterpret_cast<id>(i)];
+			[cstore performSelector:@selector(replaceColorAtIndex:withColor:) withObject:index withObject:col];
 		}
-		[cswatch performSelector:@selector(setSavedColors:) withObject:newColors];
 	}
 }
 

@@ -345,3 +345,228 @@ void InsertMarker(COMMAND_T* _ct)
 	UpdateTimeline();
 	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
 }
+
+TempoMarker::TempoMarker(double _dTimePos, int _measurePos, double _dBeatPos, double _dBpm, int _timesig_num, int _timesig_denom, bool _bLinearTempo, RawTempoMarkerData _rawData)
+{
+	m_dTimePos = _dTimePos;
+	m_measurePos = _measurePos;
+	m_dBeatPos = _dBeatPos;
+	m_dBpm = _dBpm;
+	m_timesig_num = _timesig_num;
+	m_timesig_denom = _timesig_denom;
+	m_bLinearTempo = _bLinearTempo;
+	m_rawData = _rawData;
+}
+
+bool GetAllTempoMarkers(WDL_PtrList<void>* _tempoMarkers, ReaProject* _proj)
+{
+	if (_tempoMarkers)
+	{
+		_tempoMarkers->Empty();
+		double dTimePosOut;
+		int measurePosOut;
+		double dBeatPosOut;
+		double dBpmOut;
+		int timesig_numOut;
+		int timesig_denomOut;
+		bool bLinearTempoOut;
+
+		map<int, RawTempoMarkerData> tempoDataMap;
+
+		MediaTrack* masterTrack = GetMasterTrack(_proj);
+		TrackEnvelope* tempoEnvEx = GetTrackEnvelope(masterTrack, 0);
+		string tempoStateStr = envelope::GetEnvelopeStateChunkBig(tempoEnvEx);
+		char* envState = &tempoStateStr[0];
+		int index = 0;
+
+		char* token = strtok(envState, "\n");
+
+		while (token != NULL)
+		{
+			RawTempoMarkerData newTempoMarker = RawTempoMarkerData();
+			if (sscanf(token, "PT %lf %lf %d %u %d %d %d %s %u %u", &newTempoMarker.position, &newTempoMarker.bpm, &newTempoMarker.linearBool, &newTempoMarker.beatDivision, &newTempoMarker.intData4, &newTempoMarker.settingsBitmask, &newTempoMarker.intData6, newTempoMarker.stringData7, &newTempoMarker.uintData8, &newTempoMarker.metronomePattern) >= 2)
+			{
+				tempoDataMap[index] = newTempoMarker;
+				index++;
+			}
+			token = strtok(NULL, "\n");
+		}
+
+		for (int i = 0; i <= CountTempoTimeSigMarkers(_proj); i++)
+		{
+			if (GetTempoTimeSigMarker(_proj, i, &dTimePosOut, &measurePosOut, &dBeatPosOut, &dBpmOut, &timesig_numOut, &timesig_denomOut, &bLinearTempoOut))
+			{
+				if (tempoDataMap.find(i) != tempoDataMap.end())
+				{
+					TempoMarker* tempoMarker = new TempoMarker(dTimePosOut, measurePosOut, dBeatPosOut, dBpmOut, timesig_numOut, timesig_denomOut, bLinearTempoOut, tempoDataMap.find(i)->second);
+					_tempoMarkers->Add(tempoMarker);
+				}
+			}
+		}
+	}
+	return (_tempoMarkers && _tempoMarkers->GetSize());
+}
+
+bool GetTempoMarkersInInterval(WDL_PtrList<void>* _tempoMarkers, ReaProject* _proj, double _pos1, double _pos2)
+{
+	if (_tempoMarkers)
+	{
+		_tempoMarkers->Empty();
+		double dTimePosOut;
+		int measurePosOut;
+		double dBeatPosOut;
+		double dBpmOut;
+		int timesig_numOut;
+		int timesig_denomOut;
+		bool bLinearTempoOut;
+
+		map<int, RawTempoMarkerData> tempoDataMap;
+
+		MediaTrack* masterTrack = GetMasterTrack(_proj);
+		TrackEnvelope* tempoEnvEx = GetTrackEnvelope(masterTrack, 0);
+		string tempoStateStr = envelope::GetEnvelopeStateChunkBig(tempoEnvEx);
+		char* envState = &tempoStateStr[0];
+		int index = 0;
+
+		char* token = strtok(envState, "\n");
+
+		while (token != NULL)
+		{
+			RawTempoMarkerData newTempoMarker = RawTempoMarkerData();
+			if (sscanf(token, "PT %lf %lf %d %u %d %d %d %s %u %u", &newTempoMarker.position, &newTempoMarker.bpm, &newTempoMarker.linearBool, &newTempoMarker.beatDivision, &newTempoMarker.intData4, &newTempoMarker.settingsBitmask, &newTempoMarker.intData6, newTempoMarker.stringData7, &newTempoMarker.uintData8, &newTempoMarker.metronomePattern) >= 2)
+			{
+				tempoDataMap[index] = newTempoMarker;
+				index++;
+			}
+			token = strtok(NULL, "\n");
+		}
+
+		for (int i = 0; i <= CountTempoTimeSigMarkers(_proj); i++)
+		{
+			if (GetTempoTimeSigMarker(_proj, i, &dTimePosOut, &measurePosOut, &dBeatPosOut, &dBpmOut, &timesig_numOut, &timesig_denomOut, &bLinearTempoOut))
+			{
+				if (tempoDataMap.find(i) != tempoDataMap.end())
+				{
+					TempoMarker* tempoMarker = new TempoMarker(dTimePosOut, measurePosOut, dBeatPosOut, dBpmOut, timesig_numOut, timesig_denomOut, bLinearTempoOut, tempoDataMap.find(i)->second);
+					if (IsTempoMarkerInInterval(tempoMarker, _pos1, _pos2))
+						_tempoMarkers->Add(tempoMarker);
+				}
+			}
+		}			
+	}
+	return (_tempoMarkers && _tempoMarkers->GetSize());
+}
+
+bool IsTempoMarkerInInterval(TempoMarker* _tempoMarker, double _pos1, double _pos2)
+{
+	if (_tempoMarker)
+	{
+		double pos = _tempoMarker->GetTimePosition();
+		if (pos >= _pos1 && pos <= _pos2) // is within?
+			return true;
+	}
+	return false;
+}
+
+bool DuplicateTempoMarkers(WDL_PtrList<void>* _tempoMarkers, ReaProject* _proj, const char* _undoTitle, double _nudgePos)
+{
+	bool updated = false;
+
+	if (_undoTitle)
+		Undo_BeginBlock2(NULL);
+
+	if (_tempoMarkers)
+	{
+		std::map<double, RawTempoMarkerData> newMarkersPosition;
+
+		WDL_PtrList<void> oldTempoMarkers = *_tempoMarkers;
+
+		for (int i = 0; i < oldTempoMarkers.GetSize(); i++)
+		{
+			if (TempoMarker* oldTempoMarker = (TempoMarker*)oldTempoMarkers.Get(i)) 
+			{
+				double oldPos = oldTempoMarker->GetTimePosition();
+				double newPos = oldPos + _nudgePos;
+				SetTempoTimeSigMarker(_proj, -1, newPos,-1,-1, oldTempoMarker->GetBPM(), oldTempoMarker->GetTimeSignatureNumerator(), oldTempoMarker->GetTimeSignatureDenominator(), oldTempoMarker->IsLinearTempo());
+
+				newMarkersPosition[newPos]= oldTempoMarker->GetRawMarkerData();
+			}
+		}
+
+		double dTimePosOut;
+		int measurePosOut;
+		double dBeatPosOut;
+		double dBpmOut;
+		int timesig_numOut;
+		int timesig_denomOut;
+		bool bLinearTempoOut;
+		std::map<int, RawTempoMarkerData> newMarkersId;
+		for (int i = 0; i < CountTempoTimeSigMarkers(_proj); i++)
+		{
+			if (GetTempoTimeSigMarker(_proj, i, &dTimePosOut, &measurePosOut, &dBeatPosOut, &dBpmOut, &timesig_numOut, &timesig_denomOut, &bLinearTempoOut)) 
+			{
+				if (newMarkersPosition.find(dTimePosOut) != newMarkersPosition.end()) 
+				{
+					newMarkersId[i] = newMarkersPosition.find(dTimePosOut)->second;
+				}
+			}
+		}
+
+		MediaTrack* masterTrack = GetMasterTrack(_proj);
+		TrackEnvelope* tempoEnvEx = GetTrackEnvelope(masterTrack, 0);
+		string tempoStateStr = envelope::GetEnvelopeStateChunkBig(tempoEnvEx);
+		char* envState = &tempoStateStr[0];
+		string newState = "";
+		int index = 0;
+		double position;
+		int data5;
+		char* token = strtok(envState, "\n");
+
+		while (token != NULL)
+		{
+			int foundValues = sscanf(token, "PT %lf %*lf %*d %*u %*d %d %*d %*s %*u %*u", &position, &data5);
+			if (foundValues >= 1)
+			{
+				std::map<int, RawTempoMarkerData>::iterator findResult = newMarkersId.find(index);
+
+				if (findResult != newMarkersId.end())
+				{
+					string newToken = token;
+					char appendString[2048];
+					if (foundValues == 1)
+					{
+						sprintf(appendString, " %u %d", findResult->second.beatDivision, findResult->second.intData4);
+						newToken.append(appendString);
+					}
+					else
+					{
+						newToken = newToken.substr(0, newToken.size() - 2);
+					}
+
+					sprintf(appendString, " %d %d %s %u %u", findResult->second.settingsBitmask, findResult->second.intData6, findResult->second.stringData7, findResult->second.uintData8, findResult->second.metronomePattern);
+					newToken.append(appendString);
+					newState.append(newToken);
+					newState.append("\n");
+					token = strtok(NULL, "\n");
+					index++;
+					continue;
+				}
+
+				index++;
+			}
+			newState.append(token);
+			newState.append("\n");
+			token = strtok(NULL, "\n");
+		}
+
+		SetEnvelopeStateChunk(tempoEnvEx, newState.c_str(), false);
+
+	}
+
+	if (_undoTitle) {
+		UpdateArrange();
+		Undo_EndBlock2(NULL, _undoTitle, UNDO_STATE_ALL);
+	}
+	return updated;
+}
+

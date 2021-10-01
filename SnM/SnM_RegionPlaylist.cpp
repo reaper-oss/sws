@@ -1867,6 +1867,8 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, const AppendPasteCropPla
 
 				WDL_PtrList<void> itemsToKeep;
 				GetItemsInInterval(&itemsToKeep, rgnpos, rgnend, false);
+				WDL_PtrList<void> tempoMarkersToKeep;
+				GetTempoMarkersInInterval(&tempoMarkersToKeep, NULL, rgnpos, rgnend);
 				// store regions
 				bool found = false;
 				for (int k = 0; !found && k<rgns.GetSize(); k++)
@@ -1891,6 +1893,7 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, const AppendPasteCropPla
 				for (int k = 0; k < plItem->m_cnt; k++)
 				{
 					DupSelItems(NULL, endPos-rgnpos, &itemsToKeep); // overrides the native ApplyNudge()
+					DuplicateTempoMarkers(&tempoMarkersToKeep, NULL, NULL, endPos - rgnpos);
 					endPos += (rgnend-rgnpos);
 				}
 
@@ -1995,6 +1998,8 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, const AppendPasteCropPla
 
 	Main_OnCommand(40296, 0); // select all tracks
 	Main_OnCommand(40210, 0); // copy tracks
+	WDL_PtrList<void> tempoMarkers;
+	GetAllTempoMarkers(&tempoMarkers, NULL);
 
 	PreventUIRefresh(-1);
 
@@ -2031,6 +2036,8 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, const AppendPasteCropPla
 	// new project: the playlist is empty at this point
 	g_pls.Get()->Add(dupPlaylist);
 	g_pls.Get()->m_editId = 0;
+
+	DuplicateTempoMarkers(&tempoMarkers, NULL, NULL, 0);
 
 	PreventUIRefresh(-1);
 	SNM_UIRefresh(NULL);

@@ -71,4 +71,60 @@ protected:
 	int m_id;
 };
 
+//Handle tempo markers for region playlist
+struct RawTempoMarkerData
+{
+	double position = -1;
+	double bpm = -1;
+	int linearBool = -1;
+	unsigned int beatDivision = -1;
+	int intData4 = -1; //Not sure what it is
+	int settingsBitmask = -1;
+	int intData6 = -1; //Not sure what it is
+	char stringData7[10]; //Not sure what it is
+	unsigned int uintData8 = -1; //Not sure what it is
+	unsigned int metronomePattern = -1;
+};
+
+class TempoMarker
+{
+public:
+	TempoMarker(double _dTimePos, int _measurePos, double _dBeatPos, double _dBpm, int _timesig_num, int _timesig_denom, bool _bLinearTempo, RawTempoMarkerData _rawData);
+	~TempoMarker() {}
+
+	double GetTimePosition() { return m_dTimePos; }
+	void SetTimePosition(double dTimePos) { m_dTimePos = dTimePos; }
+	int GetMeasurePosition() { return m_measurePos; }
+	void SetMeasurePosition(int measurePos) { m_measurePos = measurePos; }
+	double GetBeatPosition() { return m_dBeatPos; }
+	void SetBeatPosition(double dBeatPos) { m_dBeatPos = dBeatPos; }
+	double GetBPM() { return m_dBpm; }
+	void SetBPM(double dBpm) { m_dBpm = dBpm; }
+	int GetTimeSignatureNumerator() { return m_timesig_num; }
+	void SetTimeSignatureNumerator(int timesig_num) { m_timesig_num = timesig_num; }
+	int GetTimeSignatureDenominator() { return m_timesig_denom; }
+	void SetTimeSignatureDenominator(int timesig_denom) { m_timesig_denom = timesig_denom; }
+	bool IsLinearTempo() { return m_bLinearTempo; }
+	void SetIsLinearTempo(bool bLinearTempo) { m_bLinearTempo = bLinearTempo; }
+	RawTempoMarkerData GetRawMarkerData() { return m_rawData; }
+	void SetRawMarkerData(RawTempoMarkerData rawData) { m_rawData = rawData; };
+
+protected:
+	double m_dTimePos;
+	int m_measurePos;
+	double m_dBeatPos;
+	double m_dBpm;
+	int m_timesig_num;
+	int m_timesig_denom;
+	bool m_bLinearTempo;
+	RawTempoMarkerData m_rawData;
+
+};
+
+
+
+bool GetAllTempoMarkers(WDL_PtrList<void>* _tempoMarkers, ReaProject* _proj);
+bool GetTempoMarkersInInterval(WDL_PtrList<void>* _tempoMarkers, ReaProject* _proj, double _pos1, double _pos2);
+bool IsTempoMarkerInInterval(TempoMarker* _tempoMarker, double _pos1, double _pos2);
+bool DuplicateTempoMarkers(WDL_PtrList<void>* _tempoMarkers, ReaProject* _proj, const char* _undoTitle, double _nudgePos);
 #endif

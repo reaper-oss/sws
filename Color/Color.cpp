@@ -45,9 +45,8 @@ static bool g_bRecRedRuler = false;
 
 void UpdateCustomColors()
 {
-#ifndef __APPLE__
 	GetPrivateProfileStruct("REAPER", "custcolors", g_custColors, sizeof(g_custColors), get_ini_file());
-#else
+#ifdef __APPLE__
 	GetCustomColors(g_custColors);
 #endif
 }
@@ -66,9 +65,8 @@ void PersistColors()
 	char str[256];
 	sprintf(str, "%d %d", g_crGradStart, g_crGradEnd);
 	WritePrivateProfileString(SWS_INI, GRADIENT_COLOR_KEY, str, get_ini_file());
-#ifndef __APPLE__
 	WritePrivateProfileStruct("REAPER", "custcolors", g_custColors, sizeof(g_custColors), get_ini_file());
-#else
+#ifdef __APPLE__
 	SetCustomColors(g_custColors);
 #endif
 }

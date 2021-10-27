@@ -865,8 +865,8 @@ bool BR_MouseInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& 
 		ScreenToClient(segmentHwnd, &p);
 		RECT r; GetClientRect(segmentHwnd, &r);
 
-		if (midiEditor.GetPianoRoll() == 0 || midiEditor.GetPianoRoll() == 1)
-			mouseInfo.pianoRollMode = midiEditor.GetPianoRoll();
+		// ignoring extra flags from GetPianoRoll() (eg. custom note order mode=0x10000)
+		mouseInfo.pianoRollMode = midiEditor.GetPianoRoll() & 0xffff;
 
 		// Make sure mouse is really in note editing area
 		if (cursorSegment == MIDI_WND_NOTEVIEW)
@@ -962,7 +962,7 @@ bool BR_MouseInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& 
 					if (realMouseY > 0)
 					{
 						bool processKeyboardSeparately = true;
-						vector<int> visibleNoteRows = GetUsedNamedNotes(mouseInfo.midiEditor, NULL, midiEditor.GetNoteshow() != SHOW_ALL_NOTES, midiEditor.GetNoteshow() == HIDE_UNUSED_UNNAMED_NOTES, midiEditor.GetDrawChannel());
+						const vector<int> visibleNoteRows = midiEditor.GetUsedNamedNotes();
 
 						if (cursorSegment == MIDI_WND_NOTEVIEW)
 							processKeyboardSeparately = false;
@@ -1088,8 +1088,7 @@ bool BR_MouseInfo::GetContextMIDIInline (BR_MouseInfo::MouseInfo& mouseInfo, int
 		mouseInfo.window = "midi_editor";
 		mouseInfo.inlineMidi = true;
 
-		if (midiEditor.GetPianoRoll() == 0 || midiEditor.GetPianoRoll() == 1)
-			mouseInfo.pianoRollMode = midiEditor.GetPianoRoll();
+		mouseInfo.pianoRollMode = midiEditor.GetPianoRoll() & 0xffff;
 
 		// Get heights of various elements
 		int ccFullHeight = midiEditor.GetCCLanesFullheight(false);

@@ -45,7 +45,8 @@ enum BR_MidiNoteshow
 {
 	SHOW_ALL_NOTES             = 0,
 	HIDE_UNUSED_NOTES          = 1,
-	HIDE_UNUSED_UNNAMED_NOTES  = 2
+	HIDE_UNUSED_UNNAMED_NOTES  = 2,
+	CUSTOM_NOTES_VIEW          = 3,
 };
 
 /******************************************************************************
@@ -138,6 +139,7 @@ public:
 
 	/* Misc */
 	HWND GetEditor ();
+	vector<int> GetUsedNamedNotes ();
 
 	/* Check if MIDI editor data is valid - should call right after creating the object  */
 	bool IsValid ();
@@ -154,7 +156,7 @@ private:
 	double m_filterEventPosRepeat, m_filterEventPosLo, m_filterEventPosHi, m_filterEventLenLo, m_filterEventLenHi;
 	bool m_filterEnabled, m_filterInverted, m_filterEventParam, m_filterEventVal, m_filterEventPos, m_filterEventLen;
 	bool m_valid;
-	vector<int> m_ccLanes, m_ccLanesHeight;
+	vector<int> m_ccLanes, m_ccLanesHeight, m_notesOrder;
 };
 
 /******************************************************************************
@@ -217,7 +219,6 @@ double ME_PositionAtMouseCursor (bool checkRuler, bool checkCCLanes);
 /******************************************************************************
 * Miscellaneous                                                               *
 ******************************************************************************/
-vector<int> GetUsedNamedNotes (HWND midiEditor, MediaItem_Take* take, bool used, bool named, int channelForNames);
 vector<int> GetSelectedNotes (MediaItem_Take* take);
 vector<int> MuteUnselectedNotes (MediaItem_Take* take); // returns previous mute state of all notes
 set<int> GetUsedCCLanes (HWND midiEditor, int detect14bit, bool selectedEventsOnly); // detect14bit: 0-> don't detect 14-bit, 1->detect partial 14-bit (count both 14 bit lanes and their counterparts) 2->detect full 14-bit (detect only if all CCs that make it have exactly same time positions)

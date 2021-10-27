@@ -510,6 +510,23 @@ bool BR_MidiEditor::Build ()
 				else
 					return false;
 
+				if (m_noteshow == CUSTOM_NOTES_VIEW)
+				{
+					MediaTrack* track = GetMediaItemTake_Track(m_take);
+					WDL_FastString notesOrder;
+					SNM_ChunkParserPatcher p(track);
+					if (p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "CUSTOM_NOTE_ORDER", 0, -1, &notesOrder))
+					{
+						LineParser lp(false);
+						lp.parse(notesOrder.Get());
+						lp.eattoken();
+
+						m_notesOrder.reserve(lp.getnumtokens());
+						for (int i = 0; i < lp.getnumtokens(); ++i)
+							m_notesOrder.push_back(lp.gettoken_int(i));
+					}
+				}
+
 				// A few "corrections" for easier manipulation afterwards
 				if (m_filterChannel == 0)     m_filterChannel = ~m_filterChannel;
 				if (m_filterEventParamLo < 0) m_filterEventParamLo = 0;
@@ -710,38 +727,50 @@ double ME_PositionAtMouseCursor (bool checkRuler, bool checkCCLanes)
 /******************************************************************************
 * Miscellaneous                                                               *
 ******************************************************************************/
-vector<int> GetUsedNamedNotes (HWND midiEditor, MediaItem_Take* take, bool used, bool named, int channelForNames)
+vector<int> BR_MidiEditor::GetUsedNamedNotes ()
 {
 	/* Not really reliable, user could have changed default draw channel  *
 	*  but without resetting note view settings, view won't get updated   */
 
-	vector<bool> allNotesStatus(128, false);
-	MediaItem_Take* midiTake = midiEditor ? MIDIEditor_GetTake(midiEditor) : take;
+	vector<int> notes;
 
-	if (named)
+	switch (GetNoteshow())
 	{
-		MediaTrack* track = GetMediaItemTake_Track(midiTake);
+	case CUSTOM_NOTES_VIEW:
+		return m_notesOrder;
+	case HIDE_UNUSED_NOTES:
+	case HIDE_UNUSED_UNNAMED_NOTES:
+		break;
+	case SHOW_ALL_NOTES:
+	default:
+		return notes;
+	}
+
+	vector<bool> allNotesStatus(128, false);
+
+	if (GetNoteshow() == HIDE_UNUSED_UNNAMED_NOTES)
+	{
+		MediaTrack* track = GetMediaItemTake_Track(GetActiveTake());
+		const int channelForNames = GetDrawChannel();
+
 		for (size_t i = 0; i < allNotesStatus.size(); ++i)
 			if (GetTrackMIDINoteNameEx(NULL, track, static_cast<int>(i), channelForNames))
 				allNotesStatus[i] = true;
 	}
 
-	if (used)
+	int noteCount;
+	if (MIDI_CountEvts(GetActiveTake(), &noteCount, NULL, NULL))
 	{
-		int noteCount;
-		if (MIDI_CountEvts(midiTake, &noteCount, NULL, NULL))
+		for (int i = 0; i < noteCount; ++i)
 		{
-			for (int i = 0; i < noteCount; ++i)
-			{
-				int pitch;
-				MIDI_GetNote(midiTake, i, NULL, NULL, NULL, NULL, NULL, &pitch, NULL);
-				allNotesStatus[pitch] = true;
-			}
+			int pitch;
+			MIDI_GetNote(GetActiveTake(), i, NULL, NULL, NULL, NULL, NULL, &pitch, NULL);
+			allNotesStatus[pitch] = true;
 		}
 	}
 
-	vector<int> notes;
 	notes.reserve(allNotesStatus.size());
+
 	for (size_t i = 0; i < allNotesStatus.size(); ++i)
 	{
 		if (allNotesStatus[i])

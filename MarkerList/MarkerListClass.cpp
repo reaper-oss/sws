@@ -58,7 +58,7 @@ MarkerItem::MarkerItem(LineParser* lp)
 
 char* MarkerItem::ItemString(char* str, int iSize)
 {
-	WDL_String name;
+	WDL_FastString name;
 	makeEscapedConfigString(GetName(), &name);
 	snprintf(str, iSize, "%d %.14f %s %d %.14f %d", m_num, m_dPos, name.Get(), m_bReg ? 1 : 0, m_dRegEnd, m_iColor);
 	return str;

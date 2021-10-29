@@ -821,7 +821,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 					}
 					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_AUDIOOUT]) == 0)
 					{
-            int hwouts = GetTrackNumSends(tr, 1);
+						int hwouts = GetTrackNumSends(tr, 1);
 						if (hwouts) {
 							bMatch = true;
 						}
@@ -1073,7 +1073,7 @@ void AutoColorTrack(bool bForce)
 					GetSetMediaTrackInfo(pACTrack->m_pTr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", (void*)"");
 				}
 				pACTrack->m_layout[k].Set("");
-      }
+			}
 			// '(hide)' layout
 			if (!pACTrack->m_bLayouted[k] && pACTrack->m_layout[k].GetLength() && !_stricmp(pACTrack->m_layout[k].Get(), "(hide)"))
 			{
@@ -1086,7 +1086,7 @@ void AutoColorTrack(bool bForce)
 				}
 				pACTrack->m_layout[k].Set("");
 			}
-    }
+		}
 	}
 
 	if (bForce)

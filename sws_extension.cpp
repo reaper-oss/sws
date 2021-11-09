@@ -473,14 +473,21 @@ static void importExtensionAPI()
 // and callbacks for some "track params have changed"
 class SWSTimeSlice : public IReaperControlSurface
 {
+	enum ACUpdateFlags {
+		ACUpdate_None             = 0x0000,
+		ACUpdate_AutoColorTrack   = 0x0001,
+		ACUpdate_TrackListChange  = 0x0002,
+		ACUpdate_TrackTitle       = 0x0004
+	};
+
 public:
 	const char *GetTypeString() { return ""; }
 	const char *GetDescString() { return ""; }
 	const char *GetConfigString() { return ""; }
 
 	bool m_bChanged;
-	bool m_bACUpdate;
-	SWSTimeSlice() : m_bChanged(false), m_bACUpdate(false) {}
+	int m_iACUpdateFlags;
+	SWSTimeSlice() : m_bChanged(false), m_iACUpdateFlags(ACUpdate_None) {}
 
 	void Run() // BR: Removed some stuff from here and made it use plugin_register("timer"/"-timer") - it's the same thing as this but it enables us to remove unused stuff completely
 	{          // I guess we could do the rest too (and add user options to enable where needed)...
@@ -496,10 +503,19 @@ public:
 			UpdateSnapshotsDialog();
 			ProjectListUpdate();
 		}
-		if (m_bACUpdate)
+		if (m_iACUpdateFlags)
 		{
-			m_bACUpdate = false;
 			AutoColorTrack(false);
+			if (m_iACUpdateFlags & ACUpdate_TrackListChange)
+			{
+				AutoColorMarkerRegion(false);
+				SNM_CSurfSetTrackListChange();
+			}
+			if (m_iACUpdateFlags & ACUpdate_TrackTitle)
+			{
+				SNM_CSurfSetTrackTitle();
+			}
+			m_iACUpdateFlags = ACUpdate_None;
 		}
 	}
 
@@ -515,9 +531,7 @@ public:
 	void SetTrackListChange()
 	{
 		m_bChanged = true;
-		m_bACUpdate = true;
-		AutoColorMarkerRegion(false);
-		SNM_CSurfSetTrackListChange();
+		m_iACUpdateFlags |= ACUpdate_TrackListChange;
 	}
 
 	// For every SetTrackListChange we get NumTracks+1 SetTrackTitle calls, but we only
@@ -526,8 +540,7 @@ public:
 	void SetTrackTitle(MediaTrack *tr, const char *c)
 	{
 		ScheduleTracklistUpdate();
-		m_bACUpdate = true;
-		SNM_CSurfSetTrackTitle();
+		m_iACUpdateFlags |= ACUpdate_TrackTitle;
 	}
 
 	void OnTrackSelection(MediaTrack *tr) // 3 problems with this (last check v5.0pre28): doesn't work if Mixer option "Scroll view when tracks activated" is disabled
@@ -557,7 +570,7 @@ public:
 		{
 		case CSURF_EXT_SETFXCHANGE:
 		case CSURF_EXT_SETINPUTMONITOR: // input/output change
-			m_bACUpdate = true;
+			m_iACUpdateFlags |= ACUpdate_AutoColorTrack;
 			break;
 		}
 

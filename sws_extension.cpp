@@ -479,8 +479,8 @@ public:
 	const char *GetConfigString() { return ""; }
 
 	bool m_bChanged;
-	int m_iACIgnore;
-	SWSTimeSlice() : m_bChanged(false), m_iACIgnore(0) {}
+	bool m_bACUpdate;
+	SWSTimeSlice() : m_bChanged(false), m_bACUpdate(false) {}
 
 	void Run() // BR: Removed some stuff from here and made it use plugin_register("timer"/"-timer") - it's the same thing as this but it enables us to remove unused stuff completely
 	{          // I guess we could do the rest too (and add user options to enable where needed)...
@@ -496,6 +496,11 @@ public:
 			UpdateSnapshotsDialog();
 			ProjectListUpdate();
 		}
+		if (m_bACUpdate)
+		{
+			m_bACUpdate = false;
+			AutoColorTrack(false);
+		}
 	}
 
 	void SetPlayState(bool play, bool pause, bool rec)
@@ -510,24 +515,19 @@ public:
 	void SetTrackListChange()
 	{
 		m_bChanged = true;
-		AutoColorTrack(false);
+		m_bACUpdate = true;
 		AutoColorMarkerRegion(false);
 		SNM_CSurfSetTrackListChange();
-		m_iACIgnore = GetNumTracks() + 1;
 	}
+
 	// For every SetTrackListChange we get NumTracks+1 SetTrackTitle calls, but we only
 	// want to call AutoColorRun once, so ignore those n+1.
 	// However, we still need to trap track name changes with no track list change.
 	void SetTrackTitle(MediaTrack *tr, const char *c)
 	{
 		ScheduleTracklistUpdate();
-		if (!m_iACIgnore)
-		{
-			AutoColorTrack(false);
-			SNM_CSurfSetTrackTitle();
-		}
-		else
-			m_iACIgnore--;
+		m_bACUpdate = true;
+		SNM_CSurfSetTrackTitle();
 	}
 
 	void OnTrackSelection(MediaTrack *tr) // 3 problems with this (last check v5.0pre28): doesn't work if Mixer option "Scroll view when tracks activated" is disabled
@@ -557,7 +557,7 @@ public:
 		{
 		case CSURF_EXT_SETFXCHANGE:
 		case CSURF_EXT_SETINPUTMONITOR: // input/output change
-			AutoColorTrack(false);
+			m_bACUpdate = true;
 			break;
 		}
 

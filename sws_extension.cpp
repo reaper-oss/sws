@@ -485,9 +485,8 @@ public:
 	const char *GetDescString() { return ""; }
 	const char *GetConfigString() { return ""; }
 
-	bool m_bChanged;
 	int m_iACUpdateFlags;
-	SWSTimeSlice() : m_bChanged(false), m_iACUpdateFlags(ACUpdate_None) {}
+	SWSTimeSlice() : m_iACUpdateFlags(ACUpdate_None) {}
 
 	void Run() // BR: Removed some stuff from here and made it use plugin_register("timer"/"-timer") - it's the same thing as this but it enables us to remove unused stuff completely
 	{          // I guess we could do the rest too (and add user options to enable where needed)...
@@ -495,26 +494,33 @@ public:
 		ZoomSlice();
 		MiscSlice();
 
-		if (m_bChanged)
-		{
-			m_bChanged = false;
-			ScheduleTracklistUpdate();
-			g_pMarkerList->Update();
-			UpdateSnapshotsDialog();
-			ProjectListUpdate();
-		}
 		if (m_iACUpdateFlags)
 		{
+			bool trackListUpdate = m_iACUpdateFlags & ACUpdate_TrackListChange;
+			bool titleUpdate = m_iACUpdateFlags & ACUpdate_TrackTitle;
+			bool wantsTrackListScheduled = trackListUpdate || titleUpdate;
+
 			AutoColorTrack(false);
-			if (m_iACUpdateFlags & ACUpdate_TrackListChange)
+
+			if (trackListUpdate)
 			{
 				AutoColorMarkerRegion(false);
 				SNM_CSurfSetTrackListChange();
+				g_pMarkerList->Update();
+				UpdateSnapshotsDialog();
+				ProjectListUpdate();
 			}
-			if (m_iACUpdateFlags & ACUpdate_TrackTitle)
+
+			if (wantsTrackListScheduled)
+			{
+				ScheduleTracklistUpdate();
+			}
+
+			if (titleUpdate)
 			{
 				SNM_CSurfSetTrackTitle();
 			}
+
 			m_iACUpdateFlags = ACUpdate_None;
 		}
 	}
@@ -530,7 +536,6 @@ public:
 	// This is our only notification of active project tab change, so update everything
 	void SetTrackListChange()
 	{
-		m_bChanged = true;
 		m_iACUpdateFlags |= ACUpdate_TrackListChange;
 	}
 
@@ -539,7 +544,6 @@ public:
 	// However, we still need to trap track name changes with no track list change.
 	void SetTrackTitle(MediaTrack *tr, const char *c)
 	{
-		ScheduleTracklistUpdate();
 		m_iACUpdateFlags |= ACUpdate_TrackTitle;
 	}
 

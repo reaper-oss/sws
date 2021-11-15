@@ -116,6 +116,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 	if (bMinimizeOthers)
 	{
 		*ConfigVar<int>("vzoom2") = 0;
+		int iMinimizedTracks = 0;
 		// setting I_HEIGHTOVERRIDE to 0 on locked track effectively disables track lock
 		// see https://forum.cockos.com/showthread.php?p=2202082
 		for (int i = 0; i <= GetNumTracks(); i++)
@@ -123,12 +124,15 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 			MediaTrack* tr = CSurf_TrackFromID(i, false);
 			const bool locked = GetMediaTrackInfo_Value(tr, "B_HEIGHTLOCK");
 			if (!obeyHeightLock || !locked)
+			{
 				SetMediaTrackInfo_Value(tr, "I_HEIGHTOVERRIDE", locked ? minTrackHeight : 0);
+				iMinimizedTracks += 1;
+			}		
 		}
 
 		Main_OnCommand(40112, 0); // Zoom out vert to minimize envelope lanes too (since vZoom is now 0) (calls refresh)
-		//TrackList_AdjustWindows(false);
-		//UpdateTimeline();
+		if (iMinimizedTracks <= 1) // ignore master track since there can be no items on it
+			return;
 
 		// Get the size of shown but not zoomed tracks
 		int iNotZoomedSize = 0;
@@ -150,7 +154,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 				{
 					int trackHeight = 0;
 					if (obeyHeightLock && locked)
-						GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", &trackHeight);
+						trackHeight = static_cast<int>(GetMediaTrackInfo_Value(tr, "I_HEIGHTOVERRIDE"));
 					else
 						trackHeight = GetTrackHeightFromVZoomIndex(tr, 0);
 
@@ -249,7 +253,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 				{
 					const bool locked = GetMediaTrackInfo_Value(tr, "B_HEIGHTLOCK");
 					if (obeyHeightLock && locked)
-						GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", &trackHeight);
+						trackHeight = static_cast<int>(GetMediaTrackInfo_Value(tr, "I_HEIGHTOVERRIDE"));
 					else
 						trackHeight = GetTrackHeightFromVZoomIndex(tr, iZoom);
 

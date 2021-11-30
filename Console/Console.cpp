@@ -103,6 +103,7 @@ static console_COMMAND_T g_commands[NUM_COMMANDS] =
 	{ COLOR_SET,        0, 'c',  9, "Change color on ",      " to %s" },
 	{ MARKER_ADD,       0, '!', 25, "Insert action marker ", "!%s" },
 	{ OSC_CMD,          0, '/', 25, "Send local OSC message", 0 },
+	{ WRITE_STATE,      0, 'W', 25, "Write non-persistent extended state", 0 },
 	{ HELP_CMD,         0, '?', -1, SWS_URL_HELP_DIR"/reaconsole.php", 0 },
 	{ UNKNOWN_COMMAND,  0,   0, -1, "Enter a command...",    0 },
 };
@@ -408,6 +409,19 @@ void ProcessCommand(CONSOLE_COMMAND command, const char* args)
 				char oscStr[256];
 				snprintf(oscStr, sizeof(oscStr), "/%s", args);
 				SNM_SendLocalOscMessage(oscStr);
+				break;
+			}
+		case WRITE_STATE:
+			{
+				const char *section = strtok((char *)args, " ");
+				const char *key = strtok(NULL, " ");
+				if (section && key) {
+					const char *value = strtok(NULL, "");
+					if (value)
+						SetExtState(section, key, value, false);
+					else
+						DeleteExtState(section, key, false);
+				}
 				break;
 			}
 		default:

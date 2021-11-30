@@ -40,6 +40,9 @@ Notes:
 MIDI Editor:
 +Support REAPER v6.38's new custom note order/visibility mode
 
+ReaConsole:
++Add new 'W' command to write non-persistent data via SetExtState() which can be used to create reusable scripts. Command is in the form 'W <section> <key> <any arbitrary string value>'
+
 ReaScript API:
 +Add a return value for whether the source cue is a chapter marker to CF_EnumMediaSourceCues
 +Add CF_GetMediaSourceBitRate (exposing REAPER v6.19's new PCM_SOURCE_EXT_GETBITRATE API, issue 1134)

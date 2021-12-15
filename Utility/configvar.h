@@ -34,7 +34,7 @@ public:
     : m_name{name}, m_addr{}
   {
     int size = 0;
-    void *addr = nullptr;
+    void *addr;
 
     if(const int offset = projectconfig_var_getoffs(name, &size))
       addr = projectconfig_var_addr(project, offset);

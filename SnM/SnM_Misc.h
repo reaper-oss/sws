@@ -49,6 +49,7 @@ double SNM_GetDoubleConfigVar(const char* _varName, double _errVal);
 bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal);
 bool SNM_GetLongConfigVar(const char* _varName, int *_highOut, int *_lowOut);
 bool SNM_SetLongConfigVar(const char* _varName, int _newHighVal, int _newLowVal);
+bool SNM_SetStringConfigVar(const char* _varName, const char *_newVal);
 const char* ULT_GetMediaItemNote(MediaItem* _item);
 void ULT_SetMediaItemNote(MediaItem* _item, const char* _str);
 bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tagval_sz);

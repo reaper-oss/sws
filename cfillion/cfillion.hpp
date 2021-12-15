@@ -43,6 +43,7 @@ const char *CF_GetCommandText(int section, int command);
 
 HWND CF_GetFocusedFXChain();
 HWND CF_GetTrackFXChain(MediaTrack *);
+HWND CF_GetTrackFXChainEx(ReaProject *, MediaTrack *, bool inputChain);
 HWND CF_GetTakeFXChain(MediaItem_Take *);
 int CF_EnumSelectedFX(HWND chain, int index = -1);
 bool CF_SelectTrackFX(MediaTrack *, int index);

@@ -203,14 +203,20 @@ static void CF_RefreshTrackFXChainTitle(MediaTrack *track)
 
 HWND CF_GetTrackFXChain(MediaTrack *track)
 {
+  return CF_GetTrackFXChainEx(nullptr, track, false);
+}
+
+HWND CF_GetTrackFXChainEx(ReaProject *, MediaTrack *track, const bool input)
+{
+  // REAPER already validates whether the track belongs to the given project
   if(!track)
     return nullptr;
 
   char chainTitle[128];
 
-  if(track == GetMasterTrack(nullptr)) {
-    snprintf(chainTitle, sizeof(chainTitle), "%s%s",
-      __LOCALIZE("FX: ", "fx"), __LOCALIZE("Master Track", "fx"));
+  if(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") == -1) {
+    snprintf(chainTitle, sizeof(chainTitle), "%s%s", __LOCALIZE("FX: ", "fx"),
+      input ? __LOCALIZE("Monitoring", "fx") : __LOCALIZE("Master Track", "fx"));
 
     return FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
   }
@@ -228,9 +234,10 @@ HWND CF_GetTrackFXChain(MediaTrack *track)
   GetSetMediaTrackInfo_String(track, "P_NAME", guid, true);
   CF_RefreshTrackFXChainTitle(track);
 
-  snprintf(chainTitle, sizeof(chainTitle), R"(%s%s %d "%s"%s)",
+  snprintf(chainTitle, sizeof(chainTitle), R"(%s%s %d "%s"%s%s)",
     __LOCALIZE("FX: ", "fx"), __LOCALIZE("Track", "fx"), trackNumber, guid,
-    isFolder ? __LOCALIZE(" (folder)", "fx") : "");
+    isFolder ? __LOCALIZE(" (folder)", "fx") : "",
+    input    ? __LOCALIZE(" (input FX chain)", "fx") : "");
 
   HWND match { GetReaHwndByTitle(chainTitle) };
 

@@ -269,6 +269,17 @@ bool SNM_SetLongConfigVar(const char *varName, const int newHighValue, const int
 	return ConfigVar<long long>(varName).try_set(newValue);
 }
 
+bool SNM_SetStringConfigVar(const char *varName, const char *newValue) {
+  int size = 0;
+  char *data = static_cast<char *>(get_config_var(varName, &size));
+
+  if(!data || !newValue || size < strlen(newValue) + 1)
+    return false;
+
+  snprintf(data, size, "%s", newValue);
+  return true;
+}
+
 // host some funcs from Ultraschall, https://github.com/Ultraschall
 const char* ULT_GetMediaItemNote(MediaItem* _item) {
 		return _item ? (const char*)GetSetMediaItemInfo(_item, "P_NOTES", NULL): "";

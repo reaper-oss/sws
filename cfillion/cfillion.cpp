@@ -37,9 +37,9 @@
 #ifdef _WIN32
   constexpr unsigned int CLIPBOARD_FORMAT { CF_UNICODETEXT };
 #else
-// using RegisterClipboardFormat instead of CF_TEXT for compatibility with REAPER v5
-// (prior to WDL commit 0f77b72adf1cdbe98fd56feb41eb097a8fac5681)
-#  define CLIPBOARD_FORMAT RegisterClipboardFormat("SWELL__CF_TEXT")
+// requires redefinition of CF_TEXT in sws_rpf_wrapper.h to be a runtime call to
+// RegisterClipboardFormat for compatibility with REAPERS v5
+#  define CLIPBOARD_FORMAT CF_TEXT
 #endif
 
 extern WDL_PtrList_DOD<WDL_FastString> g_script_strs;

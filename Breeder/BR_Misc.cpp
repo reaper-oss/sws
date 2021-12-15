@@ -1536,6 +1536,11 @@ void ClearProjectTrackSelAction (COMMAND_T* ct)
 	}
 }
 
+SWSProjConfig<WDL_FastString>* GetProjectTrackSelectionAction()
+{
+	return &g_trackSelActions;
+}
+
 /******************************************************************************
 * Toggle states: Misc                                                         *
 ******************************************************************************/

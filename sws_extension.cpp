@@ -552,6 +552,15 @@ public:
 	{
 		BR_CSurf_Extended(call, parm1, parm2, parm3);
 		SNM_CSurfExtended(call, parm1, parm2, parm3);
+
+		switch(call)
+		{
+		case CSURF_EXT_SETFXCHANGE:
+		case CSURF_EXT_SETINPUTMONITOR: // input/output change
+			AutoColorTrack(false);
+			break;
+		}
+
 		return 0;
 	}
 };

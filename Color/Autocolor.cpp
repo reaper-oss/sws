@@ -58,7 +58,7 @@
 #define AC_ITEM_KEY    "AutoColor %d"
 
 
-enum { AC_ANY=0, AC_UNNAMED, AC_FOLDER, AC_CHILDREN, AC_RECEIVE, AC_MASTER, AC_REC_ARM, AC_VCA_MASTER, NUM_FILTERTYPES };
+enum { AC_ANY=0, AC_UNNAMED, AC_FOLDER, AC_CHILDREN, AC_RECEIVE, AC_MASTER, AC_REC_ARM, AC_VCA_MASTER, AC_INSTRUMENT, AC_AUDIOIN, AC_AUDIOOUT, AC_MIDIIN, AC_MIDIOUT, NUM_FILTERTYPES };
 enum { AC_RGNANY=0, AC_RGNUNNAMED, NUM_RGNFILTERTYPES };
 enum { AC_CUSTOM, AC_GRADIENT, AC_RANDOM, AC_NONE, AC_PARENT, AC_IGNORE, NUM_COLORTYPES };
 enum { COL_ID=0, COL_TYPE, COL_FILTER, COL_COLOR, COL_ICON, COL_TCP_LAYOUT, COL_MCP_LAYOUT, COL_COUNT };
@@ -71,7 +71,7 @@ enum { AC_HIDE_MCP=0, NUM_MCP_LAYOUTTYPES };
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_115
 static SWS_LVColumn g_cols[] = { {25, 0, "#" }, {25, 0, "Rule type"}, { 185, 1, "Filter" }, { 70, 1, "Color" }, { 200, 2, "Icon" }, { 100, 1, "TCP Layout" }, { 100, 1, "MCP Layout" }};
 static const char cTypes[][256] = {"Track", "Marker", "Region" }; // keep this order, see above
-static const char cFilterTypes[][256] = { "(any)", "(unnamed)", "(folder)", "(children)", "(receive)", "(master)", "(record armed)", "(vca master)" };
+static const char cFilterTypes[][256] = { "(any)", "(unnamed)", "(folder)", "(children)", "(receive)", "(master)", "(record armed)", "(vca master)", "(instrument)", "(audio input)", "(audio output)", "(MIDI input)", "(MIDI output)" };
 static const char cColorTypes[][256] = { "Custom", "Gradient", "Random", "None", "Parent", "Ignore" };
 static const char cLayoutTypes[][256] = { "(hide)" }; // #1008, additional '(hide)' layout, same for TCP and MCP
 // !WANT_LOCALIZE_STRINGS_END
@@ -676,7 +676,7 @@ HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 			case COL_MCP_LAYOUT:
 				for (int i = 0; i < NUM_MCP_LAYOUTTYPES; i++)
 					AddToMenu(hMenu, __localizeFunc(cLayoutTypes[i], "sws_DLG_115", LOCALIZE_FLAG_NOCACHE), LAYOUTTYPE_MCP_MSG + i);
-				
+
 				AddToMenu(hMenu, __LOCALIZE("(Double-click to edit layout name)","sws_DLG_115"), 0, -1, false, MF_GRAYED);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				break;
@@ -812,6 +812,41 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 						if (iVcaMaster || iVcaMasterHigh)
 							bMatch = true;
 					}
+					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_AUDIOIN]) == 0)
+					{
+						int input = *(int*)GetSetMediaTrackInfo(tr, "I_RECINPUT", NULL);
+						if (input >= 0 && !(input & 4096)) { // !none && !MIDI
+							bMatch = true;
+						}
+					}
+					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_AUDIOOUT]) == 0)
+					{
+						int hwouts = GetTrackNumSends(tr, 1);
+						if (hwouts) {
+							bMatch = true;
+						}
+					}
+					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_INSTRUMENT]) == 0)
+					{
+						if (TrackFX_GetInstrument(tr) >= 0)
+							bMatch = true;
+					}
+					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_MIDIIN]) == 0)
+					{
+						int input = *(int*)GetSetMediaTrackInfo(tr, "I_RECINPUT", NULL);
+						if (input >= 0 && (input & 4096)) { // !none && MIDI
+							bMatch = true;
+						}
+					}
+					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_MIDIOUT]) == 0)
+					{
+						int midihw = *(int*)GetSetMediaTrackInfo(tr, "I_MIDIHWOUT", NULL);
+						int mididv = midihw >> 5;
+						// int midich = midihw & 0xF;
+						if (mididv >= 0) {
+							bMatch = true;
+						}
+					}
 					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_ANY]) == 0)
 					{
 						bMatch = true;
@@ -900,7 +935,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 					for (int k=0; k<2; k++) if (bLayout[k])
 					{
 						// 'normal' track layout
-						if (_stricmp(rule->m_layout[k].Get(), pACTrack->m_layout[k].Get()) && _stricmp(rule->m_layout[k].Get(), "(hide)")) 
+						if (_stricmp(rule->m_layout[k].Get(), pACTrack->m_layout[k].Get()) && _stricmp(rule->m_layout[k].Get(), "(hide)"))
 						{
 							const char *curlayout = (const char*)GetSetMediaTrackInfo(tr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", NULL);
 							if (curlayout && _stricmp(curlayout, rule->m_layout[k].Get()))
@@ -913,13 +948,13 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 							}
 							pACTrack->m_layout[k].Set(rule->m_layout[k].Get());
 						}
-						// '(hide)' layout 
-						if (_stricmp(rule->m_layout[k].Get(), pACTrack->m_layout[k].Get()) && !_stricmp(rule->m_layout[k].Get(), "(hide)")) 
+						// '(hide)' layout
+						if (_stricmp(rule->m_layout[k].Get(), pACTrack->m_layout[k].Get()) && !_stricmp(rule->m_layout[k].Get(), "(hide)"))
 						{
 							bool isTrackVisible = IsTrackVisible(tr, k ? true : false);
 
 							if (isTrackVisible && !_stricmp(rule->m_layout[k].Get(), "(hide)"))
-							{	
+							{
 								// Only hide the track if visible, or we're forcing, or we hid it ourselves earlier
 								if (bForce || isTrackVisible == IsTrackVisible(pACTrack->m_pTr, k ? true : false))
 								{
@@ -1035,11 +1070,11 @@ void AutoColorTrack(bool bForce)
 				const char *curlayout = (const char*)GetSetMediaTrackInfo(pACTrack->m_pTr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", NULL);
 				if (curlayout && !_stricmp(pACTrack->m_layout[k].Get(), curlayout))
 				{
-					GetSetMediaTrackInfo(pACTrack->m_pTr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", (void*)"");        
+					GetSetMediaTrackInfo(pACTrack->m_pTr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", (void*)"");
 				}
 				pACTrack->m_layout[k].Set("");
-      }
-			// '(hide)' layout 
+			}
+			// '(hide)' layout
 			if (!pACTrack->m_bLayouted[k] && pACTrack->m_layout[k].GetLength() && !_stricmp(pACTrack->m_layout[k].Get(), "(hide)"))
 			{
 				// Only unhide the track if we hid it ourselves
@@ -1051,7 +1086,7 @@ void AutoColorTrack(bool bForce)
 				}
 				pACTrack->m_layout[k].Set("");
 			}
-    }
+		}
 	}
 
 	if (bForce)

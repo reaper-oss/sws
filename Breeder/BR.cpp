@@ -97,7 +97,7 @@ bool BR_GlobalActionHook (int cmd, int val, int valhw, int relmode, HWND hwnd)
 
 bool BR_SwsActionHook (COMMAND_T* ct, int flagOrRelmode, HWND hwnd)
 {
-	int cmd = ct->accel.accel.cmd;
+	const int cmd = ct->cmdId;
 
 	// Action applies next action
 	if (cmd >= g_nextActionLoCmd && cmd <= g_nextActionHiCmd && g_nextActionApplyers.find(cmd) != g_nextActionApplyers.end())

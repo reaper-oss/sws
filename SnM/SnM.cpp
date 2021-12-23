@@ -948,23 +948,23 @@ void ExclusiveToggle(COMMAND_T* _ct)
 		for (INT_PTR i=0; i<SNM_MAX_DYN_ACTIONS; i++)
 			if (COMMAND_T* ct = SWSGetCommand(_ct->doCommand, i))
 			{
-				if (ct->accel.accel.cmd != _ct->accel.accel.cmd) {
+				if (ct->cmdId != _ct->cmdId) {
 					ct->fakeToggle = false;
-					RefreshToolbar(ct->accel.accel.cmd);
+					RefreshToolbar(ct->cmdId);
 				}
 			}
 			else
 				break;
 */
 	//JFB! enough ATM but relies on *ordered* cmds, cmd ids, etc
-	int id = _ct->accel.accel.cmd - (int)_ct->user;
-	for (int i=0; i<SNM_MAX_DYN_ACTIONS; i++)
+	unsigned int id = _ct->cmdId - (int)_ct->user;
+	for (unsigned int i=0; i<SNM_MAX_DYN_ACTIONS; i++)
 	{
 		if (COMMAND_T* ct = SWSGetCommandByID(id+i))
 		{
 			if ((int)ct->user == i) // real break condition
 			{
-				if (ct->accel.accel.cmd != _ct->accel.accel.cmd)
+				if (ct->cmdId != _ct->cmdId)
 					ct->fakeToggle = false;
 			}
 			else

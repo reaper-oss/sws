@@ -335,11 +335,6 @@ COMMAND_T* SWSUnregisterCmd(int id)
 	return NULL;
 }
 
-void UnregisterAllCmds() {
-	for (int i=g_iFirstCommand; i<=g_iLastCommand; i++)
-		SWSUnregisterCmd(i);
-}
-
 #ifdef ACTION_DEBUG
 void ActionsList(COMMAND_T*)
 {
@@ -660,7 +655,6 @@ extern "C"
 error:
 			if (plugin_register)
 			{
-				UnregisterAllCmds();
 				plugin_register("-hookcommand2", (void*)hookCommandProc2);
 				plugin_register("-hookcommand", (void*)hookCommandProc);
 //				plugin_register("-hookpostcommand", (void*)hookPostCommandProc);

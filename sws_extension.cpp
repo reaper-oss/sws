@@ -306,25 +306,27 @@ bool SWSFreeUnregisterDynamicCmd(int id)
 	return false;
 }
 
+void SWSUnregisterCmdImpl(COMMAND_T* ct)
+{
+	if (!ct->uniqueSectionId && ct->doCommand)
+	{
+		plugin_register("-gaccel", &ct->accel);
+	}
+	else if (ct->onAction)
+	{
+		static custom_action_register_t s;
+		s.idStr = ct->id;
+		s.uniqueSectionId = ct->uniqueSectionId;
+		plugin_register("-custom_action", (void*)&s);
+	}
+}
+
 // Returns the COMMAND_T entry (so it can be freed if necessary)
 COMMAND_T* SWSUnregisterCmd(int id)
 {
 	if (COMMAND_T* ct = g_commands.Get(id, NULL))
 	{
-		if (!ct->uniqueSectionId && ct->doCommand)
-		{
-			plugin_register("-gaccel", &ct->accel);
-/* this is no-op ATM
-			plugin_register("-command_id", &id);
-*/
-		}
-		else if (ct->onAction)
-		{
-			static custom_action_register_t s;
-			s.idStr = ct->id;
-			s.uniqueSectionId = ct->uniqueSectionId;
-			plugin_register("-custom_action", (void*)&s);
-		}
+		SWSUnregisterCmdImpl(ct);
 		g_commands.Delete(id);
 #ifdef ACTION_DEBUG
 		g_cmdFiles.Delete(id);
@@ -335,8 +337,10 @@ COMMAND_T* SWSUnregisterCmd(int id)
 }
 
 void UnregisterAllCmds() {
-	for (unsigned int i=g_iFirstCommand; i<=g_iLastCommand; i++)
-		SWSUnregisterCmd(i);
+	for (unsigned int i = 0; i < g_commands.GetSize(); ++i) {
+		SWSUnregisterCmdImpl(*g_commands.EnumeratePtr(i));
+	}
+	g_commands.DeleteAll();
 }
 
 #ifdef ACTION_DEBUG

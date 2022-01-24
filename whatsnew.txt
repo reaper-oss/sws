@@ -1,3 +1,16 @@
+!v2.13.0.1 pre-release build (Month 99, 2099)
+
+Actions:
++Improve iteration when unregistering SWS actions (post https://forum.cockos.com/showthread.php?p=2509285|2509285|)
++Support 32-bit action IDs (post https://forum.cockos.com/showthread.php?p=2509285|2509285|)
++Xenakios Rename take(s) (and source files): delete old .reapindex file
+
+ReaScript API:
++Improve NF functions documentation (mention return units of peak/RMS/Loudness functions) (post https://forum.cockos.com/showthread.php?p=2518891|2518891|)
+
+Misc:
++Use windows control IDs (instead of FindWindowEx()/SearchCildren()) for identifying various REAPER windows (post https://forum.cockos.com/showthread.php?p=2388026|2388026|)
+
 !v2.13 pre-release build (December 20, 2021)
 
 Actions:

@@ -514,9 +514,7 @@ static COMMAND_T s_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Decrease metronome volume" }, "S&M_METRO_VOL_DOWN", ChangeMetronomeVolume, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Show theme helper (all tracks)" }, "S&M_THEME_HELPER_ALL", ShowThemeHelper, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Show theme helper (selected tracks)" }, "S&M_THEME_HELPER_SEL", ShowThemeHelper, NULL, 1},
-#ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Left mouse click at cursor position (use w/o modifier)" }, "S&M_MOUSE_L_CLICK", SimulateMouseClick, NULL, 0},
-#endif
 	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (native actions only)" }, "S&M_ALRSUMMARY1", DumpWikiActionList, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (SWS actions only)" }, "S&M_ALRSUMMARY2", DumpWikiActionList, NULL, 8},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (native actions only)" }, "S&M_DUMP_ACTION_LIST", DumpActionList, NULL, 4},

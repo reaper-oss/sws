@@ -412,7 +412,6 @@ void ChangeMetronomeVolume(COMMAND_T* _ct) {
 
 void WinWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500)
 {
-#ifdef _WIN32
 	static DWORD sWaitTime = 0;
 //	if ((GetTickCount() - sWaitTime) > _minReTrigger)
 	{
@@ -430,7 +429,6 @@ void WinWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500)
 			}
 		}
 	}
-#endif
 }
 
 // http://forum.cockos.com/showthread.php?p=612065

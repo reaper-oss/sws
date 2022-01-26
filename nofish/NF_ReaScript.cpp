@@ -38,6 +38,7 @@
 #include "../Misc/Analysis.h" // #781
 #include "../SnM/SnM.h" // ScheduledJob
 #include "../SnM/SnM_Chunk.h" // SNM_FXSummaryParser
+#include "../SnM/SnM_Misc.h" // SNM_SimulateMouseClick()
 #include "../SnM/SnM_Notes.h" // #755
 #include "../SnM/SnM_Project.h" // #974, GetProjectLoadAction(), GetGlobalStartupAction()
 #include "../SnM/SnM_Util.h" // #974, SNM_NamedCommandLookup(), CheckSwsMacroScriptNumCustomId()
@@ -472,4 +473,9 @@ bool NF_SetProjectTrackSelectionAction(const char* buf)
 bool NF_ClearProjectTrackSelectionAction()
 {
 	return DoClearProjectAction(GetProjectTrackSelectionAction());
+}
+
+void NF_SimulateMouseClick(int x, int y)
+{
+	SNM_SimulateMouseClick(x, y);
 }

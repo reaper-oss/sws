@@ -317,6 +317,8 @@ APIdef g_apidefs[] =
 	{ APIFUNC(NF_GetProjectTrackSelectionAction), "bool", "char*,int,char*,int", "descOut,descOut_sz,cmdIdOut,cmdIdOut_sz", "Gets action description and command ID number (for native actions) or named command IDs / identifier strings (for extension actions /ReaScripts) if project track selection action is set, otherwise empty string. Returns false on failure.", },
 	{ APIFUNC(NF_SetProjectTrackSelectionAction), "bool", "const char*", "str", "Returns true if project track selection action was set successfully (i.e. valid action ID). Note: For SWS / S&M actions and macros / scripts, you must use identifier strings (e.g. \"_SWS_ABOUT\", \"_f506bc780a0ab34b8fdedb67ed5d3649\"), not command IDs (e.g. \"47145\").\nTip: to copy such identifiers, right-click the action in the Actions window > Copy selected action cmdID / identifier string.\nOnly works for actions / scripts from Main action section. Project must be saved after setting project track selection action to be persistent.", },
 	{ APIFUNC(NF_ClearProjectTrackSelectionAction), "bool", "", "", "Returns true if project track selection action was cleared successfully.", },
+
+	{ APIFUNC(NF_SimulateMouseClick), "void", "int,int", "x,y", "TODO"},
 	// /*** nofish stuff ***
 
 	{ APIFUNC(SN_FocusMIDIEditor), "void", "", "", "Focuses the active/open MIDI editor.", },

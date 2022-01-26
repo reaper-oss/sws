@@ -54,6 +54,7 @@ const char* ULT_GetMediaItemNote(MediaItem* _item);
 void ULT_SetMediaItemNote(MediaItem* _item, const char* _str);
 bool SNM_ReadMediaFileTag(const char *fn, const char* tag, char* tagval, int tagval_sz);
 bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval);
+void SNM_SimulateMouseClick(int x, int y);
 
 // toolbar auto refresh
 void EnableToolbarsAutoRefesh(COMMAND_T*);

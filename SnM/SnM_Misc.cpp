@@ -441,6 +441,14 @@ void SimulateMouseClick(COMMAND_T* _ct)
 	WinWaitForEvent(WM_LBUTTONUP);
 }
 
+void SNM_SimulateMouseClick(int x, int y)
+{
+	POINT p{x, y};
+	mouse_event(MOUSEEVENTF_LEFTDOWN, p.x, p.y, 0, 0);
+	mouse_event(MOUSEEVENTF_LEFTUP, p.x, p.y, 0, 0);
+	WinWaitForEvent(WM_LBUTTONUP);
+}
+
 // dump actions or the wiki ALR summary
 // see http://forum.cockos.com/showthread.php?t=61929 and http://wiki.cockos.com/wiki/index.php/Action_List_Reference
 // _type: &1 ALR wiki (txt dump otherwise), &2=deprecated, &4=native, &8=SWS, &16=user macros/script/cycle actions/reaconsole actions

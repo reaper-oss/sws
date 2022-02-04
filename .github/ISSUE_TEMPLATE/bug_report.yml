@@ -1,0 +1,87 @@
+name: Bug report
+description: Create a bug report to help us improve
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this issue! :hugs:
+
+        Please note:
+        * Make sure the bug can be reproduced with [latest SWS version](https://www.sws-extension.org/).
+        * Make sure the bug isn't already listed in the [current issues](https://github.com/reaper-oss/sws/issues?page=16&q=is%3Aissue) (you can use the search bar for searching).
+        * Report only one bug per issue.
+
+  - type: input
+    id: version
+    attributes:
+     label: Affected version
+     description: "What SWS version are you currently using?"
+     placeholder: "x.xx.x #x (see REAPER > Extensions > About SWS Extension)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce the bug
+      description: |
+        What did you do that the bug shows up?
+        
+        If you can't cause the bug to show up again reliably (and hence don't have a proper set of steps to give us), please still try to give as many details as possible on how you think you encountered the bug.
+      placeholder: |
+        1. 
+        2. 
+        3. 
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: |
+        Tell us what you expect to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual behavior
+      description: |
+        Tell us what happens with the steps given above.
+    validations:
+      required: true
+
+  - type: textarea
+    id: screen-media
+    attributes:
+      label: Screenshots/Screen recordings
+      description: |
+        A picture or video is worth a thousand words.
+        
+        If applicable, add screenshots or a screen recording to help explain your problem.
+        GitHub supports uploading them directly in the text box.
+        If your file is too big for Github to accept, try to compress it (ZIP-file) or feel free to paste a link from an image/video hoster here instead.
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        If your bug includes a crash, try to provide a [crash log](https://forum.cockos.com/showthread.php?t=36653).
+
+  - type: textarea
+    id: system-info
+    attributes:
+      label: REAPER / System information
+      value: |
+        - REAPER version: 
+        - Operating system: 
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-information
+    attributes:
+      label: Additional information

@@ -38,6 +38,7 @@
 #include "SnM_Window.h"
 #include "../url.h"
 #include "../Console/Console.h"
+#include "../cfillion/cfillion.hpp" // CF_GetCommandText()
 #include "../IX/IX.h"
 
 #include <WDL/localize/localize.h>
@@ -793,7 +794,7 @@ void AppendWarnMsg(int _section, Cyclaction* _a, WDL_FastString* _outWarnMsg, co
 	{
 		WDL_FastString warnMsg;
 		warnMsg.AppendFormatted(256, 
-			__LOCALIZE_VERFMT("Warning: '%s' (section '%s') has been registered but it could be improved!","sws_DLG_161"), 
+			__LOCALIZE_VERFMT("Warning: '%s' (section '%s') has been exported but can't be shared with other users!","sws_DLG_161"), 
 			_a->GetName(), SNM_GetActionSectionName(_section));
 		warnMsg.Append("\n");
 		warnMsg.Append(__LOCALIZE("Details:","sws_DLG_161"));
@@ -982,27 +983,6 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a,
 					return AppendErrMsg(_section, _a, _applyMsg, str.Get());
 				}
 			}
-
-			///////////////////////////////////////////////////////////////////
-			// warnings?
-
-			if (_applyMsg)
-			{
-				if (!warned && // not already warned?
-					(strstr(cmd, "_CYCLACTION") ||
-					 strstr(cmd, "SWSCONSOLE_CUST") ||
-					 GetMacroOrScript(cmd, kbdSec->uniqueID, _macros, NULL) == 1)) // macros only, brutal but works for all sections
-				{
-					str.SetFormatted(256, __LOCALIZE_VERFMT("the identifier string '%s' cannot be shared with other users","sws_DLG_161"), cmd);
-					str.Append("\n");
-					str.AppendFormatted(256, __LOCALIZE_VERFMT("Tip: right-click this command > '%s'","sws_DLG_161"), __LOCALIZE("Explode into individual actions","sws_DLG_161"));
-					AppendWarnMsg(_section, _a, _applyMsg, str.Get());
-
-					// don't return false here, just a warning
-					warned = true;
-				}
-			}
-
 		} // for()
 
 		if ((steps+statements) == cmdSz)
@@ -1170,8 +1150,9 @@ void LoadCyclactions(bool _wantMsg, WDL_PtrList<Cyclaction>* _cyclactions = NULL
 // _cyclactions: NULL to update main model
 // _section: section index or -1 for all sections
 // _iniFn: NULL means S&M.ini
+// _wantWarning: display a warning about custom, cycle or console actions dependencies when exporting CAs 
 // remark: undo pref ignored, only saves cycle actions
-void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
+void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL, bool _wantWarning = false)
 {
 	if (!_cyclactions)
 		_cyclactions = g_cas;
@@ -1185,6 +1166,8 @@ void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section 
 	SaveIniSection("Cyclactions", iniSection.str(), _iniFn);
 
 	char iniBuf[128]{};
+	WDL_FastString str, msg; 
+	bool warned = false;
 
 	for (int sec=0; sec < SNM_MAX_CA_SECTIONS; sec++)
 	{
@@ -1201,11 +1184,34 @@ void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section 
 					freeCycleIds.Add(new int(j));
 
 			int maxId = 0;
+			int actionSecUniqueId = SNM_GetActionSectionUniqueId(sec);
 			for (int j=0; j < _cyclactions[sec].GetSize(); j++)
 			{
 				Cyclaction* a = _cyclactions[sec].Get(j);
 				if (_cyclactions[sec].Get(j)->IsEmpty()) // skip empty cyclactions
 					continue;
+
+				if (_wantWarning)
+				{
+					bool warned = false;
+					int cmdSz = a->GetCmdSize();
+					for (int i = 0; i < cmdSz; i++)
+					{
+						const char* cmd = a->GetCmd(i);
+						if (!warned && // not already warned?
+							(strstr(cmd, "_CYCLACTION") ||
+								strstr(cmd, "SWSCONSOLE_CUST") ||
+								GetActionType(CF_GetCommandText(actionSecUniqueId, NamedCommandLookup(cmd)), true) == ActionType::Custom)) // // macros only
+						{
+							str.SetFormatted(256, __LOCALIZE_VERFMT("the identifier string '%s' is a custom, cycle or console action which must be exported separately.", "sws_DLG_161"), cmd);
+							str.Append("\n");
+							str.AppendFormatted(256, __LOCALIZE_VERFMT("Tip: right-click this command > '%s'", "sws_DLG_161"), __LOCALIZE("Explode into individual actions", "sws_DLG_161"));
+							AppendWarnMsg(sec, a, &msg, str.Get());
+
+							warned = true;
+						}
+					}
+				}
 
 				int id;
 
@@ -1233,6 +1239,9 @@ void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section 
 			WritePrivateProfileString(iniSection, "Nb_Actions", iniBuf, _iniFn);
 			snprintf(iniBuf, sizeof(iniBuf), "%d", CA_VERSION);
 			WritePrivateProfileString(iniSection, "Version", iniBuf, _iniFn);
+
+			if (msg.GetLength())
+				SNM_ShowMsg(msg.Get(), __LOCALIZE("S&M - Warning", "sws_DLG_161"), g_caWndMgr.GetMsgHWND());
 		}
 	}
 }
@@ -2298,7 +2307,7 @@ void CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (actions[g_editedSection].GetSize()) {
 				char fn[SNM_MAX_PATH] = "";
 				if (BrowseForSaveFile(__LOCALIZE("S&M - Export cycle actions","sws_DLG_161"), g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, sizeof(fn))) {
-					SaveCyclactions(actions, g_editedSection, fn);
+					SaveCyclactions(actions, g_editedSection, fn, true);
 					lstrcpyn(g_lastExportFn, fn, sizeof(g_lastExportFn));
 				}
 			}
@@ -2312,7 +2321,7 @@ void CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (actions[g_editedSection].GetSize()) {
 				char fn[SNM_MAX_PATH] = "";
 				if (BrowseForSaveFile(__LOCALIZE("S&M - Export cycle actions","sws_DLG_161"), g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, sizeof(fn))) {
-					SaveCyclactions(actions, g_editedSection, fn);
+					SaveCyclactions(actions, g_editedSection, fn, true);
 					lstrcpyn(g_lastExportFn, fn, sizeof(g_lastExportFn));
 				}
 			}
@@ -2322,7 +2331,7 @@ void CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		{
 			char fn[SNM_MAX_PATH] = "";
 			if (BrowseForSaveFile(__LOCALIZE("S&M - Export cycle actions","sws_DLG_161"), g_lastExportFn, g_lastExportFn, SNM_INI_EXT_LIST, fn, sizeof(fn))) {
-				SaveCyclactions(g_editedActions, -1, fn);
+				SaveCyclactions(g_editedActions, -1, fn, true);
 				lstrcpyn(g_lastExportFn, fn, sizeof(g_lastExportFn));
 			}
 			break;

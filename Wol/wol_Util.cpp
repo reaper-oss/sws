@@ -29,6 +29,7 @@
 #include "stdafx.h"
 #include "wol_Util.h"
 #include "../Breeder/BR_Util.h"
+#include "../cfillion/cfillion.hpp" // CF_GetScrollInfo
 #include "../SnM/SnM_Dlg.h"
 #include "../SnM/SnM_Util.h"
 
@@ -118,7 +119,7 @@ void SetArrangeScroll(int offsetY, int height, VerticalZoomCenter center)
 	HWND hwnd = GetArrangeWnd();
 	SCROLLINFO si = { sizeof(SCROLLINFO), };
 	si.fMask = SIF_ALL;
-	CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
+	CF_GetScrollInfo(hwnd, SB_VERT, &si);
 
 	int newPos = si.nPos;
 	const int objUpperHalf = offsetY + (height / 4);

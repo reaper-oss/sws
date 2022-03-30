@@ -33,6 +33,7 @@
 #include "BR_EnvelopeUtil.h"
 #include "BR_MidiUtil.h"
 #include "BR_Misc.h"
+#include "../cfillion/cfillion.hpp" // CF_GetScrollInfo
 #include "../SnM/SnM.h"
 #include "../SnM/SnM_Chunk.h"
 #include "../SnM/SnM_Dlg.h"
@@ -2145,7 +2146,7 @@ int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int*
 	{
 		// Get track's start Y coordinate
 		SCROLLINFO si{sizeof(SCROLLINFO), SIF_POS};
-		CoolSB_GetScrollInfo(GetArrangeWnd(), SB_VERT, &si);
+		CF_GetScrollInfo(GetArrangeWnd(), SB_VERT, &si);
 
 		*offsetY = si.nPos + static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPY"));
 	}
@@ -2215,7 +2216,7 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 
 	if (offsetY) {
 		SCROLLINFO si{sizeof(SCROLLINFO), SIF_POS};
-		CoolSB_GetScrollInfo(GetArrangeWnd(), SB_VERT, &si);
+		CF_GetScrollInfo(GetArrangeWnd(), SB_VERT, &si);
 
 		const int trackY = si.nPos + static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPY"));
 
@@ -2303,7 +2304,7 @@ void ScrollToTrackIfNotInArrange (MediaTrack* track)
 	HWND hwnd = GetArrangeWnd();
 	SCROLLINFO si = { sizeof(SCROLLINFO), };
 	si.fMask = SIF_ALL;
-	CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
+	CF_GetScrollInfo(hwnd, SB_VERT, &si);
 
 	int trackEnd = offsetY + height;
 	int pageEnd = si.nPos + (int)si.nPage + SCROLLBAR_W;
@@ -2349,7 +2350,7 @@ RECT GetDrawableArrangeArea ()
 
 	SCROLLINFO si = { sizeof(SCROLLINFO), };
 	si.fMask = SIF_ALL;
-	CoolSB_GetScrollInfo(arrangeWnd, SB_VERT, &si);
+	CF_GetScrollInfo(arrangeWnd, SB_VERT, &si);
 	#ifdef _WIN32
 		int pageEnd = si.nPos + si.nPage + SCROLLBAR_W + 1;
 	#else

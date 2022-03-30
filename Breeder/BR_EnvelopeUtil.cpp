@@ -30,6 +30,7 @@
 
 #include "BR_EnvelopeUtil.h"
 #include "BR_Util.h"
+#include "cfillion/cfillion.hpp" // CF_GetScrollInfo
 
 #include <WDL/lice/lice_bezier.h>
 #include <WDL/localize/localize.h>
@@ -948,7 +949,7 @@ bool BR_Envelope::VisibleInArrange (int* envHeight, int* yOffset, bool cacheValu
 	HWND hwnd = GetArrangeWnd();
 	SCROLLINFO si = { sizeof(SCROLLINFO), };
 	si.fMask = SIF_ALL;
-	CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
+	CF_GetScrollInfo(hwnd, SB_VERT, &si);
 
 	if (this->IsTakeEnvelope())
 	{

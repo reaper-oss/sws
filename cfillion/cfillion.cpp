@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "cfillion.hpp"
 
+#include "Color/Color.h"
 #include "SnM/SnM_FX.h"
 #include "SnM/SnM_Window.h"
 #include "version.h"
@@ -174,6 +175,20 @@ bool CF_LocateInExplorer(const char *file)
 void CF_GetSWSVersion(char *buf, const int bufSize)
 {
   snprintf(buf, bufSize, "%d.%d.%d.%d", SWS_VERSION);
+}
+
+int CF_GetCustomColor(const int index)
+{
+  UpdateCustomColors();
+  return index >= 0 && index < 16 ? g_custColors[index] : 0;
+}
+
+void CF_SetCustomColor(const int index, const int color)
+{
+  if(index >= 0 && index < 16) {
+    g_custColors[index] = color;
+    PersistColors();
+  }
 }
 
 int CF_EnumerateActions(const int section, const int idx, char *nameBuf, const int nameBufSize)

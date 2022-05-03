@@ -105,12 +105,12 @@ ct         (ct)
 	if (ct->uniqueSectionId == SECTION_MAIN || ct->uniqueSectionId == SECTION_MAIN_ALT || ct->uniqueSectionId == SECTION_MIDI_EDITOR)
 		SWSRegisterCmd(ct, __FILE__);
 	else
-		ct->accel.accel.cmd = 0;
+		ct->accel.accel.cmd = ct->cmdId = 0;
 }
 
 static int CompareActionsByCmd (const BR_ContinuousAction** action1, const BR_ContinuousAction** action2)
 {
-	return (*action1)->ct->accel.accel.cmd - (*action2)->ct->accel.accel.cmd;
+	return (*action1)->ct->cmdId - (*action2)->ct->cmdId;
 }
 
 static int FindActionFromCmd (const WDL_PtrList<BR_ContinuousAction>& actionList, int cmd)
@@ -120,7 +120,7 @@ static int FindActionFromCmd (const WDL_PtrList<BR_ContinuousAction>& actionList
 	while (a != c)
 	{
 		int b   = (a+c)/2;
-		int cmp = cmd - actionList.Get(b)->ct->accel.accel.cmd;
+		int cmp = cmd - actionList.Get(b)->ct->cmdId;
 		if      (cmp > 0) a = b+1;
 		else if (cmp < 0) c = b;
 		else              return b;
@@ -359,11 +359,11 @@ static void ContinuousActionTimer ()
 		if (g_actionInProgress->ct->uniqueSectionId == SECTION_MIDI_EDITOR)
 		{
 			int relmode = ACTION_FLAG;
-			int cmd     = g_actionInProgress->ct->accel.accel.cmd;
+			int cmd     = g_actionInProgress->ct->cmdId;
 			kbd_RunCommandThroughHooks(SectionFromUniqueID(SECTION_MIDI_EDITOR), &cmd, NULL, NULL, &relmode, g_midiEditorWnd);
 		}
 		else
-			Main_OnCommand(g_actionInProgress->ct->accel.accel.cmd, ACTION_FLAG);
+			Main_OnCommand(g_actionInProgress->ct->cmdId, ACTION_FLAG);
 	}
 }
 
@@ -539,11 +539,11 @@ static bool ContinuousActionInit (bool init, COMMAND_T* ct, HWND hwnd, BR_Contin
 ******************************************************************************/
 bool ContinuousActionRegister (BR_ContinuousAction* action)
 {
-	if (action && action->ct->accel.accel.cmd > 0 && g_actions.FindSorted(action, &CompareActionsByCmd) == -1)
+	if (action && action->ct->cmdId != 0 && g_actions.FindSorted(action, &CompareActionsByCmd) == -1)
 	{
 		g_actions.InsertSorted(action, &CompareActionsByCmd);
-		g_continuousCmdLo = g_actions.Get(0)->ct->accel.accel.cmd;
-		g_continuousCmdHi = g_actions.Get(g_actions.GetSize() - 1)->ct->accel.accel.cmd;
+		g_continuousCmdLo = g_actions.Get(0)->ct->cmdId;
+		g_continuousCmdHi = g_actions.Get(g_actions.GetSize() - 1)->ct->cmdId;
 		return true;
 	}
 	else
@@ -556,7 +556,7 @@ void ContinuousActionStopAll ()
 	{
 		int undoFlag = g_actionInProgress->DoUndo(g_actionInProgress->ct);
 		if (undoFlag != 0)
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(SWSGetCommandByID(g_actionInProgress->ct->accel.accel.cmd)), undoFlag, -1);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(SWSGetCommandByID(g_actionInProgress->ct->cmdId)), undoFlag, -1);
 	}
 	ContinuousActionInit(false, 0, NULL, NULL);
 }
@@ -574,7 +574,7 @@ bool ContinuousActionHook (COMMAND_T* ct, int cmd, int flagOrRelmode, HWND hwnd)
 		if (BR_ContinuousAction* action = g_actions.Get(FindActionFromCmd(g_actions, cmd)))
 		{
 			return (g_actionInProgress)
-			       ? (flagOrRelmode != ACTION_FLAG || g_actionInProgress->ct->accel.accel.cmd != cmd)
+			       ? (flagOrRelmode != ACTION_FLAG || g_actionInProgress->ct->cmdId != cmd)
 				   : (!ContinuousActionInit(true, ct, hwnd, action));
 		}
 	}

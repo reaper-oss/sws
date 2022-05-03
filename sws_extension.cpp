@@ -72,9 +72,8 @@ static WDL_IntKeyedArray<WDL_String*> g_cmdFiles(freeCmdFilesValue);
 #endif
 static WDL_IntKeyedArray<COMMAND_T*> g_commands; // no valdispose (cmds can be allocated in different ways)
 
-int g_iFirstCommand = 0;
-int g_iLastCommand = 0;
-
+static int g_iFirstCommand;
+static int g_iLastCommand;
 
 bool hookCommandProc(int iCmd, int flag)
 {
@@ -102,7 +101,7 @@ bool hookCommandProc(int iCmd, int flag)
 		if (BR_SwsActionHook(cmd, flag, NULL))
 			return true;
 
-		if (!cmd->uniqueSectionId && cmd->accel.accel.cmd==iCmd && cmd->doCommand)
+		if (!cmd->uniqueSectionId && cmd->cmdId == iCmd && cmd->doCommand)
 		{
 			if (sReentrantCmds.Find(cmd->id)<0)
 			{
@@ -141,7 +140,7 @@ bool hookCommandProc2(KbdSectionInfo* sec, int cmdId, int val, int valhw, int re
 	// Ignore commands that don't have anything to do with us from this point forward
 	if (COMMAND_T* cmd = SWSGetCommandByID(cmdId))
 	{
-		if (cmd->uniqueSectionId==sec->uniqueID && cmd->accel.accel.cmd==cmdId)
+		if (cmd->uniqueSectionId==sec->uniqueID && cmd->cmdId==cmdId)
 		{
 			// job for hookCommandProc?
 			// note: we could perform cmd->doCommand() here, but we'd loose the "flag" param value
@@ -198,7 +197,7 @@ int toggleActionHook(int iCmd)
 	static WDL_PtrList<const char> sReentrantCmds;
 	if (COMMAND_T* cmd = SWSGetCommandByID(iCmd))
 	{
-		if (cmd->accel.accel.cmd==iCmd && cmd->getEnabled)
+		if (cmd->cmdId==iCmd && cmd->getEnabled)
 		{
 			if (sReentrantCmds.Find(cmd->id) == -1)
 			{
@@ -250,7 +249,7 @@ int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId, bool local
 	}
 	else
 		cmdId = 0;
-	pCommand->accel.accel.cmd = cmdId;
+	pCommand->cmdId = cmdId;
 
 	// now that it is registered, restore the default action name
 	if (pCommand->accel.desc != defaultName) pCommand->accel.desc = defaultName;
@@ -265,7 +264,7 @@ int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId, bool local
 	g_cmdFiles.Insert(cmdId, new WDL_String(cFile));
 #endif
 
-	return pCommand->accel.accel.cmd;
+	return pCommand->cmdId;
 }
 
 // For each item in table call SWSRegisterCommand
@@ -358,8 +357,8 @@ void ActionsList(COMMAND_T*)
 			{
 				if (COMMAND_T* cmd = g_commands.Enumerate(i, NULL, NULL))
 				{
-					WDL_String* pFn = g_cmdFiles.Get(cmd->accel.accel.cmd, NULL);
-					snprintf(cBuf, sizeof(cBuf), "\"%s\",%s,%d,_%s\n", cmd->accel.desc, pFn ? pFn->Get() : "", cmd->accel.accel.cmd, cmd->id);
+					WDL_String* pFn = g_cmdFiles.Get(cmd->cmdId, NULL);
+					snprintf(cBuf, sizeof(cBuf), "\"%s\",%s,%d,_%s\n", cmd->accel.desc, pFn ? pFn->Get() : "", cmd->cmdId, cmd->id);
 					fputs(cBuf, f);
 				}
 			}
@@ -381,7 +380,7 @@ int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user, const char** pMen
 			{
 				if (pMenuText)
 					*pMenuText = cmd->menuText;
-				return cmd->accel.accel.cmd;
+				return cmd->cmdId;
 			}
 		}
 	}
@@ -425,7 +424,7 @@ HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIn
 				AddSubMenu(hMenu, hSubMenu, __localizeFunc(name,"sws_menu",0));
 			}
 			else
-				AddToMenu(hMenu, __localizeFunc(name,"sws_menu",0), pCommands[i].accel.accel.cmd);
+				AddToMenu(hMenu, __localizeFunc(name,"sws_menu",0), pCommands[i].cmdId);
 		}
 		i++;
 	}

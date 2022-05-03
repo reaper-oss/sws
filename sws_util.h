@@ -93,6 +93,7 @@ typedef struct COMMAND_T
 	int uniqueSectionId;
 	void(*onAction)(COMMAND_T*, int, int, int, HWND);
 	bool fakeToggle;
+	int cmdId;
 } COMMAND_T;
 
 
@@ -152,8 +153,6 @@ extern int g_i1;
 extern int g_i2;
 extern bool g_bTrue;
 extern bool g_bFalse;
-extern int g_iFirstCommand;
-extern int g_iLastCommand;
 extern MTRand g_MTRand;
 
 // Stuff to do in swell someday

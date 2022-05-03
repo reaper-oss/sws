@@ -1109,13 +1109,13 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 			i++;
 		do
 		{
-			AddToMenuOrdered(hSubMenu, __localizeFunc(g_commandTable[i].menuText,"sws_menu",0), g_commandTable[i].accel.accel.cmd);
+			AddToMenuOrdered(hSubMenu, __localizeFunc(g_commandTable[i].menuText,"sws_menu",0), g_commandTable[i].cmdId);
 			i++;
 		}
 		while (!(g_commandTable[i-1].doCommand == pLastCommand && g_commandTable[i-1].user == 15));
 
 		// Finish with color dialog
-		AddToMenuOrdered(hSubMenu, __localizeFunc(g_commandTable[0].menuText,"sws_menu",0), g_commandTable[0].accel.accel.cmd);
+		AddToMenuOrdered(hSubMenu, __localizeFunc(g_commandTable[0].menuText,"sws_menu",0), g_commandTable[0].cmdId);
 
 		if (menuid == 0)
 			AddSubMenu(hMenu, hSubMenu, __LOCALIZE("SWS track color","sws_menu"), 40359);

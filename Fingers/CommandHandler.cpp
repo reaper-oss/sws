@@ -181,9 +181,7 @@ int RprCommandManager::getCommandId(const char *id)
         me->mSWSCommands.end(), SWSCommandFinder(id));
 
     if (command != me->mSWSCommands.end())
-    {
-        return command->accel.accel.cmd;
-    }
+        return command->cmdId;
     return -1;
 }
 

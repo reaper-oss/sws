@@ -337,6 +337,8 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_SelectTrackFX), "bool", "MediaTrack*,int", "track,index", "Set which track effect is active in the track's FX chain. The FX chain window does not have to be open.", },
 
 	{ APIFUNC(CF_GetSWSVersion), "void", "char*,int", "versionOut,versionOut_sz", "Return the current SWS version number.", },
+	{ APIFUNC(CF_GetCustomColor), "int", "int", "index", "Get one of 16 SWS custom colors (0xBBGGRR on Windows, 0xRRGGBB everyhwere else). Index is zero-based.", },
+	{ APIFUNC(CF_SetCustomColor), "void", "int,int", "index,color", "Set one of 16 SWS custom colors (0xBBGGRR on Windows, 0xRRGGBB everyhwere else). Index is zero-based.", },
 
 	{ APIFUNC(CF_EnumerateActions), "int", "int,int,char*,int", "section,index,nameOut,nameOut_sz", "Wrapper for the unexposed kbd_enumerateActions API function.\nMain=0, Main (alt recording)=100, MIDI Editor=32060, MIDI Event List Editor=32061, MIDI Inline Editor=32062, Media Explorer=32063", },
 	{ APIFUNC(CF_GetCommandText), "const char*", "int,int", "section,command", "Wrapper for the unexposed kbd_getTextFromCmd API function. See <a href='#CF_EnumerateActions'>CF_EnumerateActions</a> for common section IDs.", },

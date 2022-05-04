@@ -707,7 +707,8 @@ void BR_SetMediaItemImageResource (MediaItem* item, const char* imageIn, int ima
 
 		bool didImage      = !imageIn;
 		bool didImageFlags = false;
-		bool doImageFlags  = !imageIn || strcmp(imageIn, "");
+                                                             // also do image flags if passing an empty item with text (to be able to set text (un-)/stretched)
+		bool doImageFlags  = !imageIn || strcmp(imageIn, "") || (!CountTakes(item) && strcmp((const char*)GetSetMediaItemInfo(item, "P_NOTES", NULL), ""));
 		bool commitTwice   = false; // in case image path is the same as one already set in the item, reaper will remove it in case we supply chunk with the same path (and sometimes we just want to change the flag)
 		bool skipCommit    = false;
 

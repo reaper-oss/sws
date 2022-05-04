@@ -212,7 +212,7 @@ static COMMAND_T g_commandTable[] =
 
 static void RefreshMAToolbar()
 {
-	RefreshToolbar(g_commandTable[0].accel.accel.cmd);
+	RefreshToolbar(g_commandTable[0].cmdId);
 }
 
 int MarkerActionsInit()

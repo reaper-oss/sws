@@ -202,7 +202,7 @@ int FolderActionsInit()
 	int i = -1;
 	while (g_commandTable[++i].id != LAST_COMMAND)
 		if (g_commandTable[i].doCommand == IndentTracks || g_commandTable[i].doCommand == UnindentTracks)
-			AddToMenu(hTrackMenu, g_commandTable[i].menuText, g_commandTable[i].accel.accel.cmd);*/
+			AddToMenu(hTrackMenu, g_commandTable[i].menuText, g_commandTable[i].cmdId);*/
 
 	return 1;
 }

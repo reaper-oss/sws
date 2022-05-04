@@ -123,8 +123,8 @@ void SWS_ProjectListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 HMENU SWS_ProjectListWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU hMenu = CreatePopupMenu();
-	AddToMenu(hMenu, __localizeFunc(g_projMgrCmdTable[0].menuText,"sws_menu",0), g_projMgrCmdTable[0].accel.accel.cmd);
-	AddToMenu(hMenu, __localizeFunc(g_projMgrCmdTable[1].menuText,"sws_menu",0), g_projMgrCmdTable[1].accel.accel.cmd);
+	AddToMenu(hMenu, __localizeFunc(g_projMgrCmdTable[0].menuText,"sws_menu",0), g_projMgrCmdTable[0].cmdId);
+	AddToMenu(hMenu, __localizeFunc(g_projMgrCmdTable[1].menuText,"sws_menu",0), g_projMgrCmdTable[1].cmdId);
 	return hMenu;
 }
 

@@ -368,7 +368,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 		// Delete all related project entries and regenerate
 		int iFirstPos;
 
-		hMenu = FindMenuItem(hMenu, g_projMgrCmdTable[g_iORPCmdIndex].accel.accel.cmd, &iFirstPos);
+		hMenu = FindMenuItem(hMenu, g_projMgrCmdTable[g_iORPCmdIndex].cmdId, &iFirstPos);
 
 		if (hMenu)
 		{
@@ -396,7 +396,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 				mi.fType = MFT_STRING;
 				mi.fState = MFS_GRAYED;
 				mi.dwTypeData = (char *)__localizeFunc(g_projMgrCmdTable[g_iORPCmdIndex].menuText,"sws_menu",0);
-				mi.wID = g_projMgrCmdTable[g_iORPCmdIndex].accel.accel.cmd;
+				mi.wID = g_projMgrCmdTable[g_iORPCmdIndex].cmdId;
 				InsertMenuItem(hMenu, iFirstPos, true, &mi);
 			}
 			else

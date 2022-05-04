@@ -475,6 +475,18 @@ HWND GetActionListBox(char* _currentSection, int _sectionSz)
 	return (actionsWnd ? GetDlgItem(actionsWnd, 0x52B) : NULL);
 }
 
+LPARAM ListView_GetOwnerDataListViewParam(HWND list, int row)
+{
+	NMLVDISPINFO n = {
+#ifdef _WIN32 // suppress LVN_GETDISPINFO Arithmetic overflow warning in VS
+	#pragma warning(suppress:26454) 
+#endif
+		{ list, static_cast<UINT_PTR>(GetWindowLong(list,GWL_ID)), LVN_GETDISPINFO },
+		{ LVIF_PARAM, row, 0, }
+	};
+	SendMessage(GetParent(list), WM_NOTIFY, n.hdr.idFrom, (LPARAM)&n);
+	return n.item.lParam;
+}
 
 // returns the list view's selected item, or:
 // -1 if the action wnd is not opened
@@ -499,6 +511,9 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 				if (li.state == LVIS_SELECTED)
 				{
 					int cmdId = (int)li.lParam;
+#ifdef _WIN32		// https://forum.cockos.com/showpost.php?p=2527570
+					if (!cmdId) cmdId = (int)ListView_GetOwnerDataListViewParam(hList, i);
+#endif
 					if (_cmdId) *_cmdId = cmdId;
 
 					char actionName[SNM_MAX_ACTION_NAME_LEN] = "";

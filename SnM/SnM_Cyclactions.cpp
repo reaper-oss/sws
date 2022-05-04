@@ -2292,9 +2292,9 @@ void CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case EXPORT_SEL_MSG:
 		{
-			int x=0; WDL_PtrList_DeleteOnDestroy<Cyclaction> actions[SNM_MAX_CA_SECTIONS];
+			int x=0; WDL_PtrList<Cyclaction> actions[SNM_MAX_CA_SECTIONS];
 			while(Cyclaction* a = (Cyclaction*)g_lvL->EnumSelected(&x))
-				actions[g_editedSection].Add(new Cyclaction(a));
+				actions[g_editedSection].Add(a);
 			if (actions[g_editedSection].GetSize()) {
 				char fn[SNM_MAX_PATH] = "";
 				if (BrowseForSaveFile(__LOCALIZE("S&M - Export cycle actions","sws_DLG_161"), g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, sizeof(fn))) {
@@ -2306,9 +2306,9 @@ void CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		case EXPORT_CUR_SECTION_MSG:
 		{
-			WDL_PtrList_DeleteOnDestroy<Cyclaction> actions[SNM_MAX_CA_SECTIONS];
+			WDL_PtrList<Cyclaction> actions[SNM_MAX_CA_SECTIONS];
 			for (int i=0; i < g_editedActions[g_editedSection].GetSize(); i++)
-				actions[g_editedSection].Add(new Cyclaction(g_editedActions[g_editedSection].Get(i)));
+				actions[g_editedSection].Add(g_editedActions[g_editedSection].Get(i));
 			if (actions[g_editedSection].GetSize()) {
 				char fn[SNM_MAX_PATH] = "";
 				if (BrowseForSaveFile(__LOCALIZE("S&M - Export cycle actions","sws_DLG_161"), g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, sizeof(fn))) {

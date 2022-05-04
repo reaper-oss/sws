@@ -1,3 +1,26 @@
+!v2.13.1 pre-release build (May 7, 2022)
+
+Actions:
++Fix copying text containing no UTF-8 sequences in some actions on Windows (issue 1625, v2.13.0 regression)
++Improve iteration when unregistering SWS actions (post https://forum.cockos.com/showthread.php?p=2509285|2509285|)
++Support 32-bit action IDs (post https://forum.cockos.com/showthread.php?p=2509285|2509285|)
++Xenakios Rename take(s) (and source files): delete old .reapindex file (REAPER v6.46+)
+
+Cycle actions:
++Fix adding actions from action list on Windows (thanks Justin!) (issue 1609)
++Fix crashes when exporting (selection/current section) non-Main section cycle actions
++Show warning about cycle actions containing custom actions can't be shared with other users when exporting cycle actions (rather than when registering cycle actions) (issue 1620, partly)
+
+ReaScript API:
++Add CF_{Get,Set}CustomColor
++Add NF_DeleteTakeFromItem (issue 1097)
++BR_SetMediaItemImageResource: support setting displayed text in empty items unstretched or stretched (issue 1607)
++Improve NF functions documentation (post https://forum.cockos.com/showthread.php?p=2518891|2518891|)
+
+Misc:
++Use windows control IDs (instead of FindWindowEx()/SearchCildren()) for identifying various REAPER windows (post https://forum.cockos.com/showthread.php?p=2388026|2388026|)
++Workaround inaccurate arrange view scrollbar position (issue 1519, issue 1308)
+
 !v2.13 pre-release build (December 20, 2021)
 
 Actions:

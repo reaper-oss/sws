@@ -273,7 +273,7 @@ bool SNM_SetStringConfigVar(const char *varName, const char *newValue) {
   int size = 0;
   char *data = static_cast<char *>(get_config_var(varName, &size));
 
-  if(!data || !newValue || size < strlen(newValue) + 1)
+  if(!data || !newValue || static_cast<size_t>(size) < strlen(newValue) + 1)
     return false;
 
   snprintf(data, size, "%s", newValue);

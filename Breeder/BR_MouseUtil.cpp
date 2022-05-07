@@ -32,6 +32,7 @@
 #include "BR_EnvelopeUtil.h"
 #include "BR_MidiUtil.h"
 #include "BR_Util.h"
+#include "cfillion/cfillion.hpp" // CF_GetScrollInfo
 
 /******************************************************************************
 * Constants                                                                   *
@@ -292,9 +293,8 @@ static int TranslatePointToArrangeScrollY (POINT p)
 	HWND hwnd = GetArrangeWnd();
 	ScreenToClient(hwnd, &p);
 
-	SCROLLINFO si = { sizeof(SCROLLINFO), };
-	si.fMask = SIF_ALL;
-	CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
+	SCROLLINFO si = { sizeof(SCROLLINFO), SIF_POS };
+	CF_GetScrollInfo(hwnd, SB_VERT, &si);
 
 	return (int)p.y + si.nPos;
 }
@@ -561,7 +561,7 @@ bool BR_MouseInfo::SetDetectedCCLaneAsLastClicked ()
 				hwnd = GetArrangeWnd();
 				SCROLLINFO si = { sizeof(SCROLLINFO), };
 				si.fMask = SIF_ALL;
-				CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
+				CF_GetScrollInfo(hwnd, SB_VERT, &si);
 				point.y -= si.nPos;
 
 				CoolSB_GetScrollInfo(hwnd, SB_HORZ, &si);

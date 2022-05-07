@@ -473,3 +473,9 @@ bool NF_ClearProjectTrackSelectionAction()
 {
 	return DoClearProjectAction(GetProjectTrackSelectionAction());
 }
+
+bool NF_DeleteTakeFromItem(MediaItem* item, int takeIdx)
+{
+	SNM_TakeParserPatcher takePatcher(item);
+	return takePatcher.RemoveTake(takeIdx);
+}

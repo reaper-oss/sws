@@ -31,6 +31,7 @@ extern COLORREF g_crGradStart;
 extern COLORREF g_crGradEnd;
 
 void UpdateCustomColors();
+void PersistColors();
 bool AllBlack();
 COLORREF CalcGradient(COLORREF crStart, COLORREF crEnd, double dPos);
 int ColorInit();

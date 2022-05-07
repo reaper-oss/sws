@@ -68,3 +68,5 @@ bool           NF_ClearProjectStartupAction();
 bool           NF_GetProjectTrackSelectionAction(char* descOut, int descOut_sz, char* cmdIdOut, int cmdIdOut_sz);
 bool           NF_SetProjectTrackSelectionAction(const char* buf);
 bool           NF_ClearProjectTrackSelectionAction();
+
+bool           NF_DeleteTakeFromItem(MediaItem* item, int takeIdx);

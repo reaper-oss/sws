@@ -61,10 +61,12 @@ REAPER_EXTRA_API_DECL bool (*osara_isShortcutHelpEnabled)();
 #define REAPERAPI_NO_LICE
 #include "WDL/lice/lice.h"
 
+#ifndef _WIN32
 // using RegisterClipboardFormat instead of constant CF_TEXT for compatibility
 // with REAPER v5 (prior to WDL commit 0f77b72adf1cdbe98fd56feb41eb097a8fac5681)
 #undef  CF_TEXT
 #define CF_TEXT RegisterClipboardFormat("SWELL__CF_TEXT")
+#endif
 
 #include "reaper_plugin_functions.h"
 

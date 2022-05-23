@@ -1593,9 +1593,11 @@ void AWFadeSelection(COMMAND_T* t)
 								// Need to ensure that there's "room" to move the start of the second item back
 								// Check all of the takes' start offset before doing any "work"
 								int iTake;
-								for (iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
-									if (dEdgeAdj > *(double*)GetSetMediaItemTakeInfo(GetMediaItemTake(item2, iTake), "D_STARTOFFS", NULL))
+								for (iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++) {
+									MediaItem_Take* take = GetMediaItemTake(item2, iTake);
+									if (take && dEdgeAdj > *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL))
 										break;
+								}
 								if (iTake < GetMediaItemNumTakes(item2))
 									continue;   // Keep looking
 

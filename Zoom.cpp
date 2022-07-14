@@ -1581,10 +1581,14 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Toggle horizontal zoom to selected items" },                   "SWS_TOGZOOMHORIZ_ITEMS",  TogZoomHoriz,        NULL, 4, IsTogZoomed },
 	{ { DEFACCEL, "SWS: Toggle horizontal zoom to time selection" },                   "SWS_TOGZOOMHORIZ_TSEL",   TogZoomHoriz,        NULL, 5, IsTogZoomed },
 
-	{ { DEFACCEL, "SWS: Scroll left 10%" },  "SWS_SCROLL_L10",  HorizScroll, NULL, -10 },
-	{ { DEFACCEL, "SWS: Scroll right 10%" }, "SWS_SCROLL_R10",  HorizScroll, NULL, 10 },
-	{ { DEFACCEL, "SWS: Scroll left 1%" },   "SWS_SCROLL_L1",   HorizScroll, NULL, -1 },
-	{ { DEFACCEL, "SWS: Scroll right 1%" },  "SWS_SCROLL_R1",   HorizScroll, NULL, 1 },
+	{ { DEFACCEL, "SWS: Scroll left 1%" },          "SWS_SCROLL_L1",   HorizScroll, NULL, -1 },
+	{ { DEFACCEL, "SWS: Scroll right 1%" },         "SWS_SCROLL_R1",   HorizScroll, NULL, 1 },
+	{ { DEFACCEL, "SWS: Scroll left 10%" },         "SWS_SCROLL_L10",  HorizScroll, NULL, -10 },
+	{ { DEFACCEL, "SWS: Scroll right 10%" },        "SWS_SCROLL_R10",  HorizScroll, NULL, 10 },
+	{ { DEFACCEL, "SWS: Scroll left 75%" },         "SWS_SCROLL_L75",  HorizScroll, NULL, -75 },
+	{ { DEFACCEL, "SWS: Scroll right 75%" },        "SWS_SCROLL_R75",  HorizScroll, NULL, 75 },
+	{ { DEFACCEL, "SWS: Scroll left 100% (page)" }, "SWS_SCROLL_L100", HorizScroll, NULL, -100 },
+	{ { DEFACCEL, "SWS: Scroll right 100% (page)" },"SWS_SCROLL_R100", HorizScroll, NULL, 100 },
 
 	{ { DEFACCEL, "SWS: Save current arrange view, slot 1" }, "SWS_SAVEVIEW",      SaveCurrentArrangeViewSlot, NULL, 0 },
 	{ { DEFACCEL, "SWS: Save current arrange view, slot 2" }, "WOL_SAVEVIEWS2",    SaveCurrentArrangeViewSlot, NULL, 1 },

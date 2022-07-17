@@ -298,6 +298,7 @@ add_subdirectory(TrackList)
 add_subdirectory(Utility)
 add_subdirectory(Wol)
 add_subdirectory(Xenakios)
+add_subdirectory(acendan)
 
 # the langpack target must be included after all sources files are registered
 add_subdirectory(BuildUtils)

@@ -36,6 +36,7 @@
 #include "snooks/SN_ReaScript.h"
 #include "cfillion/cfillion.hpp"
 #include "nofish/NF_ReaScript.h"
+#include "acendan/AC_ReaScript.h"
 #include "Misc/Analysis.h"
 
 
@@ -351,6 +352,8 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_GetMediaSourceRPP), "bool", "PCM_source*,char*,int", "src,fnOut,fnOut_sz", "Get the project associated with this source (BWF, subproject...).", },
 	{ APIFUNC(CF_EnumMediaSourceCues), "int", "PCM_source*,int,double*,double*,bool*,char*,int,bool*", "src,index,timeOut,endTimeOut,isRegionOut,nameOut,nameOut_sz,isChapterOut", "Enumerate the source's media cues. Returns the next index or 0 when finished.", },
 	{ APIFUNC(CF_ExportMediaSource), "bool", "PCM_source*,const char*", "src,fn", "Export the source to the given file (MIDI only).", },
+
+	{ APIFUNC(AC_GetMediaFileCoverImage), "bool", "const char*,char*,int", "path,temppathOut,temppathOut_sz", "Returns a temp path with the given file's embedded cover image, if found. Supports WAV, MP3, FLAC, MP4, ASF, APE, MPC", },
 
 	{ NULL, } // denote end of table
 };

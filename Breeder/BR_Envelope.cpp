@@ -2054,7 +2054,7 @@ void ShowHideSendEnv (COMMAND_T* ct)
 			if (hide == envelope->IsVisible() && envelope->IsActive())
 			{
 				envelope->SetVisible(!hide);
-				if (!envelope->IsVisible() && envelope->CountPoints() <= 1)
+				if (!envelope->IsVisible() && envelope->CountPoints() <= 1 && !CountAutomationItems(envelope->GetPointer()))
 				{
 					double value;
 					const int trimMode = ConfigVar<int>("envtrimadjmode").value_or(0);

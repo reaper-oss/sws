@@ -946,14 +946,29 @@ void DeleteTakeUnderMouse (COMMAND_T* ct)
 	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE | BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT);
 
 	// Don't differentiate between things within the item, but ignore any track lane envelopes
-	if (!strcmp(mouseInfo.GetWindow(), "arrange") && !strcmp(mouseInfo.GetSegment(), "track") && mouseInfo.GetItem() && (!mouseInfo.GetEnvelope() || mouseInfo.IsTakeEnvelope()))
+	MediaItem* itemUnderMouse = mouseInfo.GetItem();
+	if (!strcmp(mouseInfo.GetWindow(), "arrange") && !strcmp(mouseInfo.GetSegment(), "track") && itemUnderMouse && (!mouseInfo.GetEnvelope() || mouseInfo.IsTakeEnvelope()))
 	{
-		if (CountTakes(mouseInfo.GetItem()) > 1 && !IsItemLocked(mouseInfo.GetItem()) && !IsLocked(ITEM_FULL))
+		if (!IsItemLocked(itemUnderMouse) && !IsLocked(ITEM_FULL))
 		{
-			SNM_TakeParserPatcher takePatcher(mouseInfo.GetItem());
-			takePatcher.RemoveTake(mouseInfo.GetTakeId());
-			if (takePatcher.Commit())
-				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+			if (CountTakes(itemUnderMouse) > 1)
+			{
+				SNM_TakeParserPatcher takePatcher(itemUnderMouse);
+				takePatcher.RemoveTake(mouseInfo.GetTakeId());
+				if (takePatcher.Commit())
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+			}
+			else if (CountTakes(itemUnderMouse) == 1) // don't delete empty items
+			// can't use TakeParserPatcher here as it would create an empty item when deleting the only take in an item
+			{
+				MediaTrack* trackUnderMouse = mouseInfo.GetTrack();
+				if (trackUnderMouse)
+				{
+					DeleteTrackMediaItem(trackUnderMouse, itemUnderMouse);
+					UpdateArrange();
+					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+				}
+			}
 		}
 	}
 }

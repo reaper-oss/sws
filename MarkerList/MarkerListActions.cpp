@@ -185,7 +185,7 @@ void SelNextRegion(COMMAND_T*)
 	{
 		if (bReg && dRegStart > dCurPos)
 		{
-			GetSet_LoopTimeRange(true, true, &dRegStart, &dRegEnd, false);
+			GetSet_LoopTimeRange(true, false, &dRegStart, &dRegEnd, false);
 			return;
 		}
 	}
@@ -194,7 +194,7 @@ void SelNextRegion(COMMAND_T*)
 	{
 		if (bReg)
 		{
-			GetSet_LoopTimeRange(true, true, &dRegStart, &dRegEnd, false);
+			GetSet_LoopTimeRange(true, false, &dRegStart, &dRegEnd, false);
 			return;
 		}
 	}
@@ -226,9 +226,9 @@ void SelPrevRegion(COMMAND_T*)
 		}
 	}
 	if (bFound)
-		GetSet_LoopTimeRange(true, true, &dRegStart, &dRegEnd, false);
+		GetSet_LoopTimeRange(true, false, &dRegStart, &dRegEnd, false);
 	else if (bRegions)
-		GetSet_LoopTimeRange(true, true, &d1, &d2, false);
+		GetSet_LoopTimeRange(true, false, &d1, &d2, false);
 }
 
 // Goto the end of the project, *including* perhaps marker ends

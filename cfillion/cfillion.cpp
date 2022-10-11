@@ -230,15 +230,19 @@ HWND CF_GetTrackFXChainEx(ReaProject *, MediaTrack *track, const bool input)
 
   char chainTitle[128];
 
-  if(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") == -1) {
-    snprintf(chainTitle, sizeof(chainTitle), "%s%s", __LOCALIZE("FX: ", "fx"),
-      input ? __LOCALIZE("Monitoring", "fx") : __LOCALIZE("Master Track", "fx"));
+  const int trackNumber
+    { static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER")) };
+  const bool bypassed { !GetMediaTrackInfo_Value(track, "I_FXEN") };
+
+  if(trackNumber == -1) {
+    snprintf(chainTitle, sizeof(chainTitle), "%s%s%s", __LOCALIZE("FX: ", "fx"),
+      input    ? __LOCALIZE("Monitoring",   "fx")
+               : __LOCALIZE("Master Track", "fx"),
+      bypassed ? __LOCALIZE(" [BYPASSED]",  "fx") : "");
 
     return FindWindowEx(nullptr, nullptr, nullptr, chainTitle);
   }
 
-  const int trackNumber
-    { static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER")) };
   const std::string trackName
     { static_cast<char *>(GetSetMediaTrackInfo(track, "P_NAME", nullptr)) };
   const bool isFolder { GetMediaTrackInfo_Value(track, "I_FOLDERDEPTH") > 0 };
@@ -250,10 +254,11 @@ HWND CF_GetTrackFXChainEx(ReaProject *, MediaTrack *track, const bool input)
   GetSetMediaTrackInfo_String(track, "P_NAME", guid, true);
   CF_RefreshTrackFXChainTitle(track);
 
-  snprintf(chainTitle, sizeof(chainTitle), R"(%s%s %d "%s"%s%s)",
+  snprintf(chainTitle, sizeof(chainTitle), R"(%s%s %d "%s"%s%s%s)",
     __LOCALIZE("FX: ", "fx"), __LOCALIZE("Track", "fx"), trackNumber, guid,
-    isFolder ? __LOCALIZE(" (folder)", "fx") : "",
-    input    ? __LOCALIZE(" (input FX chain)", "fx") : "");
+    isFolder ? __LOCALIZE(" (folder)",         "fx") : "",
+    input    ? __LOCALIZE(" (input FX chain)", "fx") : "",
+    bypassed ? __LOCALIZE(" [BYPASSED]",       "fx") : "");
 
   HWND match { GetReaHwndByTitle(chainTitle) };
 

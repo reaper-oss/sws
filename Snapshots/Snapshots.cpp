@@ -1026,12 +1026,16 @@ void SelSnapshotTracks(COMMAND_T*)
 		g_ss.Get()->m_pCurSnapshot->SelectTracks();
 }
 
-void SaveCurSnapshot(COMMAND_T*) { if (g_ss.Get()->m_pCurSnapshot) SaveSnapshot(g_ss.Get()->m_pCurSnapshot->m_iSlot); }
-void SaveSnapshot(COMMAND_T* ct) { SaveSnapshot((int)ct->user + 1); }
-void GetCurSnapshot(COMMAND_T*)	 { if (g_ss.Get()->m_pCurSnapshot) GetSnapshot(g_ss.Get()->m_pCurSnapshot->m_iSlot, ALL_MASK, false); }
-void GetPreviousSnapshot(COMMAND_T*) { if ((g_ss.Get()->m_pCurSnapshot) && (g_ss.Get()->m_pCurSnapshot)->m_iSlot >= 0) GetSnapshot(((g_ss.Get()->m_pCurSnapshot->m_iSlot) - 1), ALL_MASK, false); }
-void GetNextSnapshot(COMMAND_T*)	 { if (g_ss.Get()->m_pCurSnapshot) GetSnapshot(((g_ss.Get()->m_pCurSnapshot->m_iSlot) + 1), ALL_MASK, false); }
-void GetSnapshot(COMMAND_T* ct)	 { GetSnapshot((int)ct->user + 1, ALL_MASK, false); }
+void SaveCurSnapshot(COMMAND_T*)     { if (g_ss.Get()->m_pCurSnapshot) 
+                                           SaveSnapshot(g_ss.Get()->m_pCurSnapshot->m_iSlot); }
+void SaveSnapshot(COMMAND_T* ct)     { SaveSnapshot((int)ct->user + 1); }
+void GetCurSnapshot(COMMAND_T*)      { if (g_ss.Get()->m_pCurSnapshot) 
+                                           GetSnapshot(g_ss.Get()->m_pCurSnapshot->m_iSlot, g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly_OnRecall); }
+void GetPreviousSnapshot(COMMAND_T*) { if ((g_ss.Get()->m_pCurSnapshot) && (g_ss.Get()->m_pCurSnapshot)->m_iSlot >= 0) 
+                                           GetSnapshot(((g_ss.Get()->m_pCurSnapshot->m_iSlot) - 1), g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly_OnRecall); }
+void GetNextSnapshot(COMMAND_T*)     { if (g_ss.Get()->m_pCurSnapshot) 
+                                           GetSnapshot(((g_ss.Get()->m_pCurSnapshot->m_iSlot) + 1), g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly_OnRecall); }
+void GetSnapshot(COMMAND_T* ct)      { GetSnapshot((int)ct->user + 1, g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly_OnRecall); }
 void SetSnapType(COMMAND_T* ct)
 {
 	int type=(int)ct->user;

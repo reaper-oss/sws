@@ -1844,7 +1844,7 @@ bool BR_Envelope::FillProperties () const
 					m_properties.minValue = -1;
 					m_properties.maxValue = 1;
 					m_properties.centerValue = 0;
-					m_properties.type = (strstr(token, "AUXPANENV") || strstr(token, "PANENV2") || strstr(token, "HWPANENV")) ? PAN : PAN_PREFX;
+					m_properties.type = (strstr(token, "AUXPANENV") || strstr(token, "PANENV2") || strstr(token, "PANENVL2") || strstr(token, "HWPANENV")) ? PAN : PAN_PREFX;
 					m_properties.paramType.Set(token);
 				}
 				else if (strstr(token, "WIDTHENV"))

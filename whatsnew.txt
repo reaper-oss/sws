@@ -1,3 +1,54 @@
+!v2.13.2 pre-release build (January 16, 2023)
+
+Actions:
++Fix "SWS/BR: {Toggle,Show,Hide} * send envelopes" deleting automation items if there are no points present in the underlying envelope (issue 1654)
++Fix "SWS: Time-select {previous,next} region" setting loop points instead of time selection (issue 1648)
++Fix a crash when running "SWS/AW: Fade in/out/crossfade selected area of selected items" if a selected item contains empty takes (issue 1638, thread https://forum.cockos.com/showthread.php?t=267010|267010|]
++Make "SWS/BR: Delete take under mouse cursor" delete the item if it only contains one take (issue 1674)
++Preserve existing clipboard contents if there are no sends/receive to copy in "{Copy,Cut} selected tracks {sends,receives,routings}" (issue 1681)
++Remove the empty line at the begining of the file written by the "Dump action list" actions (issue 1666)
++Take playrate and stretch markers into account in "SWS/AW: Fill gaps between selected items (quick, no crossfade)", "(advanced)" and "(advanced, use last settings)" (issue 1657)
++Use default track settings in "Create and select first track" and "Insert track above selected tracks" (issue 1669)
+
+Cycle Actions:
++Implement "Wait n seconds before next action" (issue 1656)
+
+macOS:
++Implement "Wait for next {bar,beat}" and "Wait until end of loop" actions (experimental) (issue 971, issue 1676)
+
+MIDI Editor:
++Add support for CC shapes in the following actions:
+ - SWS/BR: Copy selected CC events in active item to lane under mouse cursor
+ - SWS/BR: Copy selected CC events in active item to last clicked lane
+ - SWS/BR: Restore events to all visible CC lanes, slot n
+ - SWS/BR: Restore events to CC lane under mouse cursor, slot n
+ - SWS/BR: Save selected events in CC lane under mouse cursor, slot n
+ - SWS/BR: Save selected events in last clicked CC lane, slot n
+
+Misc:
++Fix left post-fx dual pan envelopes being detected as pre-fx (issue 1641)
++Limit toolbars auto refresh to when a watched action's toggle state changes (post https://forum.cockos.com/showthread.php?p=2629385|2629385|)
++Support REAPER 6.73+devXXXX floating-point vertical zooming (issue 1717)
++Update TagLib to version 1.13
+
+Notes:
++Enable text editing shortcuts in the text field on macOS and Windows (issue 1721)
+
+ReaScript API:
++Add CF_PCM_Source_SetSectionInfo
++Add media source preview API (issue 1702)
++Add NF_Base64_Decode and NF_Base64_Encode (issue 778)
++Add NF_ScrollHorizontallyByPercentage
++Add support for bypassed chains in CF_GetTrackFXChain (issue 1634)
++Deprecate CF_EnumerateActions and CF_GetCommandText (use kbd_enumerateActions and kbd_getTextFromCmd instead, post https://forum.cockos.com/showthread.php?p=2610217|2610217|)
++Redirect vzoom2 to vzoom3 in SNM_{Get,Set}IntConfigVar and make SNM_SetDoubleConfigVar("vzoom3") write to both
+
+Region Playlist:
++Copy tempo/time signature markers (issue 1462)
+
+Snapshots:
++Apply filter when recalling snapshots via actions (issue 1631)
+
 !v2.13.1 pre-release build (May 7, 2022)
 
 Actions:

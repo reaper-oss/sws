@@ -309,7 +309,7 @@ void InsertTrkAbove(COMMAND_T* = NULL)
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
-			InsertTrackAtIndex(i-1, false);
+			InsertTrackAtIndex(i-1, true);
 			ClearSelected();
 			tr = CSurf_TrackFromID(i, false);
 			TrackList_AdjustWindows(false);
@@ -324,7 +324,7 @@ void InsertTrkAbove(COMMAND_T* = NULL)
 void CreateTrack1(COMMAND_T* = NULL)
 {
 	ClearSelected();
-	InsertTrackAtIndex(0, false);
+	InsertTrackAtIndex(0, true);
 	TrackList_AdjustWindows(false);
 	GetSetMediaTrackInfo(CSurf_TrackFromID(1, false), "I_SELECTED", &g_i1);
 	SetLTT();

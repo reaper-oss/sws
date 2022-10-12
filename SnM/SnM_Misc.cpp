@@ -455,14 +455,6 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
   int nbWrote=0;
   if (FILE* f = fopenUTF8(fn, "w"))
   {
-    // flush
-    fputs("\n", f);
-    fclose(f);
-    
-    f = fopenUTF8(fn, "a"); 
-    if (!f)
-      return false; // just in case..
-    
     if (_heading)
       fprintf(f, "%s", _heading);
     

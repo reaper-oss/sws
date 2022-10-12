@@ -41,71 +41,89 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 // lazy here: WDL_PtrList_DOD would have been better but it requires too much updates...
-WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_sndTrackClipboard;
-WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_rcvTrackClipboard; 
-WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_sndClipboard;
-WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_rcvClipboard;
+SndRcvClipboard g_sndTrackClipboard, g_rcvTrackClipboard;
+SndRcvClipboard g_sndClipboard, g_rcvClipboard;
 
-void FlushClipboard(WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _clipboard)
+enum RoutingCategory { Send = 0 , Receive = -1 };
+
+// noIntra: skip routings to tracks contained in 'trs'
+//          (eg. to not copy routings between selected tracks)
+static bool CopySendsReceives(const RoutingCategory type, const bool noIntra,
+		WDL_PtrList<MediaTrack>* trs, SndRcvClipboard* clipboard,
+		const bool forceFlush = false)
 {
-	if (_clipboard)
-		_clipboard->Empty(true);
+	bool updated = false;
+	const char *targetKey = type == Receive ? "P_SRCTRACK" : "P_DESTTRACK";
+
+	if (forceFlush) // flush even if there's nothing to copy
+		clipboard->Empty(true);
+
+	for (int ti = 0; ti < trs->GetSize(); ++ti)
+	{
+		MediaTrack* tr = trs->Get(ti);
+		if (!tr)
+			continue;
+
+		if(forceFlush || updated)
+			clipboard->Add(new WDL_PtrList_DeleteOnDestroy<SNM_SndRcv>());
+
+		MediaTrack* target;
+		for (int si = 0; (target = (MediaTrack*)GetSetTrackSendInfo(tr, type, si, targetKey, nullptr)); ++si)
+		{
+			if (noIntra && trs->Find(target) >= 0)
+				continue;
+
+			MediaTrack *src, *dest;
+			if (type == Receive)
+				src = target, dest = tr;
+			else
+				src = tr, dest = target;
+
+			SNM_SndRcv* send = new SNM_SndRcv();
+			if (!send->FillIOFromReaper(src, dest, type, si))
+			{
+				delete send;
+				continue;
+			}
+
+			if (!forceFlush && !updated)
+			{
+				clipboard->Empty(true);
+				for (int backlog = 0; backlog <= ti; ++backlog)
+					clipboard->Add(new WDL_PtrList_DeleteOnDestroy<SNM_SndRcv>());
+			}
+
+			clipboard->Get(ti)->Add(send);
+			updated = true;
+		}
+	}
+
+	return updated;
 }
 
 void CopySendsReceives(bool _noIntra, WDL_PtrList<MediaTrack>* _trs,
-		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _snds, 
-		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs)
+		SndRcvClipboard* _snds, SndRcvClipboard* _rcvs, bool forceFlush)
 {
-	FlushClipboard(_snds);
-	FlushClipboard(_rcvs);
+	bool addedSnds = false, addedRcvs = false;
 
-	for (int i=0; i < _trs->GetSize(); i++)
+	if (_snds)
 	{
-		if (MediaTrack* tr = _trs->Get(i))
-		{
-			// copy sends
-			if (_snds)
-			{
-				_snds->Add(new WDL_PtrList_DeleteOnDestroy<SNM_SndRcv>());
-
-				int idx=0;
-				MediaTrack* dest = (MediaTrack*)GetSetTrackSendInfo(tr, 0, idx, "P_DESTTRACK", NULL);
-				while (dest)
-				{
-					if (!_noIntra || _trs->Find(dest)<0)
-					{
-						SNM_SndRcv* send = new SNM_SndRcv();
-						if (send->FillIOFromReaper(tr, dest, 0, idx))
-							_snds->Get(i)->Add(send);
-					}
-					dest = (MediaTrack*)GetSetTrackSendInfo(tr, 0, ++idx, "P_DESTTRACK", NULL);
-				}
-			}
-
-			// copy receives
-			if (_rcvs)
-			{
-				_rcvs->Add(new WDL_PtrList_DeleteOnDestroy<SNM_SndRcv>());
-
-				int idx=0;
-				MediaTrack* src = (MediaTrack*)GetSetTrackSendInfo(tr, -1, idx, "P_SRCTRACK", NULL);
-				while (src)
-				{
-					if (!_noIntra || _trs->Find(src)<0)
-					{
-						SNM_SndRcv* rcv = new SNM_SndRcv();
-						if (rcv->FillIOFromReaper(src, tr, -1, idx))
-							_rcvs->Get(i)->Add(rcv);
-					}
-					src = (MediaTrack*)GetSetTrackSendInfo(tr, -1, ++idx, "P_SRCTRACK", NULL);
-				}
-			}
-		}
+		addedSnds = CopySendsReceives(Send, _noIntra, _trs, _snds, forceFlush);
+		forceFlush |= addedSnds;
 	}
+
+	if (_rcvs)
+	{
+		addedRcvs = CopySendsReceives(Receive, _noIntra, _trs, _rcvs, forceFlush);
+
+		if (_snds && !addedSnds && addedRcvs)
+			_snds->Empty(true);
+	}
+
+	// return addedRcvs || addedRcvs;
 }
 
-bool PasteSendsReceives(bool _send, MediaTrack* _tr, 
-		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _ios, 
+bool PasteSendsReceives(bool _send, MediaTrack* _tr, SndRcvClipboard* _ios,
 		int _trIdx, WDL_PtrList<SNM_ChunkParserPatcher>* _ps)
 {
 	bool updated = false;
@@ -129,8 +147,7 @@ bool PasteSendsReceives(bool _send, MediaTrack* _tr,
 }
 
 bool PasteSendsReceives(WDL_PtrList<MediaTrack>* _trs,
-		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _snds, 
-		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs, 
+		SndRcvClipboard* _snds, SndRcvClipboard* _rcvs,
 		WDL_PtrList<SNM_ChunkParserPatcher>* _ps)
 {
 	bool updated = false;
@@ -207,7 +224,7 @@ void CopyRoutings(COMMAND_T* _ct)
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize())
-		CopySendsReceives(false, &trs, &g_sndClipboard, &g_rcvClipboard);
+		CopySendsReceives(false, &trs, &g_sndClipboard, &g_rcvClipboard, false);
 }
 
 void CutRoutings(COMMAND_T* _ct)
@@ -241,7 +258,7 @@ void CopySends(COMMAND_T* _ct)
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize())
-		CopySendsReceives(false, &trs, &g_sndClipboard, NULL);
+		CopySendsReceives(Send, false, &trs, &g_sndClipboard);
 }
 
 void CutSends(COMMAND_T* _ct)
@@ -250,7 +267,7 @@ void CutSends(COMMAND_T* _ct)
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize()) {
-		CopySendsReceives(false, &trs, &g_sndClipboard, NULL);
+		CopySendsReceives(Send, false, &trs, &g_sndClipboard);
 		updated |= RemoveSends(&trs, NULL);
 	}
 	if (updated)
@@ -271,7 +288,7 @@ void CopyReceives(COMMAND_T* _ct)
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize())
-		CopySendsReceives(false, &trs, NULL, &g_rcvClipboard);
+		CopySendsReceives(Receive, false, &trs, &g_rcvClipboard);
 }
 
 void CutReceives(COMMAND_T* _ct)
@@ -280,7 +297,7 @@ void CutReceives(COMMAND_T* _ct)
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize()) {
-		CopySendsReceives(false, &trs, NULL, &g_rcvClipboard);
+		CopySendsReceives(Receive, false, &trs, &g_rcvClipboard);
 		updated |= RemoveReceives(&trs, NULL);
 	}
 	if (updated)

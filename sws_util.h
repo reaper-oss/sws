@@ -264,6 +264,7 @@ void SWS_GetSelectedMediaItems(WDL_TypedBuf<MediaItem*>* buf);
 void SWS_GetSelectedMediaItemsOnTrack(WDL_TypedBuf<MediaItem*>* buf, MediaTrack* tr);
 int SWS_GetModifiers();
 bool SWS_IsWindow(HWND hwnd);
+void WaitUntil(bool(*)(void *), void *); // cannot use std::function on pre-c++11 macOS
 
 // Localization, sws_util.cpp
 #define _SWS_LOCALIZATION
@@ -278,4 +279,3 @@ TrackEnvelope* SWS_GetTrackEnvelopeByName(MediaTrack* track, const char* envname
 bool RegisterExportedFuncs(reaper_plugin_info_t* _rec);
 void UnregisterExportedFuncs();
 bool RegisterExportedAPI(reaper_plugin_info_t* _rec);
-

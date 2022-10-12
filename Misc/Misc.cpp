@@ -71,10 +71,8 @@ int MiscInit()
 		return 0;
 	if (!ItemSelInit())
 		return 0;
-#ifdef _WIN32
 	if (!MacrosInit())
 		return 0;
-#endif
 	if (!ProjPrefsInit())
 		return 0;
 	if (!RecordCheckInit())

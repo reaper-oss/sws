@@ -723,3 +723,15 @@ const char* SWS_GetSourceFileName(PCM_source* src)
 		src = src->GetSource();
 	return src ? src->GetFileName() : nullptr;
 }
+
+#ifdef _WIN32
+void WaitUntil(bool(*predicate)(void *), void *data)
+{
+	while (!predicate(data)) {
+		MSG msg;
+		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+			DispatchMessage(&msg);
+		Sleep(1);
+	}
+}
+#endif

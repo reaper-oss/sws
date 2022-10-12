@@ -34,7 +34,7 @@ class Base64
 		virtual ~Base64();
 
 		char* Decode(const char* pInput, int *bufsize);	//bufsize holds the decoded length
-		char* Encode(const char* pEncodedBuf, int iLen);
+		char* Encode(const char* pEncodedBuf, int iLen, bool pad = false);
 		char* m_pEncodedBuf;
 		char* m_pDecodedBuf;
 };

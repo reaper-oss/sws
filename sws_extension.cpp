@@ -996,6 +996,7 @@ error:
 		IMPAPI(MIDI_SetItemExtents); // v5.0pre (no data on exact build in whatsnew, but I'm pretty sure I never saw this in v4)
 		IMPAPI(MIDI_SetNote);
 		IMPAPI(MIDI_SetTextSysexEvt);
+		IMPAPI(MIDI_Sort); IMPAPI(MIDI_DisableSort);
 		IMPAPI(MIDIEditor_GetActive);
 		IMPAPI(MIDIEditor_GetMode);
 		IMPAPI(MIDIEditor_GetSetting_int);

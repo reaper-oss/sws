@@ -97,7 +97,7 @@ for:
     artifacts:
       - path: build/sws*.dmg
 
-  - matrix: { only: [ appveyor_build_worker_image: &windows Visual Studio 2019 ] }
+  - matrix: { only: [ appveyor_build_worker_image: &windows Visual Studio 2022 ] }
     install:
       # Use NSIS v2.46 to reduce AV false positives
       - '"%ProgramFiles(x86)%\NSIS\uninst-nsis.exe" /S'
@@ -108,8 +108,8 @@ for:
       - refreshenv
       - curl -fsSLO https://nsis.sourceforge.io/mediawiki/images/1/18/NsProcess.zip
       - 7z e nsProcess.zip -o"%ProgramFiles(x86)%\NSIS\Unicode\Plugins" nsProcessW.dll -r
-      - if "%ARCH%" == "x64" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
-      - if "%ARCH%" == "x86" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
+      - if "%ARCH%" == "x64" call "%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+      - if "%ARCH%" == "x86" call "%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat"
     build_script:
       - mkdir build && cd build
       - cmake .. -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo

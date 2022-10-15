@@ -70,3 +70,5 @@ bool           NF_SetProjectTrackSelectionAction(const char* buf);
 bool           NF_ClearProjectTrackSelectionAction();
 
 bool           NF_DeleteTakeFromItem(MediaItem* item, int takeIdx);
+
+void           NF_ScrollHorizontallyByPercentage(int amount);

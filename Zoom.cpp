@@ -425,17 +425,22 @@ void ScrollToCursor(COMMAND_T* ct)
 	SetHorizPos(NULL, ct->user<0 && (GetPlayState()&1) ? GetPlayPosition() : GetCursorPosition(), 0.0, 0.01 * abs((int)ct->user));
 }
 
-void HorizScroll(COMMAND_T* ctx)
+void HorizScroll(const int amount)
 {
 	HWND hwnd = GetTrackWnd();
 	SCROLLINFO si = { sizeof(SCROLLINFO), };
 	si.fMask = SIF_ALL;
 	CoolSB_GetScrollInfo(hwnd, SB_HORZ, &si);
-	si.nPos += (int)((double)ctx->user * si.nPage / 100.0);
+	si.nPos += (int)((double)amount * si.nPage / 100.0);
 	if (si.nPos < 0) si.nPos = 0;
 	else if (si.nPos > si.nMax) si.nPos = si.nMax;
 	CoolSB_SetScrollInfo(hwnd, SB_HORZ, &si, true);
 	SendMessage(hwnd, WM_HSCROLL, SB_THUMBPOSITION, 0);
+}
+
+void HorizScroll(COMMAND_T * ctx)
+{
+	HorizScroll(static_cast<int>(ctx->user));
 }
 
 void ZoomToSelItems(COMMAND_T* ct)			{ VertZoomSelItems(0, ct ? (int)ct->user == 0 : false); HorizZoomSelItems(); }

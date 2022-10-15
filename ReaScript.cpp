@@ -319,6 +319,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(NF_ClearProjectTrackSelectionAction), "bool", "", "", "Returns true if project track selection action was cleared successfully.", },
 
 	{ APIFUNC(NF_DeleteTakeFromItem), "bool", "MediaItem*,int", "item,takeIdx", "Deletes a take from an item. takeIdx is zero-based. Returns true on success.", },
+	{ APIFUNC(NF_ScrollHorizontallyByPercentage), "void", "int", "amount", "100 means scroll one page. Negative values scroll left.", },
 	// /*** nofish stuff ***
 
 	{ APIFUNC(SN_FocusMIDIEditor), "void", "", "", "Focuses the active/open MIDI editor.", },

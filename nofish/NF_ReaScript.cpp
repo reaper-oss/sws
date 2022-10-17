@@ -41,6 +41,8 @@
 #include "../SnM/SnM_Notes.h" // #755
 #include "../SnM/SnM_Project.h" // #974, GetProjectLoadAction(), GetGlobalStartupAction()
 #include "../SnM/SnM_Util.h" // #974, SNM_NamedCommandLookup(), CheckSwsMacroScriptNumCustomId()
+#include "../Utility/Base64.h"
+#include "../Utility/ReaScript_Utility.hpp"
 
 #include <taglib/fileref.h>
 
@@ -478,4 +480,29 @@ bool NF_DeleteTakeFromItem(MediaItem* item, int takeIdx)
 {
 	SNM_TakeParserPatcher takePatcher(item);
 	return takePatcher.RemoveTake(takeIdx);
+}
+
+// Base64
+bool NF_Base64_Decode(const char* base64_str, char* decodedStrOut, int)
+{
+	Base64 b64; int decodedSize;
+	if (char* decoded = b64.Decode(base64_str, &decodedSize))
+	{
+		realloc_cmd_ptr(&decodedStrOut, &decodedSize, decodedSize); // allow null bytes in output
+		memcpy(decodedStrOut, decoded, decodedSize);
+		return true;
+	}
+	return false;
+}
+
+void NF_Base64_Encode(const char* str, int str_sz, const bool usePadding, char* encodedStrOut, const int encodedStrOut_sz)
+{
+	static bool isStrSizeAccurate { atof(GetAppVersion()) >= 6.44 };
+	if (isStrSizeAccurate && str_sz > 0)
+		--str_sz; // ignore the null terminator
+	else
+		str_sz = strlen(str);
+	Base64 b64;
+	const char* encoded = b64.Encode(str, str_sz, usePadding);
+	CopyToBuffer(encoded, encodedStrOut, encodedStrOut_sz);
 }

@@ -62,10 +62,10 @@ char* Base64::Encode(const char* pInput, int iInputLen, const bool pad)
 	int iEncodedLen;
 	
 	//calculate encoded buffer size
-       if (pad)
-               iEncodedLen = 4 * ceil(iLen / 3.f);
-       else
-               iEncodedLen = ceil(4 * iLen / 3.f);
+	if (pad)
+		iEncodedLen = static_cast<int>(4 * ceil(iLen / 3.f));
+	else
+		iEncodedLen = static_cast<int>(ceil(4 * iLen / 3.f));
 
 	// allocate:
 	if (m_pEncodedBuf != NULL)
@@ -120,7 +120,7 @@ char* Base64::Decode(const char* pEncodedBuf, int *iOutLen)
 
 	// allocate buffer to hold the decoded string:
 	const int iEncodedLen = strlen(pEncodedBuf);
-	iDecodedLen = 3 * (iEncodedLen / 4.f);
+	iDecodedLen = static_cast<int>(3 * (iEncodedLen / 4.f));
 
 	// remove padding from decoded length
 	for(int i = iEncodedLen - 1; i >= 0 && pEncodedBuf[i] == '='; --i, --iDecodedLen);

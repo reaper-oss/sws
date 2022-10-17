@@ -319,6 +319,10 @@ APIdef g_apidefs[] =
 	{ APIFUNC(NF_ClearProjectTrackSelectionAction), "bool", "", "", "Returns true if project track selection action was cleared successfully.", },
 
 	{ APIFUNC(NF_DeleteTakeFromItem), "bool", "MediaItem*,int", "item,takeIdx", "Deletes a take from an item. takeIdx is zero-based. Returns true on success.", },
+
+	// Base64
+	{ APIFUNC(NF_Base64_Decode), "bool","const char*,char*,int", "base64Str,decodedStrOutNeedBig,decodedStrOutNeedBig_sz", "Returns true on success.", },
+	{ APIFUNC(NF_Base64_Encode), "void","const char*,int,bool,char*,int", "str,str_sz,usePadding,encodedStrOutNeedBig,encodedStrOutNeedBig_sz", "Input string may contain null bytes in REAPER 6.44 or newer. Note: Doesn't allow padding in the middle (e.g. concatenated encoded strings), doesn't allow newlines.", },
 	// /*** nofish stuff ***
 
 	{ APIFUNC(SN_FocusMIDIEditor), "void", "", "", "Focuses the active/open MIDI editor.", },

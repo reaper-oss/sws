@@ -74,16 +74,17 @@ protected:
 //Handle tempo markers for region playlist
 struct RawTempoMarkerData
 {
-	double position = -1;
-	double bpm = -1;
-	int linearBool = -1;
-	unsigned int beatDivision = -1;
-	int intData4 = -1; //Not sure what it is
-	int settingsBitmask = -1;
-	int intData6 = -1; //Not sure what it is
-	char stringData7[10]; //Not sure what it is
-	unsigned int uintData8 = -1; //Not sure what it is
-	unsigned int metronomePattern = -1;
+	double position = 0;
+	double bpm = 0;
+	int linearBool = 0;
+	unsigned int beatDivision = 0; //High 16 bits are time signature bottom, low 16 bits are time signature top
+	int selectionBool = 0; //Is this point selected
+	int settingsBitmask = 0;
+	int bezierTension = 0; //Not used for tempo markers
+	char quantizationSettings[10]; //Not sure how this works but I guess that if you quantize the tempo marker it would change this.
+	unsigned int metronomePatternL32 = 0;
+	unsigned int metronomePatternH32 = 0;
+	int beatBase = 0;
 };
 
 class TempoMarker

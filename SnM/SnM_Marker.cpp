@@ -384,7 +384,7 @@ bool GetAllTempoMarkers(WDL_PtrList<void>* _tempoMarkers, ReaProject* _proj)
 		while (token != NULL)
 		{
 			RawTempoMarkerData newTempoMarker = RawTempoMarkerData();
-			if (sscanf(token, "PT %lf %lf %d %u %d %d %d %s %u %u", &newTempoMarker.position, &newTempoMarker.bpm, &newTempoMarker.linearBool, &newTempoMarker.beatDivision, &newTempoMarker.intData4, &newTempoMarker.settingsBitmask, &newTempoMarker.intData6, newTempoMarker.stringData7, &newTempoMarker.uintData8, &newTempoMarker.metronomePattern) >= 2)
+			if (sscanf(token, "PT %lf %lf %d %u %d %d %d %s %u %u %d", &newTempoMarker.position, &newTempoMarker.bpm, &newTempoMarker.linearBool, &newTempoMarker.beatDivision, &newTempoMarker.selectionBool, &newTempoMarker.settingsBitmask, &newTempoMarker.bezierTension, newTempoMarker.quantizationSettings, &newTempoMarker.metronomePatternL32, &newTempoMarker.metronomePatternH32, &newTempoMarker.beatBase) >= 2)
 			{
 				tempoDataMap[index] = newTempoMarker;
 				index++;
@@ -433,7 +433,7 @@ bool GetTempoMarkersInInterval(WDL_PtrList<void>* _tempoMarkers, ReaProject* _pr
 		while (token != NULL)
 		{
 			RawTempoMarkerData newTempoMarker = RawTempoMarkerData();
-			if (sscanf(token, "PT %lf %lf %d %u %d %d %d %s %u %u", &newTempoMarker.position, &newTempoMarker.bpm, &newTempoMarker.linearBool, &newTempoMarker.beatDivision, &newTempoMarker.intData4, &newTempoMarker.settingsBitmask, &newTempoMarker.intData6, newTempoMarker.stringData7, &newTempoMarker.uintData8, &newTempoMarker.metronomePattern) >= 2)
+			if (sscanf(token, "PT %lf %lf %d %u %d %d %d %s %u %u %d", &newTempoMarker.position, &newTempoMarker.bpm, &newTempoMarker.linearBool, &newTempoMarker.beatDivision, &newTempoMarker.selectionBool, &newTempoMarker.settingsBitmask, &newTempoMarker.bezierTension, newTempoMarker.quantizationSettings, &newTempoMarker.metronomePatternL32, &newTempoMarker.metronomePatternH32, &newTempoMarker.beatBase) >= 2)
 			{
 				tempoDataMap[index] = newTempoMarker;
 				index++;
@@ -519,12 +519,12 @@ bool DuplicateTempoMarkers(WDL_PtrList<void>* _tempoMarkers, ReaProject* _proj, 
 		string newState = "";
 		int index = 0;
 		double position;
-		int data5;
+		int settingsBitmask;
 		char* token = strtok(envState, "\n");
 
 		while (token != NULL)
 		{
-			int foundValues = sscanf(token, "PT %lf %*lf %*d %*u %*d %d %*d %*s %*u %*u", &position, &data5);
+			int foundValues = sscanf(token, "PT %lf %*lf %*d %*u %*d %d %*d %*s %*u %*u %*d", &position, &settingsBitmask);
 			if (foundValues >= 1)
 			{
 				std::map<int, RawTempoMarkerData>::iterator findResult = newMarkersId.find(index);
@@ -535,7 +535,7 @@ bool DuplicateTempoMarkers(WDL_PtrList<void>* _tempoMarkers, ReaProject* _proj, 
 					char appendString[2048];
 					if (foundValues == 1)
 					{
-						sprintf(appendString, " %u %d", findResult->second.beatDivision, findResult->second.intData4);
+						sprintf(appendString, " %u %d", findResult->second.beatDivision, findResult->second.selectionBool);
 						newToken.append(appendString);
 					}
 					else
@@ -543,7 +543,7 @@ bool DuplicateTempoMarkers(WDL_PtrList<void>* _tempoMarkers, ReaProject* _proj, 
 						newToken = newToken.substr(0, newToken.size() - 2);
 					}
 
-					sprintf(appendString, " %d %d %s %u %u", findResult->second.settingsBitmask, findResult->second.intData6, findResult->second.stringData7, findResult->second.uintData8, findResult->second.metronomePattern);
+					sprintf(appendString, " %d %d %s %u %u %d", findResult->second.settingsBitmask, findResult->second.bezierTension, findResult->second.quantizationSettings, findResult->second.metronomePatternL32, findResult->second.metronomePatternH32, findResult->second.beatBase);
 					newToken.append(appendString);
 					newState.append(newToken);
 					newState.append("\n");

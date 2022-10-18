@@ -237,3 +237,39 @@ void SetMenuItemSwatch(HMENU hMenu, UINT pos, int iSize, COLORREF color)
   NSRectFill(NSMakeRect(0, 0, size.width, size.height));
   [item.image unlockFocus];
 }
+
+static bool g_miscTimerRunning;
+void TestMiscTimerRunning()
+{
+  g_miscTimerRunning = true;
+  plugin_register("-timer", reinterpret_cast<void *>(&TestMiscTimerRunning));
+}
+
+void WaitUntil(bool(*predicate)(void *), void *data)
+{
+  g_miscTimerRunning = false;
+  plugin_register("timer", reinterpret_cast<void *>(&TestMiscTimerRunning));
+
+  bool firstRun = true;
+  while (!predicate(data)) {
+    // Waiting 30 ms instead of 1 ms (like on Windows) to match the normal
+    // frequency of REAPER's misc timer
+    constexpr int DEFER_TIMER_SPEED = 30,
+                  MISC_TIMER        = 0x29A;
+
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:DEFER_TIMER_SPEED / 1000.f]];
+
+    // REAPER's misc timer (based on NSTimer), responsible for many many things
+    // from UI updates to updating GetPlayPosition(), won't be re-entered in the
+    // event loop iterations above while if we're blocking it's handler.
+    //
+    // Wait until we're 100% sure the misc timer is suspended
+    // (by waiting twice its normal fire rate) before manually triggering it.
+    if (firstRun)
+      firstRun = false;
+    else if (!g_miscTimerRunning) {
+      plugin_register("-timer", reinterpret_cast<void *>(&TestMiscTimerRunning));
+      PostMessage(GetMainHwnd(), WM_TIMER, MISC_TIMER, 0);
+    }
+  }
+}

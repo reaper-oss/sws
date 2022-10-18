@@ -67,3 +67,8 @@ HCURSOR SWS_Cursor::makeFromData()
 void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwExtraInfo)
 {
 }
+
+// not implemented, would be used by WaitAction in Macros.cpp
+// void waitUntil(bool(*)(void *), void *)
+// {
+// }

@@ -30,47 +30,47 @@
 #include "stdafx.h"
 #include "Macros.h"
 
-#ifdef _WIN32 // Sorry OSX users, win32 only.
+// WaitUntil is not implemented for swell-generic (sws_util_generic.cpp)
+#if defined(_WIN32) || defined(__APPLE__)
+#  define HAS_WAITACTION
 
 void WaitAction(COMMAND_T* t)
 {
-	int iPlayState = GetPlayState();
-	if (iPlayState && !(iPlayState & 2)) // playing/recording, not paused
-	{
-		int iMeasure;
-		double dStart = GetPlayPosition();
-		double dBeat = TimeMap2_timeToBeats(NULL, dStart, &iMeasure, NULL, NULL, NULL);
-		double dStop;
-		switch (t->user)
-		{
-		case 0: // Bar
-			iMeasure++;
-			dBeat = 0.0;
-			dStop = TimeMap2_beatsToTime(NULL, dBeat, &iMeasure);
-			break;
-		case 1:
-			dBeat = (double)((int)dBeat + 1);
-			dStop = TimeMap2_beatsToTime(NULL, dBeat, &iMeasure);
-			break;
-		case 2:
-			double t1, t2;
-			GetSet_LoopTimeRange(false, true, &t1, &t2, false);
-			if (t1 == t2)
-				return;
-			dStop = t2;
-			break;
-		}
+	const int iPlayState = GetPlayState();
+	if (!iPlayState || (iPlayState & 2)) // playing/recording, not paused
+		return;
 
-		// Check for cursor going past stop, user stopping, and looping around
-		while(GetPlayPosition() < dStop && GetPlayState() && GetPlayPosition() >= dStart)
-		{
- 			// Keep the UI updating
-			MSG msg;
-			while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
-				DispatchMessage(&msg);
-			Sleep(1);
-		}
+	struct WaitData { double dStart, dStop; };
+	WaitData wd;
+	wd.dStart = GetPlayPosition();
+	int iMeasure;
+	double dBeat = TimeMap2_timeToBeats(NULL, wd.dStart, &iMeasure, NULL, NULL, NULL);
+	switch (t->user)
+	{
+	case 0: // Bar
+		iMeasure++;
+		dBeat = 0.0;
+		wd.dStop = TimeMap2_beatsToTime(NULL, dBeat, &iMeasure);
+		break;
+	case 1:
+		dBeat = (double)((int)dBeat + 1);
+		wd.dStop = TimeMap2_beatsToTime(NULL, dBeat, &iMeasure);
+		break;
+	case 2:
+		double t1, t2;
+		GetSet_LoopTimeRange(false, true, &t1, &t2, false);
+		if (t1 == t2)
+			return;
+		wd.dStop = t2;
+		break;
 	}
+
+	// Check for cursor going past stop, user stopping, and looping around
+	WaitUntil([](void *data) {
+		WaitData *wd = static_cast<WaitData *>(data);
+		const double pos = GetPlayPosition();
+		return !GetPlayState() || pos >= wd->dStop || pos < wd->dStart;
+	}, &wd);
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
@@ -83,12 +83,13 @@ static COMMAND_T g_commandTable[] =
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 //!WANT_LOCALIZE_1ST_STRING_END
+#endif
 
 int MacrosInit()
 {
+#ifdef HAS_WAITACTION
 	SWSRegisterCommands(g_commandTable);
+#endif
 
 	return 1;
 }
-
-#endif // #ifdef _WIN32

@@ -254,10 +254,11 @@ bool DupSelItems(const char* _undoTitle, double _nudgePos, WDL_PtrList<void>* _n
 			for (int i=0; i < newItems.GetSize(); i++)
 				if (MediaItem* newItem = (MediaItem*)newItems.Get(i))
 				{
-					double oldPos = *(double*)GetSetMediaItemInfo(newItem, "D_POSITION", NULL);
-					double newPos = *(double*)GetSetMediaItemInfo(items.Get(i), "D_POSITION", NULL);
-					GetSetMediaItemInfo(newItem, "D_POSITION", &newPos);
-					GetSetMediaItemInfo(items.Get(i), "D_POSITION", &oldPos);
+					MediaItem* oldItem = items.Get(i);
+					const double oldPos = GetMediaItemInfo_Value(newItem, "D_POSITION");
+					const double newPos = GetMediaItemInfo_Value(oldItem, "D_POSITION");
+					SetMediaItemInfo_Value(newItem, "D_POSITION", newPos);
+					SetMediaItemInfo_Value(oldItem, "D_POSITION", oldPos);
 					if (_newItemsOut && _newItemsOut->Find(newItem)<0)
 						_newItemsOut->Add(newItem);
 				}

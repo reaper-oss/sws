@@ -69,6 +69,7 @@ bool           NF_SetProjectTrackSelectionAction(const char* buf);
 bool           NF_ClearProjectTrackSelectionAction();
 
 bool           NF_DeleteTakeFromItem(MediaItem* item, int takeIdx);
+void           NF_ScrollHorizontallyByPercentage(int amount);
 
 // Base64
 bool          NF_Base64_Decode(const char* base64_str, char* decodedStrOut, int decodedStrOut_sz);

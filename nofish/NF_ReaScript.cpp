@@ -27,24 +27,24 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "NF_ReaScript.h"
+
+#include <taglib/fileref.h>
 #ifdef _WIN32
 #  include <cstdint> // uint32_t
 #endif
 
-#include "NF_ReaScript.h"
-
-#include "../Breeder/BR_Misc.h" // #974, GetProjectTrackSelectionAction()
-#include "../Breeder/BR_Loudness.h" // #880
-#include "../Misc/Analysis.h" // #781
+#include "../Breeder/BR_Loudness.h"
+#include "../Breeder/BR_Misc.h" // GetProjectTrackSelectionAction
+#include "../Misc/Analysis.h"
 #include "../SnM/SnM.h" // ScheduledJob
 #include "../SnM/SnM_Chunk.h" // SNM_FXSummaryParser
-#include "../SnM/SnM_Notes.h" // #755
-#include "../SnM/SnM_Project.h" // #974, GetProjectLoadAction(), GetGlobalStartupAction()
-#include "../SnM/SnM_Util.h" // #974, SNM_NamedCommandLookup(), CheckSwsMacroScriptNumCustomId()
+#include "../SnM/SnM_Notes.h"
+#include "../SnM/SnM_Project.h" // GetProjectLoadAction, GetGlobalStartupAction
+#include "../SnM/SnM_Util.h" // SNM_NamedCommandLookup, CheckSwsMacroScriptNumCustomId
 #include "../Utility/Base64.h"
 #include "../Utility/ReaScript_Utility.hpp"
-
-#include <taglib/fileref.h>
+#include "../Zoom.h" // HorizScroll
 
 // #781, peak/RMS
 double DoGetMediaItemMaxPeakAndMaxPeakPos(MediaItem* item, double* maxPeakPosOut) // maxPeakPosOut == NULL: peak only
@@ -480,6 +480,11 @@ bool NF_DeleteTakeFromItem(MediaItem* item, int takeIdx)
 {
 	SNM_TakeParserPatcher takePatcher(item);
 	return takePatcher.RemoveTake(takeIdx);
+}
+
+void NF_ScrollHorizontallyByPercentage(int amount)
+{
+	HorizScroll(amount);
 }
 
 // Base64

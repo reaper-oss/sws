@@ -27,6 +27,7 @@
 
 #pragma once
 
+void HorizScroll(int amount);
 void ZoomSlice();
 int ZoomInit(bool hookREAPERWndProcs);
 void ZoomExit();

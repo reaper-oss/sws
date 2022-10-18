@@ -454,6 +454,20 @@ int ExplodeConsoleAction(int _section, const char* _cmdStr,
 // Perform cycle actions
 ///////////////////////////////////////////////////////////////////////////////
 
+// Actions 2000 through 2023 are special and handled by REAPER's ProcessCustomAction
+static bool PerformSpecialCustomActionCommand(const int cmdId)
+{
+	if (cmdId >= 2008 && cmdId <= 2012)
+	{
+		// REAPER's implementation checks GetTickCount in a loop every 10 ms
+		constexpr float secs[] { 0.1f, 0.5f, 1.f, 5.f, 10.f };
+		Sleep(static_cast<int>(secs[cmdId - 2008] * 1000));
+		return true;
+	}
+
+	return false;
+}
+
 // assumes _cmdStr is valid and has been "exploded", if needed
 int PerformSingleCommand(int _section, const char* _cmdStr, int _val, int _valhw, int _relmode, HWND _hwnd)
 {
@@ -475,6 +489,8 @@ int PerformSingleCommand(int _section, const char* _cmdStr, int _val, int _valhw
 			switch (_section)
 			{
 				case SNM_SEC_IDX_MAIN:
+					if(PerformSpecialCustomActionCommand(cmdId))
+						return 1;
 					return KBD_OnMainActionEx(cmdId, _val, _valhw, _relmode, _hwnd, NULL);
 				case SNM_SEC_IDX_ME:
 				case SNM_SEC_IDX_ME_EL:

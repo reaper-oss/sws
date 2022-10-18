@@ -549,7 +549,8 @@ void AWFillGapsAdv(const char* title, char* retVals)
 					{
 						MediaItem_Take* currentTake = GetMediaItemTake(item2, takeIndex);
 						double startOffset = GetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS");
-						startOffset -= item2StartDiff;
+						const double playRate = GetMediaItemTakeInfo_Value(currentTake, "D_PLAYRATE");
+						startOffset -= item2StartDiff * playRate;
 						SetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS", startOffset);
 					}
 
@@ -651,7 +652,8 @@ void AWFillGapsQuick(COMMAND_T* t)
 						{
 							MediaItem_Take* currentTake = GetMediaItemTake(item2, takeIndex);
 							double startOffset = GetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS");
-							startOffset -= item2StartDiff;
+							const double playRate = GetMediaItemTakeInfo_Value(currentTake, "D_PLAYRATE");
+							startOffset -= item2StartDiff * playRate;
 							SetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS", startOffset);
 						}
 

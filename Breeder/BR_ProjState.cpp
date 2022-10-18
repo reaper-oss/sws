@@ -411,6 +411,12 @@ m_sourcePpqStart (-1)
 			                            );
 			m_events.push_back(event);
 		}
+		else if (!strcmp(lp.gettoken_str(0), "ENV") && !m_events.empty())
+		{
+			BR_MidiCCEvents::Event &event = m_events.back();
+			event.shape      = lp.gettoken_int(1);
+			event.beztension = lp.gettoken_float(3);
+		}
 		else if (!strcmp(lp.gettoken_str(0), "SOURCE_LANE"))
 		{
 			m_sourceLane = lp.gettoken_int(1);
@@ -439,14 +445,21 @@ void BR_MidiCCEvents::SaveState (ProjectStateContext* ctx)
 		ctx->AddLine("%s %.2d", SAVED_CC_EVENTS, m_slot);
 		ctx->AddLine("%s %d",   "SOURCE_LANE",   m_sourceLane);
 		ctx->AddLine("%s %d",   "PPQ",           m_ppq);
-		for (size_t i = 0; i < m_events.size(); ++i)
+		for (const auto &event : m_events)
+		{
 			ctx->AddLine("E %lf %d %d %d %d",
-			             m_events[i].positionPpq,
-			             m_events[i].channel,
-			             m_events[i].msg2,
-			             m_events[i].msg3,
-			             (int)m_events[i].mute
+			             event.positionPpq,
+			             event.channel,
+			             event.msg2,
+			             event.msg3,
+			             (int)event.mute
 			            );
+			if(event.shape || event.beztension)
+				ctx->AddLine("ENV %d 0 %g",
+				             event.shape,
+				             event.beztension
+				            );
+		}
 
 		ctx->AddLine(">");
 	}
@@ -471,6 +484,8 @@ bool BR_MidiCCEvents::Save (BR_MidiEditor& midiEditor, int lane)
 				{
 					BR_MidiCCEvents::Event event;
 					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, NULL, &event.msg3);
+					if (MIDI_GetCCShape) // v6.0
+						MIDI_GetCCShape(take, id, &event.shape, &event.beztension);
 					events.push_back(event);
 					if (m_sourcePpqStart == -1)
 						m_sourcePpqStart = event.positionPpq;
@@ -487,6 +502,8 @@ bool BR_MidiCCEvents::Save (BR_MidiEditor& midiEditor, int lane)
 				{
 					BR_MidiCCEvents::Event event;
 					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, &event.msg2, &event.msg3);
+					if (MIDI_GetCCShape) // v6.0
+						MIDI_GetCCShape(take, id, &event.shape, &event.beztension);
 					events.push_back(event);
 					if (m_sourcePpqStart == -1)
 						m_sourcePpqStart = event.positionPpq;
@@ -503,6 +520,8 @@ bool BR_MidiCCEvents::Save (BR_MidiEditor& midiEditor, int lane)
 				{
 					BR_MidiCCEvents::Event event;
 					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, &event.msg3, &event.msg2); // messages are reversed
+					if (MIDI_GetCCShape) // v6.0
+						MIDI_GetCCShape(take, id, &event.shape, &event.beztension);
 					events.push_back(event);
 					if (m_sourcePpqStart == -1)
 						m_sourcePpqStart = event.positionPpq;
@@ -535,6 +554,8 @@ bool BR_MidiCCEvents::Save (BR_MidiEditor& midiEditor, int lane)
 				{
 					BR_MidiCCEvents::Event event;
 					MIDI_GetCC(take, id, NULL, &event.mute, &event.positionPpq, NULL, &event.channel, NULL, &event.msg3);
+					if (MIDI_GetCCShape) // v6.0
+						MIDI_GetCCShape(take, id, &event.shape, &event.beztension);
 					events.push_back(event);
 					if (m_sourcePpqStart == -1)
 						m_sourcePpqStart = event.positionPpq;
@@ -650,9 +671,14 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 			targetLane2 = (do14bit) ? targetLane + 32             : targetLane2;
 			double moveOffsetPPQ = -1;
 			bool insertedOneEvent = false;
-			for (size_t i = 0; i < m_events.size(); ++i)
+
+			MIDI_DisableSort(take);
+			int ccCount;
+			MIDI_CountEvts(take, nullptr, &ccCount, nullptr);
+
+			for (const auto &event : m_events)
 			{
-				double posAddPPQ = (ratioPPQ == 0) ? m_events[i].positionPpq : Round(m_events[i].positionPpq * ratioPPQ);
+				double posAddPPQ = ratioPPQ == 0 ? event.positionPpq : Round(event.positionPpq * ratioPPQ);
 				double positionPpq = startPositionPppq + posAddPPQ;
 
 				if (positionPpq < startLimitPPQ)
@@ -668,33 +694,26 @@ bool BR_MidiCCEvents::Restore (BR_MidiEditor& midiEditor, int lane, bool allVisi
 					UnselectAllEvents(take, targetLane);
 				}
 
-				MIDI_InsertCC(take,
-				              true,
-				              m_events[i].mute,
-				              positionPpq,
-				              type,
-				              midiEditor.IsChannelVisible(m_events[i].channel) ? m_events[i].channel : midiEditor.GetDrawChannel(),
-				              (!doMsg2)    ? targetLane       : (reverseMsg ? m_events[i].msg3 : m_events[i].msg2),
-				              (reverseMsg) ? m_events[i].msg2 : m_events[i].msg3
-				);
+				const int channel = midiEditor.IsChannelVisible(event.channel) ? event.channel : midiEditor.GetDrawChannel();
+				const int msg2 = !doMsg2 ? targetLane : (reverseMsg ? event.msg3 : event.msg2),
+				          msg3 = reverseMsg ? event.msg2 : event.msg3;
 
-				if (do14bit)
+				if (MIDI_InsertCC(take, true, event.mute, positionPpq, type, channel, msg2, msg3))
 				{
-					MIDI_InsertCC(take,
-					              true,
-					              m_events[i].mute,
-					              positionPpq,
-					              type,
-					              midiEditor.IsChannelVisible(m_events[i].channel) ? m_events[i].channel : midiEditor.GetDrawChannel(),
-					              targetLane2,
-					              m_events[i].msg2
-					);
+					if (MIDI_SetCCShape /* v6.0 */ && (event.shape || event.beztension))
+						MIDI_SetCCShape(take, ccCount, event.shape, event.beztension, nullptr);
+					++ccCount;
 				}
+
+				if (do14bit && MIDI_InsertCC(take, true, event.mute, positionPpq, type, channel, targetLane2, event.msg2))
+					++ccCount;
 			}
 
 			if (moveOffsetPPQ != -1 && moveOffsetPPQ > moveOffsetMaxPPQ)
 				moveOffsetMaxPPQ = moveOffsetPPQ;
 		}
+
+		MIDI_Sort(take);
 
 		if (moveOffsetMaxPPQ != -1)
 		{
@@ -724,7 +743,7 @@ double BR_MidiCCEvents::GetSourcePpqStart ()
 	return m_sourcePpqStart;
 }
 
-void BR_MidiCCEvents::AddEvent (double ppqPos, int msg2, int msg3, int channel)
+void BR_MidiCCEvents::AddEvent (double ppqPos, int msg2, int msg3, int channel, int shape, double beztension)
 {
 	BR_MidiCCEvents::Event event;
 	event.positionPpq = ppqPos;
@@ -732,6 +751,8 @@ void BR_MidiCCEvents::AddEvent (double ppqPos, int msg2, int msg3, int channel)
 	event.msg3        = msg3;
 	event.channel     = channel;
 	event.mute        = false;
+	event.shape       = shape;
+	event.beztension  = beztension;
 
 	if (m_sourcePpqStart == -1)
 	{
@@ -746,18 +767,22 @@ void BR_MidiCCEvents::AddEvent (double ppqPos, int msg2, int msg3, int channel)
 
 BR_MidiCCEvents::Event::Event () :
 positionPpq (0),
+beztension  (0),
 channel     (0),
 msg2        (0),
 msg3        (0),
+shape       (0),
 mute        (false)
 {
 }
 
 BR_MidiCCEvents::Event::Event (double positionPpq, int channel, int msg2, int msg3, bool mute) :
 positionPpq (positionPpq),
+beztension  (0),
 channel     (channel),
 msg2        (msg2),
 msg3        (msg3),
+shape       (0),
 mute        (mute)
 {
 }

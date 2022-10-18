@@ -61,7 +61,6 @@ bool           NF_SetGlobalStartupAction(const char* buf);
 bool           NF_ClearGlobalStartupAction();
 
 bool           NF_GetProjectStartupAction(char* descOut, int descOut_sz, char* cmdIdOut, int cmdIdOut_sz);
-void           NF_GetProjectStartupAction_CmdID(char *buf, int bufSize);
 bool           NF_SetProjectStartupAction(const char* buf);
 bool           NF_ClearProjectStartupAction();
 
@@ -70,3 +69,7 @@ bool           NF_SetProjectTrackSelectionAction(const char* buf);
 bool           NF_ClearProjectTrackSelectionAction();
 
 bool           NF_DeleteTakeFromItem(MediaItem* item, int takeIdx);
+
+// Base64
+bool          NF_Base64_Decode(const char* base64_str, char* decodedStrOut, int decodedStrOut_sz);
+void          NF_Base64_Encode(const char* str, int str_sz, bool usePadding, char* encodedStrOut, int encodedStrOut_sz);

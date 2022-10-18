@@ -5,4 +5,5 @@ PRIVATE
   envelope.cpp
   hidpi.cpp
   RazorEditArea.cpp
+  ReaScript_Utility.cpp
 )

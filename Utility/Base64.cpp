@@ -56,18 +56,21 @@ Base64::~Base64()
 //////////////////////////////////////////////////////////////////////
 // Public Member Functions
 //////////////////////////////////////////////////////////////////////
-char* Base64::Encode(const char* pInput, int iInputLen)
+char* Base64::Encode(const char* pInput, int iInputLen, const bool pad)
 {
 	int iLen = iInputLen;
 	int iEncodedLen;
 	
 	//calculate encoded buffer size
-	iEncodedLen = (int)(((iLen-1) * 4 / 3) + 3);  // an extra for the null terminator!
+	if (pad)
+		iEncodedLen = static_cast<int>(4 * ceil(iLen / 3.f));
+	else
+		iEncodedLen = static_cast<int>(ceil(4 * iLen / 3.f));
 
 	// allocate:
 	if (m_pEncodedBuf != NULL)
 		free (m_pEncodedBuf);
-	m_pEncodedBuf = new char[iEncodedLen];
+	m_pEncodedBuf = new char[iEncodedLen + 1];
 	char* pOutput = m_pEncodedBuf;
 
 	//let's step through the buffer (in groups of three bytes) and encode it...
@@ -96,6 +99,10 @@ char* Base64::Encode(const char* pInput, int iInputLen)
 			*(pOutput++) = cb64[(((unsigned char)pInput[1] & 0x0F) << 2)];
 		}
 	}
+
+	while (pad && pOutput < m_pEncodedBuf + iEncodedLen)
+		*(pOutput++) = '=';
+
 	// Null terminate
 	*pOutput = 0;
 	
@@ -112,13 +119,18 @@ char* Base64::Decode(const char* pEncodedBuf, int *iOutLen)
 		*iOutLen = 0;
 
 	// allocate buffer to hold the decoded string:
-	iDecodedLen = (int)((strlen(pEncodedBuf)-1)*3/4)+1;
+	const int iEncodedLen = strlen(pEncodedBuf);
+	iDecodedLen = static_cast<int>(3 * (iEncodedLen / 4.f));
+
+	// remove padding from decoded length
+	for(int i = iEncodedLen - 1; i >= 0 && pEncodedBuf[i] == '='; --i, --iDecodedLen);
+
 	if (m_pDecodedBuf != NULL)
 		free (m_pDecodedBuf);
 	m_pDecodedBuf = new char[iDecodedLen];
 
 	// allocate a local scratch buffer for decoding - work with BYTE's to avoid fatal sign extensions by compiler:
-	char* pInput = new char[strlen(pEncodedBuf)+1];
+	char* pInput = new char[iEncodedLen+1];
 	strcpy(pInput, pEncodedBuf);
 
 	// Loop for each byte of input:
@@ -126,10 +138,18 @@ char* Base64::Decode(const char* pEncodedBuf, int *iOutLen)
 	while (pInput[iBlock+i])
 	{
 		if ((unsigned char)pInput[iBlock+i] < 0x2B || (unsigned char)pInput[iBlock+i] > 0x7A)
+		{
+			delete [] pInput;
 			return NULL;
+		}
+		if (pInput[iBlock+i] == '=')
+			break;
 		pInput[iBlock+i] = cd64[(unsigned char)pInput[iBlock+i] - 0x2B];
 		if (pInput[iBlock+i] == '$')
+		{
+			delete [] pInput;
 			return NULL;
+		}
 		pInput[iBlock+i] -= 0x3E;
 
 		switch(i++)

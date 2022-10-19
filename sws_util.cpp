@@ -707,14 +707,23 @@ TrackEnvelope* SWS_GetTrackEnvelopeByName(MediaTrack* track, const char* envname
 	return GetTrackEnvelopeByName(track,  __localizeFunc(envname, "envname", 0));
 }
 
-void UpdateStretchMarkersAfterSetTakeStartOffset(MediaItem_Take* take, double takeStartOffset_multiplyPlayrate)
+void AdjustTakesStartOffset(MediaItem *item, const double adjustment)
 {
-	for (int i = 0; i < GetTakeNumStretchMarkers(take); i++) {
-		double posOut;
-		GetTakeStretchMarker(take, i, &posOut, NULL);
-		SetTakeStretchMarker(take, i, posOut + takeStartOffset_multiplyPlayrate, NULL);
+	// https://forum.cockos.com/showthread.php?t=180571
+	for (int i = 0; i < GetMediaItemNumTakes(item); ++i) {
+		MediaItem_Take *take = GetMediaItemTake(item, i);
+		const double startOffset = GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
+		const double playRate    = GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
+		const double takeAdjust  = adjustment * playRate;
+		SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", startOffset - takeAdjust);
+
+		for (int j = 0; j < GetTakeNumStretchMarkers(take); ++j) {
+			double position;
+			GetTakeStretchMarker(take, j, &position, nullptr);
+			SetTakeStretchMarker(take, j, position + takeAdjust, nullptr);
+		}
 	}
-	UpdateItemInProject(GetMediaItemTake_Item(take));
+	UpdateItemInProject(item);
 }
 
 const char* SWS_GetSourceFileName(PCM_source* src)

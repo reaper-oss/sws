@@ -543,16 +543,8 @@ void AWFillGapsAdv(const char* title, char* retVals)
 
 					}
 
-
 					// Adjust start offset for all takes in item2 to account for fill
-					for (int takeIndex = 0; takeIndex < GetMediaItemNumTakes(item2); takeIndex++)
-					{
-						MediaItem_Take* currentTake = GetMediaItemTake(item2, takeIndex);
-						double startOffset = GetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS");
-						const double playRate = GetMediaItemTakeInfo_Value(currentTake, "D_PLAYRATE");
-						startOffset -= item2StartDiff * playRate;
-						SetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS", startOffset);
-					}
+					AdjustTakesStartOffset(item2, item2StartDiff);
 
 					// Finally trim the item to fill the gap and adjust the snap offset
 					SetMediaItemInfo_Value(item2, "D_POSITION", (item1End - fadeLength));
@@ -648,14 +640,7 @@ void AWFillGapsQuick(COMMAND_T* t)
 					item2Length += item2StartDiff;
 
 					// Adjust start offset for all takes in item2 to account for fill
-					for (int takeIndex = 0; takeIndex < GetMediaItemNumTakes(item2); takeIndex++)
-						{
-							MediaItem_Take* currentTake = GetMediaItemTake(item2, takeIndex);
-							double startOffset = GetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS");
-							const double playRate = GetMediaItemTakeInfo_Value(currentTake, "D_PLAYRATE");
-							startOffset -= item2StartDiff * playRate;
-							SetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS", startOffset);
-						}
+					AdjustTakesStartOffset(item2, item2StartDiff);
 
 					// Finally trim the item to fill the gap and adjust the snap offset
 					SetMediaItemInfo_Value(item2, "D_POSITION", (item1End));
@@ -744,20 +729,7 @@ void AWFillGapsQuickXFade(COMMAND_T* t)
 					item2Length += item2StartDiff;
 
 					// Adjust start offset for all takes in item2 to account for fill
-					for (int takeIndex = 0; takeIndex < GetMediaItemNumTakes(item2); takeIndex++)
-					{
-						MediaItem_Take* currentTake = GetMediaItemTake(item2, takeIndex);
-						double startOffset = GetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS");
-
-						// NF fix: also take Playrate into account
-						double dPlayrate = GetMediaItemTakeInfo_Value(currentTake, "D_PLAYRATE");
-						startOffset -= (item2StartDiff * dPlayrate);
-						SetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS", startOffset);
-
-						// NF: fix / workaround for setting take start offset doesn't work if containing stretch markers
-						UpdateStretchMarkersAfterSetTakeStartOffset(currentTake, item2StartDiff * dPlayrate);
-
-					}
+					AdjustTakesStartOffset(item2, item2StartDiff);
 
 					// Finally trim the item to fill the gap and adjust the snap offset
 					SetMediaItemInfo_Value(item2, "D_POSITION", (item1End - fadeLength));
@@ -1424,19 +1396,8 @@ void AWFadeSelection(COMMAND_T* t)
 									GetSetMediaItemInfo(item2, "D_SNAPOFFSET", &dSnapOffset2);
 								}
 
-								for (int iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
-								{
-									MediaItem_Take* take = GetMediaItemTake(item2, iTake);
-									if (take)
-									{
-										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
-										double dPlayrate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
-										dOffset -= (dEdgeAdj2 * dPlayrate);
-										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+								AdjustTakesStartOffset(item2, dEdgeAdj2);
 
-										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj2 * dPlayrate); // NF fix
-									}
-								}
 								rightFlag=true;
 								//leftFlag=true;
 								break;
@@ -1479,20 +1440,8 @@ void AWFadeSelection(COMMAND_T* t)
 									GetSetMediaItemInfo(item2, "D_SNAPOFFSET", &dSnapOffset2);
 								}
 
-								for (int iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
-								{
-									MediaItem_Take* take = GetMediaItemTake(item2, iTake);
-									if (take)
-									{
-										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
-										double dPlayrate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
+								AdjustTakesStartOffset(item2, dEdgeAdj2);
 
-										dOffset -= (dEdgeAdj2 * dPlayrate);
-										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
-
-										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj2 * dPlayrate); // NF fix
-									}
-								}
 								rightFlag=true;
 
 								//Added Mar 16/2011, fixes fade in getting created if edit cursor placed in first half of left item, this is technically expected behavior but not in reality
@@ -1561,19 +1510,7 @@ void AWFadeSelection(COMMAND_T* t)
 									GetSetMediaItemInfo(item2, "D_SNAPOFFSET", &dSnapOffset2);
 								}
 
-								for (int iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
-								{
-									MediaItem_Take* take = GetMediaItemTake(item2, iTake);
-									if (take)
-									{
-										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
-										double dPlayrate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
-										dOffset -= (dEdgeAdj2 * dPlayrate);
-										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
-
-										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj2 * dPlayrate); // NF fix
-									}
-								}
+								AdjustTakesStartOffset(item2, dEdgeAdj2);
 
 								// Set both flags, prevents bad behavior with "trim" fade when selection only overlaps left side of crossfade
 								// Normally the leftFlag wouldn't get set so the trim fade code creates a fade in
@@ -1619,19 +1556,8 @@ void AWFadeSelection(COMMAND_T* t)
 									GetSetMediaItemInfo(item2, "D_SNAPOFFSET", &dSnapOffset2);
 								}
 
-								for (iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
-								{
-									MediaItem_Take* take = GetMediaItemTake(item2, iTake);
-									if (take)
-									{
-										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
-										double dPlayrate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
-										dOffset -= (dEdgeAdj * dPlayrate);
-										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+								AdjustTakesStartOffset(item2, dEdgeAdj);
 
-										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj * dPlayrate); // NF fix
-									}
-								}
 								rightFlag=true;
 
 								//Added Mar16/2011, fixes unexpected fade in's from "fade in to cursor" section
@@ -1732,19 +1658,8 @@ void AWFadeSelection(COMMAND_T* t)
 									GetSetMediaItemInfo(item2, "D_SNAPOFFSET", &dSnapOffset2);
 								}
 
-								for (iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
-								{
-									MediaItem_Take* take = GetMediaItemTake(item2, iTake);
-									if (take)
-									{
-										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
-										double dPlayrate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
-										dOffset -= (dEdgeAdj2 * dPlayrate);
-										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+								AdjustTakesStartOffset(item2, dEdgeAdj2);
 
-										UpdateStretchMarkersAfterSetTakeStartOffset(take, dEdgeAdj2 * dPlayrate); // NF fix
-									}
-								}
 								rightFlag=true;
 								break;
 
@@ -2037,21 +1952,7 @@ void AWTrimFill(COMMAND_T* t)
 						GetSetMediaItemInfo(item1, "D_POSITION", &selStart);
 						GetSetMediaItemInfo(item1, "D_LENGTH", &dLen1);
 
-						for (int iTake = 0; iTake < GetMediaItemNumTakes(item1); iTake++)
-						{
-							MediaItem_Take* take = GetMediaItemTake(item1, iTake);
-							if (take)
-							{
-								double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
-								double dPlayrate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
-								dOffset -= (edgeAdj * dPlayrate);
-								GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
-
-								UpdateStretchMarkersAfterSetTakeStartOffset(take, edgeAdj * dPlayrate); // NF fix
-							}
-						}
-
-
+						AdjustTakesStartOffset(item1, edgeAdj);
 					}
 
 					if (!(rightFlag))
@@ -2140,21 +2041,7 @@ void AWTrimFill(COMMAND_T* t)
 						GetSetMediaItemInfo(item1, "D_POSITION", &cursorPos);
 						GetSetMediaItemInfo(item1, "D_LENGTH", &dLen1);
 
-						for (int iTake = 0; iTake < GetMediaItemNumTakes(item1); iTake++)
-						{
-							MediaItem_Take* take = GetMediaItemTake(item1, iTake);
-							if (take)
-							{
-								double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
-								double dPlayrate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
-								dOffset -= (edgeAdj * dPlayrate);
-								GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
-
-								UpdateStretchMarkersAfterSetTakeStartOffset(take, edgeAdj * dPlayrate); // NF fix
-							}
-						}
-
-
+						AdjustTakesStartOffset(item1, edgeAdj);
 					}
 
 					if (!(rightFlag))

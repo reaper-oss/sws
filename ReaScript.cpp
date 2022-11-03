@@ -352,6 +352,33 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_EnumMediaSourceCues), "int", "PCM_source*,int,double*,double*,bool*,char*,int,bool*", "src,index,timeOut,endTimeOut,isRegionOut,nameOut,nameOut_sz,isChapterOut", "Enumerate the source's media cues. Returns the next index or 0 when finished.", },
 	{ APIFUNC(CF_ExportMediaSource), "bool", "PCM_source*,const char*", "src,fn", "Export the source to the given file (MIDI only).", },
 
+	{ APIFUNC(CF_CreatePreview), "CF_Preview*", "PCM_source*", "source", R"(Create a new preview object. Does not take ownership of the source (don't forget to destroy it unless it came from a take!). See CF_Preview_Play and the others CF_Preview_* functions.
+
+The preview object is automatically destroyed at the end of a defer cycle if at least one of these conditions are met:
+- playback finished
+- playback was not started using CF_Preview_Play
+- the output track no longer exists)", },
+	{ APIFUNC(CF_Preview_GetValue), "bool", "CF_Preview*,const char*,double*", "preview,name,valueOut", R"(Supported attributes:
+B_LOOP         seek to the beginning when reaching the end of the source
+B_PPITCH       preserve pitch when changing playback rate
+D_FADEINLEN    lenght in seconds of playback fade in
+D_FADEOUTLEN   lenght in seconds of playback fade out
+D_LENGTH       (read only) length of the source * playback rate
+D_MEASUREALIGN >0 = wait until the next bar before starting playback (note: this causes playback to silently continue when project is paused and previewing through a track)
+D_PAN          playback pan
+D_PITCH        pitch adjustment in semitones
+D_PLAYRATE     playback rate
+D_POSITION     current playback position
+D_VOLUME       playback volume
+I_OUTCHAN      first hardware output channel (&1024=mono, reads -1 when playing through a track, see CF_Preview_SetOutputTrack)
+I_PITCHMODE    highest 16 bits=pitch shift mode (see EnumPitchShiftModes), lower 16 bits=pitch shift submode (see EnumPitchShiftSubModes))", },
+	{ APIFUNC(CF_Preview_GetPeak), "bool", "CF_Preview*,int,double*", "preview,channel,peakvolOut", "Read peak volume for channel 0 or 1. Only available when outputting to a hardware output (not through a track).", },
+	{ APIFUNC(CF_Preview_SetValue), "bool", "CF_Preview*,const char*,double", "preview,name,newValue", "See CF_Preview_GetValue.", },
+	{ APIFUNC(CF_Preview_SetOutputTrack), "bool", "CF_Preview*,ReaProject*,MediaTrack*", "preview,project,track", "", },
+	{ APIFUNC(CF_Preview_Play), "bool", "CF_Preview*", "preview", "Start playback of the configured preview object.", },
+	{ APIFUNC(CF_Preview_Stop), "bool", "CF_Preview*", "preview", "Stop and destroy a preview object.", },
+	{ APIFUNC(CF_Preview_StopAll), "void", "", "", "Stop and destroy all currently active preview objects.", },
+
 	{ NULL, } // denote end of table
 };
 

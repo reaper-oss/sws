@@ -37,6 +37,7 @@
 #include "version.h"
 
 #include <WDL/localize/localize.h>
+#include <WDL/projectcontext.h>
 
 #ifdef _WIN32
   constexpr unsigned int CLIPBOARD_FORMAT { CF_UNICODETEXT };
@@ -426,6 +427,43 @@ bool CF_ExportMediaSource(PCM_source *source, const char *file)
 
   return source->Extended(PCM_SOURCE_EXT_EXPORTTOFILE,
     const_cast<char *>(file), nullptr, nullptr) > 0;
+}
+
+// cannot return CreateFromType("SECTION"): if not added to the project,
+// the ReaScript argument validator won't recognize the new section as valid
+bool CF_PCM_Source_SetSectionInfo(PCM_source *section, PCM_source *source,
+  const double offset, double length, const bool reverse)
+{
+  if(!section || section == source || strcmp(section->GetType(), "SECTION"))
+    return false;
+
+  enum Flags { IgnoreRange = 1, Reverse = 2 };
+  int mode {};
+  if(!offset && !length)
+    mode |= IgnoreRange;
+  if(reverse)
+    mode |= Reverse;
+
+  if(!source)
+    source = section->GetSource();
+  if(!source)
+    return false;
+  if(length <= 0.0)
+    length = source->GetLength() - offset + length;
+
+  WDL_HeapBuf buffer;
+  ProjectStateContext *ctx { ProjectCreateMemCtx(&buffer) };
+  ctx->AddLine("LENGTH %f", length);
+  ctx->AddLine("STARTPOS %f", offset);
+  ctx->AddLine("MODE %d", mode);
+  ctx->AddLine("<SOURCE %s", source->GetType());
+  source->SaveState(ctx);
+  ctx->AddLine(">");
+  // the section deletes its current parent source itself
+  section->LoadState("<SOURCE SECTION", ctx);
+  delete ctx;
+
+  return true;
 }
 
 BOOL CF_GetScrollInfo(HWND hwnd, const int bar, LPSCROLLINFO si)

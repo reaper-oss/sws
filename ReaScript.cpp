@@ -351,6 +351,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_GetMediaSourceRPP), "bool", "PCM_source*,char*,int", "src,fnOut,fnOut_sz", "Get the project associated with this source (BWF, subproject...).", },
 	{ APIFUNC(CF_EnumMediaSourceCues), "int", "PCM_source*,int,double*,double*,bool*,char*,int,bool*", "src,index,timeOut,endTimeOut,isRegionOut,nameOut,nameOut_sz,isChapterOut", "Enumerate the source's media cues. Returns the next index or 0 when finished.", },
 	{ APIFUNC(CF_ExportMediaSource), "bool", "PCM_source*,const char*", "src,fn", "Export the source to the given file (MIDI only).", },
+	{ APIFUNC(CF_PCM_Source_SetSectionInfo), "bool", "PCM_source*,PCM_source*,double,double,bool", "section,source,offset,length,reverse", "Give a section source created using PCM_Source_CreateFromType(\"SECTION\"). Offset and length are ignored if 0. Negative length to subtract from the total length of the source." },
 
 	{ APIFUNC(CF_CreatePreview), "CF_Preview*", "PCM_source*", "source", R"(Create a new preview object. Does not take ownership of the source (don't forget to destroy it unless it came from a take!). See CF_Preview_Play and the others CF_Preview_* functions.
 

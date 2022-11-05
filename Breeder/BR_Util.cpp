@@ -1284,6 +1284,7 @@ bool SetMediaSourceProperties (MediaItem_Take* take, bool section, double start,
 							AppendLine(sourceStr, line);
 						}
 					}
+					delete ctx;
 				}
 			}
 			else if (getSectionDefaults)

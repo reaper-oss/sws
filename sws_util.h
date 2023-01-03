@@ -210,6 +210,7 @@ bool SWSFreeUnregisterDynamicCmd(int id);
 
 void ActionsList(COMMAND_T*);
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user = 0, const char** pMenuText = NULL);
+COMMAND_T** SWSGetCommand(int index);
 COMMAND_T* SWSGetCommandByID(int cmdId);
 int IsSwsAction(const char* _actionName);
 

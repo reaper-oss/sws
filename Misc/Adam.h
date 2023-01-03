@@ -35,6 +35,12 @@ void UpdateItemTimebaseToolbar();
 void UpdateTimebaseToolbar();
 void AWDoAutoGroup(bool rec);
 
+// for SNM_RefreshToolbars
+int IsGridSwing(COMMAND_T*);
+int IsProjectTimebase(COMMAND_T*);
+int IsSelTracksTimebase(COMMAND_T*);
+int IsSelItemsTimebase(COMMAND_T*);
+
 // #587
 void NFDoAutoGroupTakesMode(WDL_TypedBuf<MediaItem*> selItems);
 

@@ -367,21 +367,54 @@ int IsToolbarsAutoRefeshEnabled(COMMAND_T* _ct) {
 
 void SNM_RefreshToolbars()
 {
-	// offscreen item sel. buttons
-	for (int i=0; i<SNM_ITEM_SEL_COUNT; i++)
-		RefreshToolbar(SWSGetCommandID(ToggleOffscreenSelItems, i));
-	RefreshToolbar(SWSGetCommandID(UnselectOffscreenItems, -1));
-
-	// write automation button
-	RefreshToolbar(SWSGetCommandID(ToggleWriteEnvExists));
-
+	constexpr int (*watchStateGetters[])(COMMAND_T *)
+	{
+		&HasOffscreenSelItems, // offscreen item sel. buttons
+		// &WriteEnvExists, // write automation button, handled by toggleActionHook
 #ifdef _SNM_HOST_AW
-	// host AW's grid toolbar buttons auto refresh and track timebase auto refresh
-	UpdateGridToolbar();
-	UpdateTimebaseToolbar();
-	UpdateTrackTimebaseToolbar();
-	UpdateItemTimebaseToolbar();
+		&IsProjectTimebase,   // UpdateTimebaseToolbar
+		&IsSelTracksTimebase, // UpdateTrackTimebaseToolbar
+		&IsSelItemsTimebase,  // UpdateItemTimebaseToolbar
+
+		// UpdateGridToolbar
+		// &IsGridTriplet,  // handled by toggleActionHook
+		// &IsGridDotted,   // idem
+		&IsGridSwing, // toggling the checkbox in Grid Settings does not trigger toggleActionHook
+		// &IsClickUnmuted, // idem
+		// &IsAWSetGridPreserveType, // idem
 #endif
+	};
+
+	struct ToggleStateWatch { COMMAND_T *cmd; int stateCache; };
+	static std::vector<ToggleStateWatch> watchs;
+
+	if (watchs.empty())
+	{
+		int i = 0;
+		while (COMMAND_T **cmdPtr = SWSGetCommand(i++))
+		{
+			COMMAND_T *cmd = *cmdPtr;
+			for (const auto getEnabled : watchStateGetters)
+			{
+				if (getEnabled == cmd->getEnabled)
+				{
+					watchs.push_back({ cmd, getEnabled(cmd) });
+					break;
+				}
+			}
+		}
+		return;
+	}
+
+	for (ToggleStateWatch &watch : watchs)
+	{
+		const int state = watch.cmd->getEnabled(watch.cmd);
+		if (state != watch.stateCache)
+		{
+			watch.stateCache = state;
+			RefreshToolbar(watch.cmd->cmdId);
+		}
+	}
 }
 
 // polled via SNM_CSurfRun()

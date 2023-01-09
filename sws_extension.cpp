@@ -372,6 +372,11 @@ void ActionsList(COMMAND_T*)
 }
 #endif
 
+COMMAND_T** SWSGetCommand(const int index)
+{
+	return g_commands.EnumeratePtr(index);
+}
+
 //JFB questionnable func: ok most of the time but, for ex.,
 // 2 different cmds can share the same function pointer cmd->doCommand
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user, const char** pMenuText)

@@ -466,7 +466,7 @@ class ArrangeState
 {
 private:
 	double dHZoom;
-	int iVZoom;
+	float fVZoom;
 	int iXPos;
 	int iYPos;
 	WDL_TypedBuf<int>  hbTrackHeights;
@@ -508,7 +508,7 @@ public:
 		// Vert
 		if (m_bVert)
 		{
-			iVZoom = static_cast<int>(get_reaper_vzoom());
+			fVZoom = get_reaper_vzoom();
 			hbTrackHeights.Resize(GetNumTracks()+1, false);
 			hbTrackVis.Resize(GetNumTracks()+1, false);
 			hbEnvHeights.Resize(0, false);
@@ -553,7 +553,7 @@ public:
 		// Vert zoom
 		if (m_bVert)
 		{
-			set_reaper_vzoom(iVZoom);
+			set_reaper_vzoom(fVZoom);
 			int iSaved = hbTrackHeights.GetSize();
 			int iEnvPtr = 0;
 			for (int i = 0; i <= GetNumTracks(); i++)
@@ -759,7 +759,7 @@ private:
 	// Zoom
 	WDL_TypedBuf<int> m_iTrackHeights;
 	double m_dHZoom;
-	int m_iVZoom;
+	float m_fVZoom;
 	bool m_bProjExtents;
 
 	// Pos
@@ -767,7 +767,7 @@ private:
 	int m_iVPos, m_iHPos;
 
 public:
-	ZoomState():m_iTrackHeights(256),m_dHZoom(0.0),m_iVZoom(0),m_iVPos(0),m_iHPos(0),m_trVPos(NULL),m_bProjExtents(false) {}
+	ZoomState():m_iTrackHeights(256),m_dHZoom(0.0),m_fVZoom(0.f),m_iVPos(0),m_iHPos(0),m_trVPos(NULL),m_bProjExtents(false) {}
 	void SaveZoom()
 	{
 		// Save the track heights
@@ -777,7 +777,7 @@ public:
 			pHeights[i] = *(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_HEIGHTOVERRIDE", NULL);
 
 		m_dHZoom = GetHZoomLevel();
-		m_iVZoom = static_cast<int>(get_reaper_vzoom());
+		m_fVZoom = get_reaper_vzoom();
 		m_bProjExtents = false;
 	}
 	void ZoomToProject()
@@ -809,11 +809,11 @@ public:
 			ZoomToProject();
 
 		HWND hTrackView = GetTrackWnd();
-		if (!hTrackView || (m_dHZoom == 0.0 && m_iVZoom == 0))
+		if (!hTrackView || (m_dHZoom == 0.0 && m_fVZoom == 0.f))
 			return;
 
 		adjustZoom(m_dHZoom, 1, false, -1);
-		set_reaper_vzoom(m_iVZoom);
+		set_reaper_vzoom(m_fVZoom);
 
 		// Restore track heights, ignoring the fact that tracks could have been added/removed
 		for (int i = 0; i < m_iTrackHeights.GetSize() && i <= GetNumTracks(); i++)
@@ -832,7 +832,7 @@ public:
 
 	bool IsZoomEqual(ZoomState* zs)
 	{	// Ignores the horiz/vert positions!
-		if (zs->m_dHZoom != m_dHZoom || zs->m_iVZoom != m_iVZoom)
+		if (zs->m_dHZoom != m_dHZoom || zs->m_fVZoom != m_fVZoom)
 			return false;
 		if (zs->m_iTrackHeights.GetSize() != m_iTrackHeights.GetSize())
 			return false;
@@ -845,7 +845,7 @@ public:
 	// Debug
 	//void Print(int i)
 	//{
-	//	dprintf("ZoomState %d: H: %.2f @ %d, V: %d @ %d, Proj: %s\n", i, m_dHZoom, m_iHPos, m_iVZoom, m_iVPos, m_bProjExtents ? "yes" : "no");
+	//	dprintf("ZoomState %d: H: %.2f @ %d, V: %g @ %d, Proj: %s\n", i, m_dHZoom, m_iHPos, m_fVZoom, m_iVPos, m_bProjExtents ? "yes" : "no");
 	//}
 };
 

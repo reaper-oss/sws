@@ -97,6 +97,20 @@ void SetVertPos(HWND hwnd, int iTrack, bool bPixels, int iExtra = 0) // 1 based 
 	SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, 0);
 }
 
+static float get_reaper_vzoom()
+{
+	if (ConfigVar<float> vzoom3 { "vzoom3" }) // REAPER v6.73+devXXXX
+		return *vzoom3;
+	return static_cast<float>(*ConfigVar<int>("vzoom2"));
+}
+
+static void set_reaper_vzoom(const float vz)
+{
+	// vzoom2 is ignored in REAPER v6.73+devXXXX onwards [p=2632786]
+	*ConfigVar<int>("vzoom2") = static_cast<int>(floor(vz+0.5));
+	ConfigVar<float>("vzoom3").try_set(vz);
+}
+
 void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bool includeEnvelopes)
 {
 	HWND hTrackView = GetTrackWnd();
@@ -115,7 +129,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 
 	if (bMinimizeOthers)
 	{
-		*ConfigVar<int>("vzoom2") = 0;
+		set_reaper_vzoom(0.f);
 		int iMinimizedTracks = 0;
 		// setting I_HEIGHTOVERRIDE to 0 on locked track effectively disables track lock
 		// see https://forum.cockos.com/showthread.php?p=2202082
@@ -280,7 +294,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 			if (!obeyHeightLock || !locked)
 				SetMediaTrackInfo_Value(tr, "I_HEIGHTOVERRIDE", locked ? trackHeight : 0);
 		}
-		*ConfigVar<int>("vzoom2") = iZoom;
+		set_reaper_vzoom(static_cast<float>(iZoom));
 		TrackList_AdjustWindows(false);
 		UpdateTimeline();
 	}
@@ -494,7 +508,7 @@ public:
 		// Vert
 		if (m_bVert)
 		{
-			iVZoom = *ConfigVar<int>("vzoom2");
+			iVZoom = static_cast<int>(get_reaper_vzoom());
 			hbTrackHeights.Resize(GetNumTracks()+1, false);
 			hbTrackVis.Resize(GetNumTracks()+1, false);
 			hbEnvHeights.Resize(0, false);
@@ -539,7 +553,7 @@ public:
 		// Vert zoom
 		if (m_bVert)
 		{
-			*ConfigVar<int>("vzoom2") = iVZoom;
+			set_reaper_vzoom(iVZoom);
 			int iSaved = hbTrackHeights.GetSize();
 			int iEnvPtr = 0;
 			for (int i = 0; i <= GetNumTracks(); i++)
@@ -763,7 +777,7 @@ public:
 			pHeights[i] = *(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_HEIGHTOVERRIDE", NULL);
 
 		m_dHZoom = GetHZoomLevel();
-		m_iVZoom = *ConfigVar<int>("vzoom2");
+		m_iVZoom = static_cast<int>(get_reaper_vzoom());
 		m_bProjExtents = false;
 	}
 	void ZoomToProject()
@@ -799,7 +813,7 @@ public:
 			return;
 
 		adjustZoom(m_dHZoom, 1, false, -1);
-		*ConfigVar<int>("vzoom2") = m_iVZoom;
+		set_reaper_vzoom(m_iVZoom);
 
 		// Restore track heights, ignoring the fact that tracks could have been added/removed
 		for (int i = 0; i < m_iTrackHeights.GetSize() && i <= GetNumTracks(); i++)

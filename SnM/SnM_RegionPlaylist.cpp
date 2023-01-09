@@ -36,6 +36,7 @@
 #include "SnM_Util.h"
 #include "../Prompt.h"
 #include "WDL/xsrand.h"
+#include "cfillion/tempomarkerduplicator.hpp"
 
 #include <WDL/localize/localize.h>
 #include <WDL/projectcontext.h>
@@ -1824,8 +1825,11 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, const AppendPasteCropPla
 		{"envattach",      1}, // move with items
 		{"projgroupover",  1}, // disable item grouping
 		{"splitautoxfade", 0}, // disable overlapping items when splitting
+		{"itemtimelock",   0}, // item/env timebase = time
 	};
 	(void)options;
+
+	TempoMarkerDuplicator tempoMap;
 
 	WDL_PtrList_DeleteOnDestroy<MarkerRegion> rgns;
 	for (int i=0; i < _playlist->GetSize(); i++)
@@ -1872,6 +1876,7 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, const AppendPasteCropPla
 				for (int k = 0; k < plItem->m_cnt; k++)
 				{
 					DupSelItems(NULL, endPos-rgnpos, &itemsToKeep); // overrides the native ApplyNudge()
+					tempoMap.copyRange(rgnpos, rgnend, endPos - rgnpos);
 					endPos += (rgnend-rgnpos);
 				}
 
@@ -1903,11 +1908,14 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, const AppendPasteCropPla
 		return;
 	}
 
+	tempoMap.commit();
+
 	///////////////////////////////////////////////////////////////////////////
 	// append/paste to current project
 	if (_mode == PASTE_PROJECT || _mode == PASTE_CURSOR)
 	{
-//		Main_OnCommand(40289, 0); // unselect all items
+		// Main_OnCommand(40289, 0); // unselect all items
+
 		SetEditCurPos2(NULL, endPos, true, false);
 
 		PreventUIRefresh(-1);
@@ -1978,6 +1986,7 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, const AppendPasteCropPla
 	Main_OnCommand(40210, 0); // copy tracks
 
 	PreventUIRefresh(-1);
+	tempoMap = TempoMarkerDuplicator {}; // reload after cropping to commit in new tab
 
 	// trick!
 	Undo_EndBlock2(NULL, __LOCALIZE("Crop project to playlist","sws_undo"), UNDO_STATE_ALL);
@@ -1994,6 +2003,10 @@ void AppendPasteCropPlaylist(RegionPlaylist* _playlist, const AppendPasteCropPla
 	Undo_BeginBlock2(NULL);
 
 	PreventUIRefresh(1);
+
+	// write tempo envelope before pasting items for items to retain
+	// the correct position and rate regardless of current timebase settings
+	tempoMap.commit();
 
 	Main_OnCommand(40058, 0); // paste item/tracks
 	Main_OnCommand(40297, 0); // unselect all tracks

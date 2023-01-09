@@ -204,6 +204,13 @@ bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_Fast
 }
 
 int SNM_GetIntConfigVar(const char *varName, const int fallback) {
+	if (!strcmp(varName, "vzoom2")) {
+		// make older scripts compatible with REAPER v6.73+devXXXX
+		// REAPER and SWS write to both vzoom3+2, but other extensions might not
+		if (ConfigVar<float> vzoom3 { "vzoom3" })
+			return static_cast<int>(*vzoom3);
+	}
+
 	if (ConfigVar<int> cv{varName})
 		return *cv;
 	else if(ConfigVar<char> cv{varName})
@@ -213,18 +220,19 @@ int SNM_GetIntConfigVar(const char *varName, const int fallback) {
 }
 
 bool SNM_SetIntConfigVar(const char *varName, const int newValue) {
-	if (ConfigVar<int> cv{varName})
-		*cv = newValue;
-	else if (ConfigVar<char> cv{varName}) {
+	if (!strcmp(varName, "vzoom2")) // set both vzoom3 and vzoom2 (below)
+		ConfigVar<float>("vzoom3").try_set(static_cast<float>(newValue));
+	if (ConfigVar<int>(varName).try_set(newValue))
+		return true;
+	if (ConfigVar<char> cv{varName}) {
 		if (newValue > std::numeric_limits<char>::max() || newValue < std::numeric_limits<char>::min())
 			return false;
 
 		*cv = newValue;
+		return true;
 	}
-	else
-		return false;
 
-	return true;
+	return false;
 }
 
 double SNM_GetDoubleConfigVar(const char *varName, const double fallback) {
@@ -237,6 +245,8 @@ double SNM_GetDoubleConfigVar(const char *varName, const double fallback) {
 }
 
 bool SNM_SetDoubleConfigVar(const char *varName, const double newValue) {
+	if (!strcmp(varName, "vzoom3")) // compatibility with vzoom3-unaware extensions
+		*ConfigVar<int>("vzoom2") = static_cast<int>(newValue);
 	if (ConfigVar<double> cv{varName})
 		*cv = newValue;
 	else if (ConfigVar<float> cv{varName}) {

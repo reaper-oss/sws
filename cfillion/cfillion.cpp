@@ -28,13 +28,16 @@
 #include "stdafx.h"
 #include "cfillion.hpp"
 
+#include "apiparam.hpp"
+#include "Breeder/BR_Util.h"
 #include "Color/Color.h"
+#include "preview.hpp"
 #include "SnM/SnM_FX.h"
 #include "SnM/SnM_Window.h"
-#include "Breeder/BR_Util.h"
 #include "version.h"
 
 #include <WDL/localize/localize.h>
+#include <WDL/projectcontext.h>
 
 #ifdef _WIN32
   constexpr unsigned int CLIPBOARD_FORMAT { CF_UNICODETEXT };
@@ -431,6 +434,43 @@ bool CF_ExportMediaSource(PCM_source *source, const char *file)
     const_cast<char *>(file), nullptr, nullptr) > 0;
 }
 
+// cannot return CreateFromType("SECTION"): if not added to the project,
+// the ReaScript argument validator won't recognize the new section as valid
+bool CF_PCM_Source_SetSectionInfo(PCM_source *section, PCM_source *source,
+  const double offset, double length, const bool reverse)
+{
+  if(!section || section == source || strcmp(section->GetType(), "SECTION"))
+    return false;
+
+  enum Flags { IgnoreRange = 1, Reverse = 2 };
+  int mode {};
+  if(!offset && !length)
+    mode |= IgnoreRange;
+  if(reverse)
+    mode |= Reverse;
+
+  if(!source)
+    source = section->GetSource();
+  if(!source)
+    return false;
+  if(length <= 0.0)
+    length = source->GetLength() - offset + length;
+
+  WDL_HeapBuf buffer;
+  ProjectStateContext *ctx { ProjectCreateMemCtx(&buffer) };
+  ctx->AddLine("LENGTH %f", length);
+  ctx->AddLine("STARTPOS %f", offset);
+  ctx->AddLine("MODE %d", mode);
+  ctx->AddLine("<SOURCE %s", source->GetType());
+  source->SaveState(ctx);
+  ctx->AddLine(">");
+  // the section deletes its current parent source itself
+  section->LoadState("<SOURCE SECTION", ctx);
+  delete ctx;
+
+  return true;
+}
+
 BOOL CF_GetScrollInfo(HWND hwnd, const int bar, LPSCROLLINFO si)
 {
   if(bar == SB_VERT && hwnd == GetArrangeWnd() && (si->fMask & SIF_POS)) {
@@ -446,4 +486,94 @@ BOOL CF_GetScrollInfo(HWND hwnd, const int bar, LPSCROLLINFO si)
   }
 
   return CoolSB_GetScrollInfo(hwnd, bar, si);
+}
+
+static const APIParam<CF_Preview> PREVIEW_PARAMS[] {
+  { "B_LOOP",         &CF_Preview::getLoop,          &CF_Preview::setLoop          },
+  { "B_PPITCH",       &CF_Preview::getPreservePitch, &CF_Preview::setPreservePitch },
+  { "D_FADEINLEN",    &CF_Preview::getFadeInLen,     &CF_Preview::setFadeInLen     },
+  { "D_FADEOUTLEN",   &CF_Preview::getFadeOutLen,    &CF_Preview::setFadeOutLen    },
+  { "D_LENGTH",       &CF_Preview::getLength,        nullptr                       },
+  { "D_MEASUREALIGN", &CF_Preview::getMeasureAlign,  &CF_Preview::setMeasureAlign  },
+  { "D_PAN",          &CF_Preview::getPan,           &CF_Preview::setPan           },
+  { "D_PITCH",        &CF_Preview::getPitch,         &CF_Preview::setPitch         },
+  { "D_PLAYRATE",     &CF_Preview::getPlayRate,      &CF_Preview::setPlayRate      },
+  { "D_POSITION",     &CF_Preview::getPosition,      &CF_Preview::setPosition      },
+  { "D_VOLUME",       &CF_Preview::getVolume,        &CF_Preview::setVolume        },
+  { "I_OUTCHAN",      &CF_Preview::getOutputChannel, &CF_Preview::setOutput        },
+  { "I_PITCHMODE",    &CF_Preview::getPitchMode,     &CF_Preview::setPitchMode     },
+};
+
+CF_Preview *CF_CreatePreview(PCM_source *source)
+{
+  if(!source || source->GetSampleRate() < 1.0) // only accept sources with audio
+    return nullptr;
+
+  return new CF_Preview { source };
+}
+
+bool CF_Preview_GetValue(CF_Preview *preview, const char *name, double *valueOut)
+{
+  if(!name || !valueOut || !CF_Preview::isValid(preview))
+    return false;
+
+  for(const auto &param : PREVIEW_PARAMS) {
+    if(param.match(name))
+      return param.get(preview, valueOut);
+  }
+
+  return false;
+}
+
+bool CF_Preview_GetPeak(CF_Preview *preview, const int channel, double *peakvolOut)
+{
+  if(!peakvolOut || !CF_Preview::isValid(preview))
+    return false;
+
+  return preview->getPeak(channel, peakvolOut);
+}
+
+bool CF_Preview_SetValue(CF_Preview *preview, const char *name, double newValue)
+{
+  if(!name || !CF_Preview::isValid(preview))
+    return false;
+
+  for(const auto &param : PREVIEW_PARAMS) {
+    if(param.match(name))
+      return param.set(preview, newValue);
+  }
+
+  return false;
+}
+
+// the ReaProject argument is there only to satisfy REAPER's argument validator
+bool CF_Preview_SetOutputTrack(CF_Preview *preview, ReaProject *, MediaTrack *track)
+{
+  if(!track || !CF_Preview::isValid(preview))
+    return false;
+
+  preview->setOutput(track);
+  return true;
+}
+
+bool CF_Preview_Play(CF_Preview *preview)
+{
+  if(!CF_Preview::isValid(preview))
+    return false;
+
+  return preview->play();
+}
+
+bool CF_Preview_Stop(CF_Preview *preview)
+{
+  if(!CF_Preview::isValid(preview))
+    return false;
+
+  preview->stop();
+  return true;
+}
+
+void CF_Preview_StopAll()
+{
+  CF_Preview::stopAll();
 }

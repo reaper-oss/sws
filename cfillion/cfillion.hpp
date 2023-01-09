@@ -56,7 +56,20 @@ bool CF_GetMediaSourceOnline(PCM_source *);
 void CF_SetMediaSourceOnline(PCM_source *, bool set);
 bool CF_GetMediaSourceMetadata(PCM_source *, const char *name, char *buf, int bufSize);
 bool CF_GetMediaSourceRPP(PCM_source *source, char *buf, const int bufSize);
-int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time, double *endTime, bool *isRegion, char *name, const int nameSize, bool *isChapter);
+int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time,
+  double *endTime, bool *isRegion, char *name, const int nameSize, bool *isChapter);
 bool CF_ExportMediaSource(PCM_source *source, const char *file);
+bool CF_PCM_Source_SetSectionInfo(PCM_source *section, PCM_source *source,
+  double offset, double length, bool reverse);
 
 BOOL CF_GetScrollInfo(HWND, int bar, LPSCROLLINFO);
+
+class CF_Preview;
+CF_Preview *CF_CreatePreview(PCM_source *);
+bool CF_Preview_GetValue(CF_Preview *, const char *name, double *valueOut);
+bool CF_Preview_GetPeak(CF_Preview *, int channel, double *peakvolOut);
+bool CF_Preview_SetValue(CF_Preview *, const char *name, double newValue);
+bool CF_Preview_SetOutputTrack(CF_Preview *, ReaProject *, MediaTrack *);
+bool CF_Preview_Play(CF_Preview *);
+bool CF_Preview_Stop(CF_Preview *);
+void CF_Preview_StopAll();

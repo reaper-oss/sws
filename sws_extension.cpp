@@ -1024,6 +1024,7 @@ error:
 		IMPAPI(PCM_Source_CreateFromSimple);
 		IMPAPI(PCM_Source_CreateFromType);
 		IMPAPI(PCM_Source_GetSectionInfo);
+		IMPAPI(PCM_Source_Destroy);
 		IMPAPI(PlayPreview);
 		IMPAPI(PlayPreviewEx);
 		IMPAPI(PlayTrackPreview);
@@ -1034,6 +1035,7 @@ error:
 		IMPAPI(projectconfig_var_addr);
 		IMPAPI(projectconfig_var_getoffs);
 		IMPAPI(realloc_cmd_ptr); // v5.965+
+		IMPAPI(ReaperGetPitchShiftAPI);
 		IMPAPI(RefreshToolbar);
 		IMPAPI(RefreshToolbar2); // v5pre8+
 #ifdef _WIN32

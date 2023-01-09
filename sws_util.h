@@ -240,11 +240,9 @@ bool TrackMatchesGuid(ReaProject*, MediaTrack*, const GUID*);
 inline bool TrackMatchesGuid(MediaTrack* tr, const GUID* g) { return TrackMatchesGuid(nullptr, tr, g); }
 const char *stristr(const char* a, const char* b);
 
-// NF: fix / workaround for setting take start offset doesn't work if containing stretch markers
-// see https://forum.cockos.com/showthread.php?t=180571
-// probably all functions setting take start offset should use this for now, until it's changed in REAPER
+// adjust take start offset obeying play rate and its stretch markers
 // caller must check for take != NULL
-void UpdateStretchMarkersAfterSetTakeStartOffset(MediaItem_Take* take, double takeStartOffset_multiplyPlayrate);
+void AdjustTakesStartOffset(MediaItem *, double adjustment);
 
 // returns source filename also if source is section/reversed (see PCM_source::GetFilename() comment)
 const char* SWS_GetSourceFileName(PCM_source* src);

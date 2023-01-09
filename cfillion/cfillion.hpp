@@ -40,6 +40,7 @@ void CF_GetSWSVersion(char *buf, int bufSize);
 int CF_GetCustomColor(int index);
 void CF_SetCustomColor(int index, int color);
 
+// deprecated, exposed natively in REAPER v6.71
 int CF_EnumerateActions(int section, int idx, char *nameBuf, int nameBufSize);
 const char *CF_GetCommandText(int section, int command);
 

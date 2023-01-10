@@ -67,6 +67,9 @@ if(MSVC)
 
   # Global compiler flags (all targets)
   add_compile_options(
+    # Source encoding independent of the current system locale
+    /utf-8
+
     # Buffer security check
     /GS
 

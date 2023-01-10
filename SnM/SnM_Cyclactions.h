@@ -36,7 +36,7 @@
 #define CA_VERSION		3
 #define CA_MAX_LEN		SNM_MAX_CHUNK_LINE_LENGTH
 #define CA_SEP_V1		',' // deprecated: prevented console cmd support
-#define CA_SEP_V2		'µ' // deprecated: UTF8 on OSX
+#define CA_SEP_V2		'Âµ' // deprecated: UTF8 on OSX
 #define CA_SEP			'|'
 #define CA_EMPTY		"no-op|65535" // use the above CA_SEP separator!
 #define CA_TGL1			'#' // CA reports a fake toggle state

@@ -237,3 +237,16 @@ void SetMenuItemSwatch(HMENU hMenu, UINT pos, int iSize, COLORREF color)
   NSRectFill(NSMakeRect(0, 0, size.width, size.height));
   [item.image unlockFocus];
 }
+
+void SWS_Mac_MakeDefaultWindowMenu(HWND hwnd)
+{
+  // Replace the menubar with an empty one with just an "Edit" menu
+  // when the given window has focus.
+  if (HMENU menu = SWELL_GetDefaultModalWindowMenu()) {
+    if ((menu = SWELL_DuplicateMenu(menu))) {
+      SetMenu(hwnd, menu);
+      menu = GetSubMenu(menu, 0); // "REAPER" menu
+      SWELL_SetMenuDestination(menu, GetMainHwnd());
+    }
+  }
+}

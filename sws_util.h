@@ -178,6 +178,7 @@ void ShowColorChooser(COLORREF initialCol);
 bool GetChosenColor(COLORREF* pColor);
 void HideColorChooser();
 void SetMenuItemSwatch(HMENU hMenu, UINT pos, int size, COLORREF color);
+void SWS_Mac_MakeDefaultWindowMenu(HWND);
 #endif
 
 struct SWS_Cursor {

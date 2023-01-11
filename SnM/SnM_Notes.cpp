@@ -148,11 +148,22 @@ NotesWnd::~NotesWnd() = default;
 void NotesWnd::OnInitDlg()
 {
 	m_edit = GetDlgItem(m_hwnd, IDC_EDIT1);
+	HWND edit2 = GetDlgItem(m_hwnd, IDC_EDIT2);
 
 	// don't passthrough input to the main window
 	// https://forum.cockos.com/showthread.php?p=1208961
 	SetWindowLongPtr(m_edit, GWLP_USERDATA, 0xdeadf00b);
-	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT2), GWLP_USERDATA, 0xdeadf00b);
+	SetWindowLongPtr(edit2,  GWLP_USERDATA, 0xdeadf00b);
+
+#ifdef __APPLE__
+	// Prevent shortcuts in the menubar from triggering main window actions
+	// bypassing the accelerator hook return value
+	SWS_Mac_MakeDefaultWindowMenu(m_hwnd);
+
+	// WS_VSCROLL makes SWELL use an NSTextView instead of NSTextField
+	Mac_TextViewSetAllowsUndo(m_edit, true);
+	Mac_TextViewSetAllowsUndo(edit2,  true);
+#endif
 
 	m_resize.init_item(IDC_EDIT1, 0.0, 0.0, 1.0, 1.0);
 	m_resize.init_item(IDC_EDIT2, 0.0, 0.0, 1.0, 1.0);
@@ -427,39 +438,27 @@ void OSXForceTxtChangeJob::Perform() {
 //  1 = eat
 int NotesWnd::OnKey(MSG* _msg, int _iKeyState)
 {
-/*JFB not needed: IDC_EDIT is the single control of this window..
-#ifdef _WIN32
-	if (_msg->hwnd == m_edit)
-#else
-	if (GetFocus() == m_edit)
-#endif
-*/
+	if (g_locked)
 	{
-		if (g_locked)
-		{
-			_msg->hwnd = m_hwnd; // redirect to main window
-			return 0;
-		}
-		else if (_msg->message == WM_KEYDOWN || _msg->message == WM_CHAR)
-		{
-			// ctrl+A => select all
-			if (_msg->wParam == 'A' && _iKeyState == LVKF_CONTROL)
-			{
-				SetFocus(m_edit);
-				SendMessage(m_edit, EM_SETSEL, 0, -1);
-				return 1;
-			}
-			else
-#ifndef _SNM_SWELL_ISSUES
-			if (_msg->wParam == VK_RETURN)
-				return -1; // send the return key to the edit control
-#else
-			// fix/workaround (SWELL bug?): EN_CHANGE is not always sent...
-			{
-				ScheduledJob::Schedule(new OSXForceTxtChangeJob());
-				return -1; // send the return key to the edit control
-			}
+		_msg->hwnd = m_hwnd; // redirect to main window
+		return 0;
+	}
+	else if(_msg->hwnd == m_edit)
+	{
+#ifdef _SNM_SWELL_ISSUES
+		// fix/workaround (SWELL bug?): EN_CHANGE is not always sent...
+		ScheduledJob::Schedule(new OSXForceTxtChangeJob());
 #endif
+		return -1;
+	}
+	else if (_msg->message == WM_KEYDOWN || _msg->message == WM_CHAR)
+	{
+		// ctrl+A => select all
+		if (_msg->wParam == 'A' && _iKeyState == LVKF_CONTROL)
+		{
+			SetFocus(m_edit);
+			SendMessage(m_edit, EM_SETSEL, 0, -1);
+			return 1;
 		}
 	}
 	return 0; 

@@ -273,3 +273,22 @@ void WaitUntil(bool(*predicate)(void *), void *data)
     }
   }
 }
+
+void SWS_Mac_MakeDefaultWindowMenu(HWND hwnd)
+{
+  // Replace the menubar with an empty one with just an "Edit" menu
+  // when the given window has focus.
+  if (HMENU menu = SWELL_GetDefaultModalWindowMenu()) {
+    if ((menu = SWELL_DuplicateMenu(menu))) {
+      SetMenu(hwnd, menu);
+      menu = GetSubMenu(menu, 0); // "REAPER" menu
+      SWELL_SetMenuDestination(menu, GetMainHwnd());
+    }
+  }
+}
+
+void Mac_TextViewSetAllowsUndo(HWND hwnd, const bool enable)
+{
+  if(hwnd && [(id)hwnd isKindOfClass:[NSTextView class]])
+    [(NSTextView *)hwnd setAllowsUndo:enable];
+}

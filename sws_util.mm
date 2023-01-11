@@ -250,3 +250,9 @@ void SWS_Mac_MakeDefaultWindowMenu(HWND hwnd)
     }
   }
 }
+
+void Mac_TextViewSetAllowsUndo(HWND hwnd, const bool enable)
+{
+  if(hwnd && [(id)hwnd isKindOfClass:[NSTextView class]])
+    [(NSTextView *)hwnd setAllowsUndo:enable];
+}

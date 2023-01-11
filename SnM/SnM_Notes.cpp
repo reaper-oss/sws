@@ -148,16 +148,21 @@ NotesWnd::~NotesWnd() = default;
 void NotesWnd::OnInitDlg()
 {
 	m_edit = GetDlgItem(m_hwnd, IDC_EDIT1);
+	HWND edit2 = GetDlgItem(m_hwnd, IDC_EDIT2);
 
 	// don't passthrough input to the main window
 	// https://forum.cockos.com/showthread.php?p=1208961
 	SetWindowLongPtr(m_edit, GWLP_USERDATA, 0xdeadf00b);
-	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT2), GWLP_USERDATA, 0xdeadf00b);
+	SetWindowLongPtr(edit2,  GWLP_USERDATA, 0xdeadf00b);
 
 #ifdef __APPLE__
 	// Prevent shortcuts in the menubar from triggering main window actions
 	// bypassing the accelerator hook return value
 	SWS_Mac_MakeDefaultWindowMenu(m_hwnd);
+
+	// WS_VSCROLL makes SWELL use an NSTextView instead of NSTextField
+	Mac_TextViewSetAllowsUndo(m_edit, true);
+	Mac_TextViewSetAllowsUndo(edit2,  true);
 #endif
 
 	m_resize.init_item(IDC_EDIT1, 0.0, 0.0, 1.0, 1.0);

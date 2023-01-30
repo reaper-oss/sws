@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1" commit="5c0a4d92c8e93846d94a1c2f920ef110a4163c86" name="SWS">
+  <category name="Extensions">
+    <reapack name="sws.ext" type="extension" desc="SWS">
+      <version name="2.13.2.0" author="myrrc" time="2022-10-07T18:28:51Z">
+        <source platform="win64" file="sws.dll">https://github.com/myrrc/sws/releases/download/$version/sws-win-x64.dll</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+

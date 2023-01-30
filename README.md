@@ -1,5 +1,13 @@
 # SWS Extension
 
+[![Build](https://github.com/myrrc/sws/actions/workflows/build.yml/badge.svg)](https://github.com/myrrc/sws/actions/workflows/build.yml)
+
+This package can be installed with ReaPack:
+
+```
+
+```
+
 [![Build status](https://ci.appveyor.com/api/projects/status/6jq0uwut3mx14xp4/branch/master?svg=true)](https://ci.appveyor.com/project/reaper-oss/sws/branch/master)
 
 The SWS extension is a collection of features that seamlessly integrate into
@@ -27,3 +35,14 @@ similarly licensed):
 
 The SWS extension also relies on [TagLib](https://taglib.org/) and
 [WDL](https://www.cockos.com/wdl).
+
+## Creating releases
+
+Releases are created with tags. Create a tag, fill the necessary information about a release or a pre-release,
+and then push a tag into git repository. This will trigger a CI pipeline which will create a release and upload all
+necessary artifacts.
+
+For releases, installers are also built along with libraries.
+
+Tip: if you have a commit and a tag for release, you can push them simultaneously with `
+git push --atomic origin <branch name> <tag>`.

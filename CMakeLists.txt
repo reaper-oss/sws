@@ -232,6 +232,10 @@ else()
     -Wno-deprecated-declarations
   )
 
+  if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_link_options(sws PRIVATE -s)
+  endif()
+
   # Better [s][n]printf diagnostics (GCC 7)
   check_cxx_compiler_flag(-Wformat-overflow HAVE_WFORMAT_OVERFLOW)
   if(HAVE_WFORMAT_OVERFLOW)
@@ -389,3 +393,4 @@ include(CPack)
 
 configure_file(version.h.in version.h)
 configure_file(version.rc2.in version.rc2)
+configure_file(sws.ext.in sws.ext @ONLY)

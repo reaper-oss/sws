@@ -1,0 +1,17 @@
+@description SWS
+@version @SWS_VERSION_MAJOR@.@SWS_VERSION_MINOR@.@SWS_VERSION_PATCH@.@SWS_VERSION_TWEAK@
+@author SWS Team
+
+@provides
+   FingersExtras/Grooves/* -> Grooves/
+
+@provides
+   [darwin32] sws.dylib https://github.com/myrrc/sws/releases/download/$version/sws-mac-i386.dylib
+   [darwin64] sws.dylib https://github.com/myrrc/sws/releases/download/$version/sws-mac-amd64.dylib
+   [darwin-arm64] sws.dylib https://github.com/myrrc/sws/releases/download/$version/sws-mac-amd64.dylib
+   [linux32] sws.so https://github.com/myrrc/sws/releases/download/$version/sws-linux-i386.so
+   [linux64] sws.sohttps://github.com/myrrc/sws/releases/download/$version/sws-linux-amd64.so
+   [linux-armv7l] sws.so https://github.com/myrrc/sws/releases/download/$version/sws-linux-armhf.so
+   [linux-aarch64] sws.so https://github.com/myrrc/sws/releases/download/$version/sws-linux-arm64.so
+   [win32] sws.dll https://github.com/myrrc/sws/releases/download/$version/sws-win-x86.dll
+   [win64] sws.dll https://github.com/myrrc/sws/releases/download/$version/sws-win-x64.dll

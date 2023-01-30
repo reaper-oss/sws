@@ -1,0 +1,104 @@
+name: Build
+on: [push, pull_request]
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  build_and_test:
+    if: contains(toJson(github.event.commits), '[skip ci]') == false
+    name: ${{matrix.os.host}}-${{matrix.os.arch}}
+    runs-on: ${{matrix.os.host}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - {host: ubuntu-latest, arch: amd64}
+            #- {host: ubuntu-latest, arch: i386}
+            #- {host: ubuntu-latest, arch: armhf}
+            #- {host: ubuntu-latest, arch: arm64}
+            #- {host: macos-latest, arch: amd64}
+            #- {host: macos-latest, arch: arm64}
+            # Issues with linking against system dylib, removing as for now
+            #- {host: macos-10.15, arch: i386}
+            #- {host: windows-latest, arch: x64}
+            #- {host: windows-latest, arch: x86}
+    steps:
+    - name: install deps
+      if: runner.os == 'Linux'
+      run: |
+        sudo sed -i '/arch=/! s/^deb/deb [arch=amd64,i386]/' /etc/apt/sources.list # provide i386 gtk package
+
+        awk '
+        $3 !~ /ubuntu\.com/ { next }
+        $1 == "deb" {
+          $2 = "[arch=armhf,arm64]";
+          $3 = "http://ports.ubuntu.com/ubuntu-ports/"
+        } 1' /etc/apt/sources.list | sudo tee /etc/apt/sources.list.d/ports.list # provide ARM gtk package
+
+        sudo dpkg --add-architecture ${{matrix.os.arch}}
+        sudo apt-get update
+        sudo apt install php-cli libgtk-3-dev:${{matrix.os.arch}}
+
+        case ${{matrix.os.arch}} in
+        i386) sudo apt install g++-multilib ;;
+        armhf) sudo apt install g++-arm-linux-gnueabihf ;;
+        arm64) sudo apt install g++-aarch64-linux-gnu ;;
+        esac
+
+        #- name: setup builder version
+        #  if: runner.os == 'macOS'
+        #  run: |
+        #    case ${{matrix.os.arch}} in
+        #    i386) sudo xcode-select -s /Applications/Xcode_10.3.app ;;
+        #    *) sudo xcode-select -s /Applications/Xcode.app ;;
+        #    esac
+
+    - name: install deps
+      if: runner.os == 'Windows'
+      run: choco install -y nsis-unicode php && refreshenv
+
+    - name: setup bitness build
+      if: runner.os == 'Windows'
+      uses: egor-tensin/vs-shell@v2
+      with: { arch: "${{matrix.os.arch}}" }
+
+    - uses: lukka/get-cmake@latest
+    - uses: actions/checkout@v3
+      with: { submodules: recursive }
+
+    - name: build
+      run: |
+        cmake -GNinja -Bbuild -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchains/${{runner.os}}-${{matrix.os.arch}}.cmake
+        cmake --build build --config Release
+
+    - uses: actions/upload-artifact@v3
+      if: runner.os == 'Linux'
+      with: { name: "sws-linux-${{matrix.os.arch}}.so",  path: build/reaper_sws*.so }
+    - uses: actions/upload-artifact@v3
+      if: runner.os == 'macOS'
+      with: { name: "sws-mac-${{matrix.os.arch}}.dylib", path: build/*sws*.dylib }
+    - uses: actions/upload-artifact@v3
+      if: runner.os == 'Windows'
+      with: { name: "sws-win-${{matrix.os.arch}}.dll",   path: build\reaper_sws*.dll }
+
+    # create installers on release
+    #    # Use NSIS v2.46 to reduce AV false positives
+    #    '"%ProgramFiles(x86)%\NSIS\uninst-nsis.exe" /S'
+    #    curl -fsSLO https://nsis.sourceforge.io/mediawiki/images/1/18/NsProcess.zip
+    #    7z e nsProcess.zip -o"%ProgramFiles(x86)%\NSIS\Unicode\Plugins" nsProcessW.dll -r
+    #
+    #if: startsWith(github.ref, 'refs/tags/')
+    #run: cpack
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    needs: build_and_test
+    steps:
+    - uses: actions/download-artifact@v3
+      with: { path: ~/artifacts/ }
+    - name: create release
+      env: { GH_TOKEN: "${{ github.token }}" }
+      run: gh release create ${GITHUB_REF_NAME} ~/artifacts/* --latest --repo ${GITHUB_ACTION_REPOSITORY}

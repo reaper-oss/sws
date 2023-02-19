@@ -842,6 +842,7 @@ error:
 		IMPAPI(GetIconThemeStruct);
 		IMPAPI(GetInputChannelName);
 		IMPAPI(GetItemEditingTime2);
+		IMPAPI(GetItemFromPoint); // v5.975+
 		IMPAPI(GetLastColorThemeFile); // v5.02+
 		IMPAPI(GetLastMarkerAndCurRegion); // v4.60+
 		IMPAPI(GetLastTouchedFX);

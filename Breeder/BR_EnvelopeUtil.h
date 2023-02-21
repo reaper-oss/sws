@@ -189,6 +189,7 @@ private:
 		EnvProperties& operator=  (const EnvProperties& properties);
 		vector<WDL_FastString> automationItems;
 		//POOLEDENVINST id pos length offset rate timeBased baseline(.5=0) amplitude loop ? ?
+		// see https://forum.cockos.com/showpost.php?p=2198410
 		// For now we're just storing as strings in properties and not handling parsing of these
 		//struct AutomationItem
 		//{

@@ -30,6 +30,12 @@
 /******************************************************************************
 * Commands: Tempo continuous actions                                          *
 ******************************************************************************/
+enum MoveGridToMouseCommand
+{
+	MOVE_CLOSEST_TEMPO_MOUSE = 0,
+	MOVE_GRID_TO_MOUSE,
+	MOVE_M_GRID_TO_MOUSE
+};
 void MoveGridToMouseInit ();
 
 /******************************************************************************

@@ -284,7 +284,8 @@ static bool MoveGridInit (COMMAND_T* ct, bool init)
 	if (init)
 	{
 		const int projgridframe = ConfigVar<int>("projgridframe").value_or(0);
-		if (((int)ct->user == 1 || (int)ct->user == 2) && projgridframe&1) // frames grid line spacing
+		MoveGridToMouseCommand cmd = (MoveGridToMouseCommand)ct->user;
+		if ((cmd == MOVE_GRID_TO_MOUSE || cmd == MOVE_M_GRID_TO_MOUSE) && projgridframe&1) // frames grid line spacing
 		{
 			initSuccessful = false;
 			static bool s_warnUser = true;
@@ -332,10 +333,32 @@ static HCURSOR MoveGridCursor (COMMAND_T* ct, int window)
 		return NULL;
 }
 
+/**
+ * Explicitly set a tempo envelope point's tempo to its calculated tempo.
+ *
+ * Must call this on a point before creating a BR_Envelope that will change its bpm,
+ * otherwise tempo updates via BR_Envelope will be ignored.
+ *
+ * @param id The tempo envelope point id to ensure has tempo set. It must exist.
+ * @return whether a point was mutated
+ */
+static bool EnsureTempoSet(int id)
+{
+	double timeposOut, beat, bpm;
+	int measure, num, den;
+	bool linear;
+	GetTempoTimeSigMarker(NULL, id, &timeposOut, &measure, &beat, &bpm, &num, &den, &linear);
+	//TODO is there any way to tell whether bpm has already been explicitly set by this point?
+	SetTempoTimeSigMarker(NULL, id, timeposOut, measure, beat, bpm, num, den, linear);
+	return true;
+}
+
 static void MoveGridToMouse (COMMAND_T* ct)
 {
 	static int    s_lockedId = -1;
 	static double s_lastPosition = 0;
+
+	MoveGridToMouseCommand cmd = (MoveGridToMouseCommand)ct->user;
 
 	// Action called for the first time: reset variables and cache tempo map for future calls
 	if (!g_moveGridTempoMap)
@@ -344,13 +367,25 @@ static void MoveGridToMouse (COMMAND_T* ct)
 		s_lastPosition = 0;
 
 		// Make sure tempo map already has at least one point created (for some reason it won't work if creating it directly in chunk)
-		if ((int)ct->user != 0 && CountTempoTimeSigMarkers(NULL) == 0) // do it only if not moving tempo marker
+		if (cmd != MOVE_CLOSEST_TEMPO_MOUSE)
 		{
 			InitTempoMap();
 			g_didTempoMapInit = true;
 		}
 
 		g_moveGridTempoMap = new (nothrow) BR_Envelope(GetTempoEnv());
+
+		// Make sure previous point is editable via g_moveGridTempoMap.
+		if (g_moveGridTempoMap && cmd != MOVE_CLOSEST_TEMPO_MOUSE)
+		{
+			// ensure previous point's bpm is explicitly set, otherwise changes won't register in BR_Envelope.
+			if(EnsureTempoSet(g_moveGridTempoMap->FindPrevious(PositionAtMouseCursor(true))))
+			{
+				delete g_moveGridTempoMap;
+				g_moveGridTempoMap = new (nothrow) BR_Envelope(GetTempoEnv());
+			}
+		}
+
 		if (!g_moveGridTempoMap || !g_moveGridTempoMap->CountPoints() || g_moveGridTempoMap->IsLocked())
 		{
 			ContinuousActionStopAll();
@@ -380,9 +415,9 @@ static void MoveGridToMouse (COMMAND_T* ct)
 			int targetId;
 
 			// Find closest grid tempo marker
-			if ((int)ct->user == 1 || (int)ct->user == 2)
+			if (cmd == MOVE_GRID_TO_MOUSE || cmd == MOVE_M_GRID_TO_MOUSE)
 			{
-				grid = ((int)ct->user == 1) ? (GetClosestGridLine(mousePosition)) : (GetClosestMeasureGridLine(mousePosition));
+				grid = (cmd == MOVE_GRID_TO_MOUSE) ? (GetClosestGridLine(mousePosition)) : (GetClosestMeasureGridLine(mousePosition));
 				targetId = g_moveGridTempoMap->Find(grid, MIN_TEMPO_DIST);
 			}
 			// Find closest tempo marker
@@ -445,9 +480,9 @@ void MoveGridToMouseInit ()
 	//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 	static COMMAND_T s_commandTable[] =
 	{
-		{ { DEFACCEL, "SWS/BR: Move closest tempo marker to mouse cursor (perform until shortcut released)" },      "BR_MOVE_CLOSEST_TEMPO_MOUSE", MoveGridToMouse, NULL, 0},
-		{ { DEFACCEL, "SWS/BR: Move closest grid line to mouse cursor (perform until shortcut released)" },         "BR_MOVE_GRID_TO_MOUSE",       MoveGridToMouse, NULL, 1},
-		{ { DEFACCEL, "SWS/BR: Move closest measure grid line to mouse cursor (perform until shortcut released)" }, "BR_MOVE_M_GRID_TO_MOUSE",     MoveGridToMouse, NULL, 2},
+		{ { DEFACCEL, "SWS/BR: Move closest tempo marker to mouse cursor (perform until shortcut released)" },      "BR_MOVE_CLOSEST_TEMPO_MOUSE", MoveGridToMouse, NULL, MOVE_CLOSEST_TEMPO_MOUSE},
+		{ { DEFACCEL, "SWS/BR: Move closest grid line to mouse cursor (perform until shortcut released)" },         "BR_MOVE_GRID_TO_MOUSE",       MoveGridToMouse, NULL, MOVE_GRID_TO_MOUSE},
+		{ { DEFACCEL, "SWS/BR: Move closest measure grid line to mouse cursor (perform until shortcut released)" }, "BR_MOVE_M_GRID_TO_MOUSE",     MoveGridToMouse, NULL, MOVE_M_GRID_TO_MOUSE},
 		{ {}, LAST_COMMAND}
 	};
 	//!WANT_LOCALIZE_1ST_STRING_END

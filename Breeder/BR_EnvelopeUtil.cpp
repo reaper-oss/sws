@@ -2961,10 +2961,15 @@ void CalculateSplitMiddlePoints (double* time1, double* time2, double* bpm1, dou
 	WritePtr(bpm2, val2);
 }
 
-void InitTempoMap ()
+bool InitTempoMap ()
 {
 	if (!CountTempoTimeSigMarkers(NULL))
+  {
 		SetTempoTimeSigMarker(NULL, -1, 0, -1, -1, GetProjectSettingsTempo(NULL, NULL), 0, 0, false);
+    return true;
+  }
+  else
+    return false;
 }
 
 void RemoveTempoMap ()

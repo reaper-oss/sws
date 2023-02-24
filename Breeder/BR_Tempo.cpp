@@ -344,13 +344,21 @@ static HCURSOR MoveGridCursor (COMMAND_T* ct, int window)
  */
 static bool EnsureTempoSet(int id)
 {
+      char debugStr[256];
+      snprintf(debugStr, sizeof(debugStr), "EnsureTempoSet: id: %d\n", id);
+			OutputDebugString(debugStr);
+
 	double timeposOut, beat, bpm;
 	int measure, num, den;
 	bool linear;
-	GetTempoTimeSigMarker(NULL, id, &timeposOut, &measure, &beat, &bpm, &num, &den, &linear);
-	//TODO is there any way to tell whether bpm has already been explicitly set by this point?
-	SetTempoTimeSigMarker(NULL, id, timeposOut, measure, beat, bpm, num, den, linear);
-	return true;
+	if(GetTempoTimeSigMarker(NULL, id, &timeposOut, &measure, &beat, &bpm, &num, &den, &linear))
+  {
+    SetTempoTimeSigMarker(NULL, id, timeposOut, measure, beat, bpm, num, den, linear);
+    //TODO is there any way to tell whether bpm has already been explicitly set by this point?
+    return true;
+  }
+  else
+    return false;
 }
 
 static void MoveGridToMouse (COMMAND_T* ct)
@@ -367,16 +375,16 @@ static void MoveGridToMouse (COMMAND_T* ct)
 		s_lastPosition = 0;
 
 		// Make sure tempo map already has at least one point created (for some reason it won't work if creating it directly in chunk)
-		if (cmd != MOVE_CLOSEST_TEMPO_MOUSE)
-		{
-			InitTempoMap();
-			g_didTempoMapInit = true;
-		}
+    g_didTempoMapInit = InitTempoMap();
 
 		g_moveGridTempoMap = new (nothrow) BR_Envelope(GetTempoEnv());
 
 		// Make sure previous point is editable via g_moveGridTempoMap.
-		if (g_moveGridTempoMap && cmd != MOVE_CLOSEST_TEMPO_MOUSE)
+    // FIXME in MOVE_CLOSEST_TEMPO_MOUSE, we need the prev point relative to
+    // the closest point to be matched, not relative to the mouse.
+    // eg.,   4/4      12bpm      <cursor>
+    //        ^--this needs tempo
+		if (g_moveGridTempoMap && g_moveGridTempoMap->CountPoints())
 		{
 			// ensure previous point's bpm is explicitly set, otherwise changes won't register in BR_Envelope.
 			if(EnsureTempoSet(g_moveGridTempoMap->FindPrevious(PositionAtMouseCursor(true))))

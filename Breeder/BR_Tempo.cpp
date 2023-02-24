@@ -284,8 +284,7 @@ static bool MoveGridInit (COMMAND_T* ct, bool init)
 	if (init)
 	{
 		const int projgridframe = ConfigVar<int>("projgridframe").value_or(0);
-		MoveGridToMouseCommand cmd = (MoveGridToMouseCommand)ct->user;
-		if ((cmd == MOVE_GRID_TO_MOUSE || cmd == MOVE_M_GRID_TO_MOUSE) && projgridframe&1) // frames grid line spacing
+		if (((int)ct->user == 1 || (int)ct->user == 2) && projgridframe&1) // frames grid line spacing
 		{
 			initSuccessful = false;
 			static bool s_warnUser = true;
@@ -378,7 +377,6 @@ static void MoveGridToMouse (COMMAND_T* ct)
 	static int    s_lockedId = -1;
 	static double s_lastPosition = 0;
 
-	MoveGridToMouseCommand cmd = (MoveGridToMouseCommand)ct->user;
   bool firstTime = false;
 
 	// Action called for the first time: reset variables and cache tempo map for future calls
@@ -416,9 +414,9 @@ static void MoveGridToMouse (COMMAND_T* ct)
 			int targetId;
 
 			// Find closest grid tempo marker
-			if (cmd == MOVE_GRID_TO_MOUSE || cmd == MOVE_M_GRID_TO_MOUSE)
+			if ((int)ct->user == 1 || (int)ct->user == 2)
 			{
-				grid = (cmd == MOVE_GRID_TO_MOUSE) ? (GetClosestGridLine(mousePosition)) : (GetClosestMeasureGridLine(mousePosition));
+				grid = ((int)ct->user == 1) ? (GetClosestGridLine(mousePosition)) : (GetClosestMeasureGridLine(mousePosition));
 				targetId = g_moveGridTempoMap->Find(grid, MIN_TEMPO_DIST);
 			}
 			// Find closest tempo marker
@@ -471,9 +469,9 @@ static void MoveGridToMouse (COMMAND_T* ct)
     int id1 = s_lockedId-1;
     int id2 = s_lockedId;
     int id3 = s_lockedId+1;
-    if (id2 > 0 || id1 == 0)
+    if (id1 <= 0)
       EnsureTempoSet(id1);
-    if (g_moveGridTempoMap->ValidateId(id3))
+    if (id2 == 0 || g_moveGridTempoMap->ValidateId(id3))
       EnsureTempoSet(id2);
     delete g_moveGridTempoMap;
     if (!InitGridTempoMap()) return;
@@ -511,9 +509,9 @@ void MoveGridToMouseInit ()
 	//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 	static COMMAND_T s_commandTable[] =
 	{
-		{ { DEFACCEL, "SWS/BR: Move closest tempo marker to mouse cursor (perform until shortcut released)" },      "BR_MOVE_CLOSEST_TEMPO_MOUSE", MoveGridToMouse, NULL, MOVE_CLOSEST_TEMPO_MOUSE},
-		{ { DEFACCEL, "SWS/BR: Move closest grid line to mouse cursor (perform until shortcut released)" },         "BR_MOVE_GRID_TO_MOUSE",       MoveGridToMouse, NULL, MOVE_GRID_TO_MOUSE},
-		{ { DEFACCEL, "SWS/BR: Move closest measure grid line to mouse cursor (perform until shortcut released)" }, "BR_MOVE_M_GRID_TO_MOUSE",     MoveGridToMouse, NULL, MOVE_M_GRID_TO_MOUSE},
+		{ { DEFACCEL, "SWS/BR: Move closest tempo marker to mouse cursor (perform until shortcut released)" },      "BR_MOVE_CLOSEST_TEMPO_MOUSE", MoveGridToMouse, NULL, 0},
+		{ { DEFACCEL, "SWS/BR: Move closest grid line to mouse cursor (perform until shortcut released)" },         "BR_MOVE_GRID_TO_MOUSE",       MoveGridToMouse, NULL, 1},
+		{ { DEFACCEL, "SWS/BR: Move closest measure grid line to mouse cursor (perform until shortcut released)" }, "BR_MOVE_M_GRID_TO_MOUSE",     MoveGridToMouse, NULL, 2},
 		{ {}, LAST_COMMAND}
 	};
 	//!WANT_LOCALIZE_1ST_STRING_END

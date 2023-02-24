@@ -533,12 +533,7 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 	PreventUIRefresh(1);
 
 	// In case tempo map has no tempo points
-	bool didTempoMapInit = false;
-	if (CountTempoTimeSigMarkers(NULL) == 0)
-	{
-		InitTempoMap();
-		didTempoMapInit = true;
-	}
+	bool didTempoMapInit = InitTempoMap();
 
 	BR_Envelope tempoMap(GetTempoEnv());
 

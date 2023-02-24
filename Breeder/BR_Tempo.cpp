@@ -361,6 +361,18 @@ static bool EnsureTempoSet(int id)
     return false;
 }
 
+static bool InitGridTempoMap()
+{
+  g_moveGridTempoMap = new (nothrow) BR_Envelope(GetTempoEnv());
+
+  if (!g_moveGridTempoMap || !g_moveGridTempoMap->CountPoints() || g_moveGridTempoMap->IsLocked())
+  {
+    ContinuousActionStopAll();
+    return false;
+  }
+  return true;
+}
+
 static void MoveGridToMouse (COMMAND_T* ct)
 {
 	static int    s_lockedId = -1;
@@ -379,13 +391,7 @@ static void MoveGridToMouse (COMMAND_T* ct)
 		// Make sure tempo map already has at least one point created (for some reason it won't work if creating it directly in chunk)
     g_didTempoMapInit = InitTempoMap();
 
-		g_moveGridTempoMap = new (nothrow) BR_Envelope(GetTempoEnv());
-
-		if (!g_moveGridTempoMap || !g_moveGridTempoMap->CountPoints() || g_moveGridTempoMap->IsLocked())
-		{
-			ContinuousActionStopAll();
-			return;
-		}
+		if (!InitGridTempoMap()) return;
 	}
 
 	// Find closest grid/tempo marker
@@ -443,39 +449,34 @@ static void MoveGridToMouse (COMMAND_T* ct)
 		}
 	}
 
-  // reinitialize g_moveGridTempoMap so that tempo changes are recognized
+  // FIXME hovering over the first point with MOVE_CLOSEST_TEMPO_MOUSE and dragging right
+  // does not work if it the first point doesn't have tempo.
+  // e.g.,   <4/4>
+  //          ^--- drag right...
+  //       then,   
+  //          120bpm,4/4                       <120bpm, 4/4>
+  //          ^--- stuck at 120bpm...           ^-- not locked to grid
+
+  // reinitialize g_moveGridTempoMap so that tempo changes are recognized on points
+  // that don't set bpm (like those that set time sigs or metronome patterns).
   if (firstTime && s_lockedId >= 0)
   {
-
-		// Make sure previous point is editable via g_moveGridTempoMap.
-    // FIXME in MOVE_CLOSEST_TEMPO_MOUSE, we need the prev point relative to
-    // the closest point to be matched, not relative to the mouse.
-    // eg.,   4/4      <120bpm>
-    //        ^--this needs tempo
-    // eg.,   4/4      4/4      <120bpm>
-    //                 ^-- this needs tempo
-    // eg.,   4/4      <4/4>      4/4
-    //        ^--      ^-- these need tempo
-		if (g_moveGridTempoMap && g_moveGridTempoMap->CountPoints())
-		{
-      // if there's a point after the current one, then the current point must also have tempo.
-      //
-			// ensure previous point's bpm is explicitly set, otherwise changes won't register in BR_Envelope.
-      int prevId;
-      switch (cmd)
-      {
-        // 
-        case MOVE_CLOSEST_TEMPO_MOUSE:
-          break;
-        default: 
-          prevId = g_moveGridTempoMap->FindPrevious(PositionAtMouseCursor(true));
-      }
-			if(EnsureTempoSet(prevId))
-			{
-				delete g_moveGridTempoMap;
-				g_moveGridTempoMap = new (nothrow) BR_Envelope(GetTempoEnv());
-			}
-		}
+    // Any point immediately before one we are manipulating must have tempo.
+    // e.g.,   4/4      <120bpm>
+    //         ^--this needs tempo
+    // e.g.,   4/4      4/4      <120bpm>
+    //                  ^-- this needs tempo
+    // e.g.,   4/4      <4/4>      4/4
+    //         ^--------^-- these need tempo
+    int id1 = s_lockedId-1;
+    int id2 = s_lockedId;
+    int id3 = s_lockedId+1;
+    if (id2 > 0 || id1 == 0)
+      EnsureTempoSet(id1);
+    if (g_moveGridTempoMap->ValidateId(id3))
+      EnsureTempoSet(id2);
+    delete g_moveGridTempoMap;
+    if (!InitGridTempoMap()) return;
   }
 
 	// Move grid and commit changes

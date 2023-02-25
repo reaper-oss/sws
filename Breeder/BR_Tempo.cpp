@@ -62,15 +62,15 @@ static HWND g_tempoShapeWnd = NULL;
  */
 static bool EnsureTempoSet(int id)
 {
-      char debugStr[256];
-      snprintf(debugStr, sizeof(debugStr), "EnsureTempoSet: id: %d\n", id);
-			OutputDebugString(debugStr);
 
 	double timeposOut, beat, bpm;
 	int measure, num, den;
 	bool linear;
 	if(GetTempoTimeSigMarker(NULL, id, &timeposOut, &measure, &beat, &bpm, &num, &den, &linear))
   {
+      char debugStr[256];
+      snprintf(debugStr, sizeof(debugStr), "EnsureTempoSet: id: %d, bpm %d\n", id, bpm);
+			OutputDebugString(debugStr);
     SetTempoTimeSigMarker(NULL, id, timeposOut, measure, beat, bpm, num, den, linear);
     //TODO is there any way to tell whether bpm has already been explicitly set by this point?
     return true;
@@ -647,18 +647,20 @@ void MoveTempo (COMMAND_T* ct)
 			BeforeMoveTempo(tempoMap, id);
 	}
   delete &tempoMap;
-	tempoMap = GetTempoEnv();
+	BR_Envelope tempoMap2(GetTempoEnv());
+	if (!tempoMap2.CountPoints())
+		return;
 
 	for (int i = 0; i < count; ++i)
 	{
-		int id = ((int)ct->user == 3) ? (targetId) : (tempoMap.GetSelected(i));
+		int id = ((int)ct->user == 3) ? (targetId) : (tempoMap2.GetSelected(i));
 		if (id > 0) // skip first point
-			skipped += (MoveTempo(tempoMap, id, tDiff, true)) ? (0) : (1);
+			skipped += (MoveTempo(tempoMap2, id, tDiff, true)) ? (0) : (1);
 	}
 
 	// Commit changes
 	PreventUIRefresh(1); // prevent jumpy cursor
-	if (tempoMap.Commit())
+	if (tempoMap2.Commit())
 	{
 		if ((int)ct->user == 3)
 			SetEditCurPos2(NULL, cursor, false, false); // always keep cursor position when moving to closest tempo marker
@@ -668,7 +670,7 @@ void MoveTempo (COMMAND_T* ct)
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
-	if (s_warnUser && skipped != 0 && !tempoMap.IsLocked())
+	if (s_warnUser && skipped != 0 && !tempoMap2.IsLocked())
 	{
 		char buffer[512];
 		snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);

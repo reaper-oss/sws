@@ -146,10 +146,10 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 		if (g_renameparams.DialogRC==0)
 		{
 			// Can only do the filename if it exists
-			if (SWS_GetSourceFileName(thesrc) && SWS_GetSourceFileName(thesrc)[0])
+			const char *thefn = SWS_GetSourceFileName(thesrc);
+			if (thefn && thefn[0])
 			{
-				string oldname;
-				oldname.assign(SWS_GetSourceFileName(thesrc));
+				string oldname = thefn;
 				vector<string> fnsplit;
 				SplitFileNameComponents(oldname,fnsplit);
 				string newfilename;
@@ -176,7 +176,8 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 				for (size_t j=0;j<alltakes.size();j++)
 				{
 					PCM_source* thesrcToRename = (PCM_source*)GetSetMediaItemTakeInfo(alltakes[j], "P_SOURCE", 0);
-					if (!thesrcToRename || strcmp(SWS_GetSourceFileName(thesrcToRename), oldname.c_str()))
+					const char *thefnToRename = SWS_GetSourceFileName(thesrcToRename);
+					if (!thefnToRename || strcmp(thefnToRename, oldname.c_str()))
 						continue;
 
 					thesrcToRename->SetFileName(newfilename.c_str());

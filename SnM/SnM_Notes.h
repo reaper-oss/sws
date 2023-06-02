@@ -162,6 +162,7 @@ protected:
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
 	int OnKey(MSG* msg, int iKeyState);
 	void OnTimer(WPARAM wParam=0);
+    void OnDroppedFiles(HDROP h);
 	void OnResize();
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);
@@ -172,7 +173,7 @@ private:
 #ifdef WANT_ACTION_HELP
 	SNM_ToolbarButton m_btnAlr, m_btnActionList;
 #endif
-	SNM_ToolbarButton m_btnImportSub, m_btnExportSub;
+	SNM_ToolbarButton m_btnImportSub, m_btnImportAss, m_btnExportSub;
 	WDL_VirtualStaticText m_txtLabel;
 	SNM_DynSizedText m_bigNotes;
 

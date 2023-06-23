@@ -742,11 +742,11 @@ static DYN_COMMAND_T s_dynCmdTable[]
 	{ "SWS/S&M: Live Config #%d - Disable tiny fades", "S&M_LIVECFG_FADES_OFF", DisableTinyFadesLiveConfig, 0, SNM_LIVECFG_NB_CONFIGS, NULL}, // default: none
 	{ "SWS/S&M: Live Config #%d - Toggle enable tiny fades", "S&M_LIVECFG_FADES_TGL", ToggleTinyFadesLiveConfig, SNM_LIVECFG_NB_CONFIGS, SNM_LIVECFG_NB_CONFIGS, IsTinyFadesLiveConfigEnabled},
 
-	{ "SWS/S&M: Region Playlist #%d - Play", "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Region Playlist #%d - Play", "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, 10, SNM_MAX_DYN_ACTIONS, NULL},
 
 	{ "SWS/S&M: Go to marker %d (obeys smooth seek)", "S&M_GOTO_MARKER", GotoMarker, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
 	{ "SWS/S&M: Go to region %d (obeys smooth seek)", "S&M_GOTO_REGION", GotoRegion, 0, SNM_MAX_DYN_ACTIONS, NULL}, // default: none
-	{ "SWS/S&M: Go to/time-select region %d (obeys smooth seek)", "S&M_GOTO_SEL_REGION", GotoAnsSelectRegion, 4, SNM_MAX_DYN_ACTIONS, NULL},
+	{ "SWS/S&M: Go to/time-select region %d (obeys smooth seek)", "S&M_GOTO_SEL_REGION", GotoAnsSelectRegion, 10, SNM_MAX_DYN_ACTIONS, NULL},
 
 	{ "SWS/S&M: Dummy toggle %d", "S&M_DUMMY_TGL", Noop, 8, SNM_MAX_DYN_ACTIONS, GetFakeToggleState},
 	{ "SWS/S&M: Exclusive toggle A%d", "S&M_EXCL_TGL", ExclusiveToggle, 4, SNM_MAX_DYN_ACTIONS, GetFakeToggleState}, // not "S&M_EXCL_TGL_A" for historical reasons...

@@ -385,6 +385,9 @@ I_PITCHMODE    highest 16 bits=pitch shift mode (see EnumPitchShiftModes), lower
 	{ APIFUNC(CF_Preview_Stop), "bool", "CF_Preview*", "preview", "Stop and destroy a preview object.", },
 	{ APIFUNC(CF_Preview_StopAll), "void", "", "", "Stop and destroy all currently active preview objects.", },
 
+	{ APIFUNC(JB_GetSWSExtraProjectNotes), "const char*", "ReaProject*", "project", "", },
+	{ APIFUNC(JB_SetSWSExtraProjectNotes), "void", "ReaProject*,const char*", "project,str", "", },
+
 	{ NULL, } // denote end of table
 };
 

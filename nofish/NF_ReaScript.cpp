@@ -511,3 +511,13 @@ void NF_Base64_Encode(const char* str, int str_sz, const bool usePadding, char* 
 	const char* encoded = b64.Encode(str, str_sz, usePadding);
 	CopyToBuffer(encoded, encodedStrOut, encodedStrOut_sz);
 }
+
+const char* JB_GetSWSExtraProjectNotes(ReaProject* project)
+{
+	return JBDoGetSWSExtraProjectNotes(project);
+}
+
+void JB_SetSWSExtraProjectNotes(ReaProject* project, const char* buf)
+{
+	JBDoSetSWSExtraProjectNotes(project, buf);
+}

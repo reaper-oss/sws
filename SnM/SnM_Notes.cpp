@@ -1804,3 +1804,24 @@ void NF_DoUpdateSWSMarkerRegionSubWindow()
 			w->ForceUpdateMkrRgnNameOrSub(g_notesType);
 	}
 }
+
+const char* JBDoGetSWSExtraProjectNotes(ReaProject* project)
+{
+	return g_prjNotes.Get()->Get();
+}
+
+void JBDoSetSWSExtraProjectNotes(ReaProject* project, const char* buf)
+{
+	if (MarkProjectDirty)
+		MarkProjectDirty(NULL);
+
+	g_prjNotes.Get()->Set(buf);
+
+	// update displayed text if Notes window is visible and notes for set track are displayed
+	if (NotesWnd* w = g_notesWndMgr.Get()) {
+		if (w->IsWndVisible() && g_notesType == SNM_NOTES_PROJECT_EXTRA) {
+			w->SetText(buf);
+		}
+	}
+	return;
+}

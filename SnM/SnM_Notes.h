@@ -214,4 +214,7 @@ const char* NFDoGetSWSMarkerRegionSub(int mkrRgnIdx);
 bool NFDoSetSWSMarkerRegionSub(const char* mkrRgnSubIn, int mkrRgnIdx);
 void NF_DoUpdateSWSMarkerRegionSubWindow();
 
+const char* JBDoGetSWSExtraProjectNotes(ReaProject* project);
+void JBDoSetSWSExtraProjectNotes(ReaProject* project, const char* buf);
+
 #endif

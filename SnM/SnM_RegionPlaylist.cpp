@@ -1425,34 +1425,34 @@ void PlaylistRun()
 			}
 
 			const bool isNewPassInRegion = isFirstPassInRegion || pos<g_lastRunPos;
-			const bool isLastPassInRegion = g_rgnLoop == 0 || g_rgnLoop == 1;
-
-			// region loop?
-			if (!isLastPassInRegion && (isNewPassInRegion || g_unsync))
-			{
+			if (isNewPassInRegion || g_unsync) {
 				updated = true;
-				if (g_rgnLoop>0)
-					g_rgnLoop--;
+				
+				// region loop?
+				const bool isLastPassInRegion = g_rgnLoop == 0 || g_rgnLoop == 1;
+				if (isLastPassInRegion) {
+					int nextId = GetNextValidItem(g_playPlaylist, g_playCur, false, g_repeatPlaylist, g_shufflePlaylist);
 
-				SeekPlay(g_nextRgnPos);
-			} else if (isLastPassInRegion){
-				int nextId = GetNextValidItem(g_playPlaylist, g_playCur, false, g_repeatPlaylist, g_shufflePlaylist);
-
-				// loop corner cases
-				// ex: 1 item in the playlist + repeat on, or repeat on + last region == first region,
-				//     or playlist = region3, then unknown region (e.g. deleted) and region3 again, or etc..
-				if (nextId>=0)
-					if (RegionPlaylist* pl = GetPlaylist(g_playPlaylist))
-						if (RgnPlaylistItem* next = pl->Get(nextId)) 
-							if (RgnPlaylistItem* cur = pl->Get(g_playCur)) 
-								g_plLoop = (cur->m_rgnId==next->m_rgnId); // valid regions at this point
+					// loop corner cases
+					// ex: 1 item in the playlist + repeat on, or repeat on + last region == first region,
+					//     or playlist = region3, then unknown region (e.g. deleted) and region3 again, or etc..
+					if (nextId>=0)
+						if (RegionPlaylist* pl = GetPlaylist(g_playPlaylist))
+							if (RgnPlaylistItem* next = pl->Get(nextId)) 
+								if (RgnPlaylistItem* cur = pl->Get(g_playCur)) 
+									g_plLoop = (cur->m_rgnId==next->m_rgnId); // valid regions at this point
 
 #ifdef _SNM_RGNPL_DEBUG1
-				snprintf(dbg, sizeof(dbg), "SEEK - Current = %d, Next = %d\n", g_playCur, nextId); OutputDebugString(dbg);
+					snprintf(dbg, sizeof(dbg), "SEEK - Current = %d, Next = %d\n", g_playCur, nextId); OutputDebugString(dbg);
 #endif
-				if (!SeekItem(g_playPlaylist, nextId, g_playCur))
-					SeekItem(g_playPlaylist, -1, g_playCur); // end of playlist..
-				updated = true;
+					if (!SeekItem(g_playPlaylist, nextId, g_playCur))
+						SeekItem(g_playPlaylist, -1, g_playCur); // end of playlist..
+				} else {
+					if (g_rgnLoop>0)
+						g_rgnLoop--;
+
+					SeekPlay(g_nextRgnPos);
+				}
 			}
 		}
 		g_unsync = false;

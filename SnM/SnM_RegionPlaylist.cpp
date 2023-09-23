@@ -1434,11 +1434,8 @@ void PlaylistRun()
 				if (g_rgnLoop>0)
 					g_rgnLoop--;
 
-				SeekPlay(g_nextRgnPos); // then exit
-			}
-
-			if (isLastPassInRegion) // if, not else if!
-			{
+				SeekPlay(g_nextRgnPos);
+			} else if (isLastPassInRegion){
 				int nextId = GetNextValidItem(g_playPlaylist, g_playCur, false, g_repeatPlaylist, g_shufflePlaylist);
 
 				// loop corner cases

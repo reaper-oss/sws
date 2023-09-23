@@ -1436,7 +1436,8 @@ void PlaylistRun()
 					SeekPlay(g_nextRgnPos); // then exit
 			}
 
-			if (!g_rgnLoop) // if, not else if!
+			const bool isLastPassInRegion = !g_rgnLoop;
+			if (isLastPassInRegion) // if, not else if!
 			{
 				int nextId = GetNextValidItem(g_playPlaylist, g_playCur, false, g_repeatPlaylist, g_shufflePlaylist);
 

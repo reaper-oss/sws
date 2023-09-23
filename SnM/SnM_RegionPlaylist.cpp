@@ -1425,18 +1425,18 @@ void PlaylistRun()
 			}
 
 			const bool isNewPassInRegion = isFirstPassInRegion || pos<g_lastRunPos;
+			const bool isLastPassInRegion = g_rgnLoop == 0 || g_rgnLoop == 1;
 
 			// region loop?
-			if (g_rgnLoop && (isNewPassInRegion || g_unsync))
+			if (!isLastPassInRegion && (isNewPassInRegion || g_unsync))
 			{
 				updated = true;
 				if (g_rgnLoop>0)
 					g_rgnLoop--;
-				if (g_rgnLoop)
-					SeekPlay(g_nextRgnPos); // then exit
+
+				SeekPlay(g_nextRgnPos); // then exit
 			}
 
-			const bool isLastPassInRegion = !g_rgnLoop;
 			if (isLastPassInRegion) // if, not else if!
 			{
 				int nextId = GetNextValidItem(g_playPlaylist, g_playCur, false, g_repeatPlaylist, g_shufflePlaylist);

@@ -938,6 +938,7 @@ error:
 		IMPAPI(GetUserInputs);
 		IMPAPI(get_config_var);
 		IMPAPI(get_ini_file);
+		IMPAPI(GoToRegion);
 		IMPAPI(GR_SelectColor);
 		IMPAPI(GSC_mainwnd);
 		IMPAPI(guidToString);

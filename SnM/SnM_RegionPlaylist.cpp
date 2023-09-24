@@ -115,11 +115,15 @@ int g_playPlaylist = -1;		// -1: stopped, playlist id otherwise
 bool g_unsync = false;			// true when switching to a position that is not part of the playlist
 int g_playCur = -1;				// index of the item being played, -1 means "not playing yet"
 int g_playNext = -1;			// index of the next item to be played, -1 means "the end"
+int g_nextRegionId = -1;		// index of the region that g_playNext refers to, can be used passed to GoToRegion API call
 int g_rgnLoop = 0;				// region loop count: 0 not looping, <0 infinite loop, n>0 looping n times
 bool g_plLoop = false;			// other (corner case) loops in the playlist?
 double g_lastRunPos = -1.0;
 double g_nextRgnPos, g_nextRgnEnd;
 double g_curRgnPos = 0.0, g_curRgnEnd = -1.0; // to detect unsync, end<pos means non relevant
+double g_safeTimeToEndPlaylist = -1.0; 	// the 'smooth seek to after the end of project' trick can only be pulled off
+										// with regular smooth seek --> we need to schedule it after markers
+bool g_endOfPlaylistSeekIssued = false;
 
 int g_oldSeekPref = -1;
 int g_oldStopprojlenPref = -1;
@@ -204,8 +208,8 @@ double RegionPlaylist::GetLength()
 	return infinite ? length*(-1) : length;
 }
 
-// get the 1st marker/region num which has nested marker/region
-int RegionPlaylist::GetNestedMarkerRegion()
+// get the 1st region num which has a nested region
+int RegionPlaylist::GetNestedRegion()
 {
 	for (int i=0; i<GetSize(); i++)
 	{
@@ -227,10 +231,45 @@ int RegionPlaylist::GetNestedMarkerRegion()
 								(dEnd>=(rgnpos+SNM_FUDGE_FACTOR) && dEnd<=(rgnend-SNM_FUDGE_FACTOR)))
 								return num;
 						}
-						else if (dPos>=(rgnpos+SNM_FUDGE_FACTOR) && dPos<=(rgnend-SNM_FUDGE_FACTOR))
-							return num;
 					}
 					lastx=x;
+				}
+			}
+		}
+	}
+	return -1;
+}
+
+constexpr const char* DedicatedEndRegionName = "<END>";
+
+int RegionPlaylist::GetRegionWithUnsafeMarker()
+{
+	if (EndsWithDedicatedEndRegion ()) {
+		return -1;
+	}
+
+	for (int i=0; i<GetSize(); i++)
+	{
+		if (RgnPlaylistItem* plItem = Get(i))
+		{
+			double rgnend;
+			int num;
+			const int rgnidx = EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, NULL, &rgnend, NULL, &num, NULL);
+			if (rgnidx>=0)
+			{
+				int markerIdx = -1;
+				GetLastMarkerAndCurRegion (NULL, rgnend - SNM_FUDGE_FACTOR, &markerIdx, nullptr);
+				if (markerIdx == -1) {
+					// not sure if possible
+					continue;
+				}
+				double markerPos;
+				EnumProjectMarkers2 (NULL, markerIdx, nullptr, &markerPos, nullptr, nullptr, nullptr);
+
+				constexpr double safeDistanceToPreviousMarker = 1.0;
+
+				if (rgnend - markerPos < safeDistanceToPreviousMarker) {
+					return num;
 				}
 			}
 		}
@@ -251,6 +290,19 @@ int RegionPlaylist::GetGreaterMarkerRegion(double _pos)
 	return -1;
 }
 
+bool RegionPlaylist::EndsWithDedicatedEndRegion()
+{
+	const int lastItemIdx = GetSize () - 1;
+	if (IsValidIem (lastItemIdx)) {
+		const RgnPlaylistItem* const plItem = Get(lastItemIdx);
+		const char* name;
+		EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, NULL, NULL, &name, NULL, NULL);
+		if (strcmp (name, DedicatedEndRegionName) == 0 && plItem->m_cnt < 0) {
+			return true;
+		}
+	}
+	return false;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // RegionPlaylistView
@@ -1326,23 +1378,54 @@ int GetPrevValidItem(int _plId, int _itemId, bool _startWith, bool _repeat, bool
 	return -1;
 }
 
-bool SeekItem(int _plId, int _nextItemId, int _curItemId)
+void PrepareToEndPlaylist ()
+{
+	// temp override of the "stop play at project end" option
+	if (ConfigVar<int> opt = "stopprojlen") {
+		g_oldStopprojlenPref = *opt;
+		*opt = 1;
+	}
+	g_playNext = -1;
+	g_nextRegionId = -1;
+	g_rgnLoop = 0;
+	g_nextRgnPos = SNM_GetProjectLength()+1.0;
+	g_nextRgnEnd = g_nextRgnPos+1.0;
+
+	int markerIdx = 0;
+	GetLastMarkerAndCurRegion (NULL, g_curRgnEnd - SNM_FUDGE_FACTOR, &markerIdx, nullptr);
+	EnumProjectMarkers2 (NULL, markerIdx, nullptr, &g_safeTimeToEndPlaylist, nullptr, nullptr, nullptr);
+}
+
+void SeekRegion (const int _reaperRegionId)
+{
+	const double cursorpos = GetCursorPositionEx(NULL);
+	PreventUIRefresh(1);
+	GoToRegion (NULL, g_nextRegionId, false);
+	if ((GetPlayStateEx(NULL)&1) != 1)
+		OnPlayButton();
+	SetEditCurPos2(NULL, cursorpos, false, false);
+	PreventUIRefresh(-1);
+
+#if defined(_SNM_RGNPL_DEBUG1) || defined(_SNM_RGNPL_DEBUG2)
+	char dbg[256] = "";
+	snprintf(dbg, sizeof(dbg), "GoToRegion() - Reaper Region Id: %d\n", _reaperRegionId);
+	OutputDebugString(dbg);
+#endif
+}
+
+enum class SeekMethod {
+	IgnoreMarkers,
+	ConsiderMarkers
+};
+
+bool SeekItem(const int _plId, const int _nextItemId, const int _curItemId, const SeekMethod _method)
 {
 	if (RegionPlaylist* pl = g_pls.Get()->Get(_plId))
 	{
 		// trick to stop the playlist in sync: smooth seek to the end of the project (!)
 		if (_nextItemId<0)
 		{
-			// temp override of the "stop play at project end" option
-			if (ConfigVar<int> opt = "stopprojlen") {
-				g_oldStopprojlenPref = *opt;
-				*opt = 1;
-			}
-			g_playNext = -1;
-			g_rgnLoop = 0;
-			g_nextRgnPos = SNM_GetProjectLength()+1.0;
-			g_nextRgnEnd = g_nextRgnPos+1.0;
-			SeekPlay(g_nextRgnPos);
+			PrepareToEndPlaylist ();
 			return true;
 		}
 		else if (RgnPlaylistItem* next = pl->Get(_nextItemId))
@@ -1351,6 +1434,7 @@ bool SeekItem(int _plId, int _nextItemId, int _curItemId)
 			if (EnumMarkerRegionById(NULL, next->m_rgnId, NULL, &a, &b, NULL, NULL, NULL)>=0)
 			{
 				g_playNext = _nextItemId;
+				g_nextRegionId = GetMarkerRegionNumFromId (next->m_rgnId);
 				g_playCur = _plId==g_playPlaylist ? g_playCur : _curItemId;
 				g_rgnLoop = next->m_cnt<0 ? -1 : next->m_cnt>1 ? next->m_cnt : 0;
 				g_nextRgnPos = a;
@@ -1359,7 +1443,12 @@ bool SeekItem(int _plId, int _nextItemId, int _curItemId)
 					g_curRgnPos = 0.0;
 					g_curRgnEnd = -1.0;
 				}
-				SeekPlay(g_nextRgnPos);
+
+				if (_method == SeekMethod::IgnoreMarkers) {
+					SeekRegion (g_nextRegionId);
+				} else {
+					SeekPlay(g_nextRgnPos);
+				}
 				return true;
 			}
 		}
@@ -1398,6 +1487,15 @@ void PlaylistRun()
 #endif
 	bool updated = false;
 	const double pos = GetPlayPosition2Ex(NULL);
+
+	const bool isPlaylistAboutToEnd = g_playNext == -1;
+	if (isPlaylistAboutToEnd)
+	{
+		if (!g_endOfPlaylistSeekIssued && g_safeTimeToEndPlaylist < pos) {
+			SeekPlay (g_nextRgnPos);
+			g_endOfPlaylistSeekIssued = true;
+		}
+	}
 
 	if (IsInNextRegion (pos))
 	{
@@ -1445,13 +1543,13 @@ void PlaylistRun()
 #ifdef _SNM_RGNPL_DEBUG1
 					snprintf(dbg, sizeof(dbg), "SEEK - Current = %d, Next = %d\n", g_playCur, nextId); OutputDebugString(dbg);
 #endif
-					if (!SeekItem(g_playPlaylist, nextId, g_playCur))
-						SeekItem(g_playPlaylist, -1, g_playCur); // end of playlist..
+					if (!SeekItem(g_playPlaylist, nextId, g_playCur, SeekMethod::IgnoreMarkers))
+						SeekItem(g_playPlaylist, -1, g_playCur, SeekMethod::IgnoreMarkers); // end of playlist..
 				} else {
 					if (g_rgnLoop>0)
 						g_rgnLoop--;
 
-					SeekPlay(g_nextRgnPos);
+					SeekRegion (g_nextRegionId);
 				}
 			}
 		}
@@ -1475,7 +1573,7 @@ void PlaylistRun()
 			int spareItemId = -1;
 			if (RegionPlaylist* pl = g_pls.Get()->Get(g_playPlaylist))
 				spareItemId = pl->IsInPlaylist(pos, g_repeatPlaylist, g_playCur>=0?g_playCur:0);
-			if (spareItemId<0 || !SeekItem(g_playPlaylist, spareItemId, -1))
+			if (spareItemId<0 || !SeekItem(g_playPlaylist, spareItemId, -1, SeekMethod::ConsiderMarkers))
 			{
 #ifdef _SNM_RGNPL_DEBUG2
 				snprintf(dbg, sizeof(dbg), ">>> SYNC LOSS, SEEK expected region pos = %f\n", g_nextRgnPos); OutputDebugString(dbg);
@@ -1556,11 +1654,22 @@ void PlaylistPlay(int _plId, int _itemId)
 			}
 		}
 
-		num = pl->GetNestedMarkerRegion();
+		num = pl->GetNestedRegion();
 		if (num>0)
 		{
 			char msg[256] = "";
-			snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("The playlist #%d might not work as expected!\nIt contains nested markers/regions (inside region %d at least).","sws_DLG_165"), _plId+1, num);
+			snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("The playlist #%d might not work as expected!\nIt contains nested regions (inside region %d at least).","sws_DLG_165"), _plId+1, num);
+			if (IDCANCEL == MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
+				PlaylistStop();
+				return;
+			}
+		}
+
+		const int unsafeRegion = pl->GetRegionWithUnsafeMarker();
+		if (unsafeRegion>0)
+		{
+			char msg[512] = "";
+			snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("The playlist #%d might not work as expected!\nSome regions have a marker just before the end (region %d at least).\nPlaylist might end unexpectedly, if such a region is the last one.\nPlease delete all markers that are within 1 second of the end of a region, or consider creating your own region named \"%s\" , with infinite loop, to override this warning.","sws_DLG_165"), _plId+1, unsafeRegion, DedicatedEndRegionName);
 			if (IDCANCEL == MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
 				PlaylistStop();
 				return;
@@ -1587,7 +1696,10 @@ void PlaylistPlay(int _plId, int _itemId)
 			g_plLoop = false;
 			g_unsync = false;
 			g_lastRunPos = SNM_GetProjectLength()+1.0;
-			if (SeekItem(_plId, _itemId, g_playPlaylist==_plId ? g_playCur : -1))
+			g_nextRegionId = -1;
+			g_safeTimeToEndPlaylist = -1.0;
+			g_endOfPlaylistSeekIssued = false;
+			if (SeekItem(_plId, _itemId, (g_playPlaylist==_plId ? g_playCur : -1), SeekMethod::IgnoreMarkers))
 			{
 				g_playPlaylist = _plId; // enables PlaylistRun()
 				if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
@@ -1711,7 +1823,7 @@ void PlaylistResync()
 {
 	if (RegionPlaylist* pl = GetPlaylist(g_playPlaylist))
 		if (RgnPlaylistItem* item = pl->Get(g_playCur))
-			SeekItem(g_playPlaylist, GetNextValidItem(g_playPlaylist, g_playCur, item->m_cnt<0 || item->m_cnt>1, g_repeatPlaylist, g_shufflePlaylist), g_playCur);
+			SeekItem(g_playPlaylist, GetNextValidItem(g_playPlaylist, g_playCur, item->m_cnt<0 || item->m_cnt>1, g_repeatPlaylist, g_shufflePlaylist), g_playCur, SeekMethod::IgnoreMarkers);
 }
 
 void SetPlaylistRepeat(COMMAND_T* _ct)

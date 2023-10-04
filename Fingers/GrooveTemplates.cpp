@@ -12,14 +12,6 @@
 
 #include <WDL/localize/localize.h>
 
-template<class T>
-struct subtract : public std::unary_function <T, T>
-{
-    subtract(T rhs) : _rhs(rhs) {}
-    T operator() (T lhs) { return lhs - _rhs; }
-    T _rhs;
-};
-
 bool GrooveTemplateHandler::GrooveMarker::operator== (const GrooveMarker &rhs)
 {
     return index == rhs.index;

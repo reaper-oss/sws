@@ -60,16 +60,16 @@ MediaTrack* TrackAtMouseCursor (int* context, double* position); // context: 0->
 *   |______________|_______________|_____________________________________|    *
 *   | transport    | ""            | ""                                  |    *
 *   |______________|_______________|_____________________________________|    *
-*   | tcp          | track         | ""                                  |    *
+*   | tcp          | track         | "", spacer                          |    *
 *   |              | envelope      | ""                                  |    *
 *   |              | empty         | ""                                  |    *
 *   |______________|_______________|_____________________________________|    *
-*   | mcp          | track         | ""                                  |    *
+*   | mcp          | track         | "", spacer                          |    *
 *   |              | empty         | ""                                  |    *
 *   |______________|_______________|_____________________________________|    *
 *   | arrange      | track         | empty,                              |    *
 *   |              |               | item, item_stretch_marker,          |    *
-*   |              |               | env_point, env_segment              |    *
+*   |              |               | env_point, env_segment, spacer      |    *
 *   |              | envelope      | empty, env_point, env_segment       |    *
 *   |              | empty         | ""                                  |    *
 *   |______________|_______________|_____________________________________|    *
@@ -162,7 +162,7 @@ private:
 	int GetRulerLaneHeight (int rulerH, int lane);
 	int IsHwndMidiEditor (HWND hwnd, HWND* midiEditor, HWND* subView);
 	static bool SortEnvHeightsById (const pair<int,int>& left, const pair<int,int>& right);
-	void GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, MediaTrack** _track, list<TrackEnvelope*>* envelopes, int* height, int* offset);
+	void GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, MediaTrack** _track, list<TrackEnvelope*>* envelopes, int* height, int* offset, int* spacerSize);
 
 	BR_MouseInfo::MouseInfo m_mouseInfo;
 	POINT m_ccLaneClickPoint;

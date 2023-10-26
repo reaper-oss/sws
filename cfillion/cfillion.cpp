@@ -479,6 +479,7 @@ BOOL CF_GetScrollInfo(HWND hwnd, const int bar, LPSCROLLINFO si)
       MediaTrack *track { CSurf_TrackFromID(i, false) };
       if(TcpVis(track)) {
         si->nPos = -static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPY"));
+        si->nPos += GetTrackSpacerSize(track);
         si->fMask &= ~SIF_POS;
         break;
       }

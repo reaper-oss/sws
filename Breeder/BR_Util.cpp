@@ -2119,6 +2119,7 @@ int GetTrackHeightFromVZoomIndex (MediaTrack* track, int vZoom)
 				// Calculate track height (method stolen from Zoom.cpp - Thanks Tim!)
 				int normalizedZoom = (vZoom < 30) ? (vZoom - 4) : (30 + 3*(vZoom - 30) - 4);
 				height = minHeight + ((maxHeight-minHeight)*normalizedZoom) / 56;
+				height += GetTrackSpacerSize(track);
 			}
 		}
 	}
@@ -2143,13 +2144,15 @@ int GetMasterTcpGap ()
 
 int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int* bottomGap /*=NULL*/)
 {
+	int spacerSize = GetTrackSpacerSize(track);
+
 	if (offsetY)
 	{
 		// Get track's start Y coordinate
 		SCROLLINFO si{sizeof(SCROLLINFO), SIF_POS};
 		CF_GetScrollInfo(GetArrangeWnd(), SB_VERT, &si);
 
-		*offsetY = si.nPos + static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPY"));
+		*offsetY = si.nPos + static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPY")) - spacerSize;
 	}
 
 	if (!TcpVis(track))
@@ -2159,7 +2162,7 @@ int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int*
 	if (compact == 2)                              // wrong value if track was resized prior to compacting so return here
 		return SNM_GetIconTheme()->tcp_supercollapsed_height;
 
-	const int height = static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPH"));
+	const int height = static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPH")) + spacerSize;
 
 	if (topGap || bottomGap)
 		GetTrackGap(height, topGap, bottomGap);
@@ -2231,6 +2234,16 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 		GetEnvelopeInfo_Value(envelope, drawableRangeOnly ? "I_TCPH_USED" : "I_TCPH"));
 
 	return envelopeHeight;
+}
+
+int GetTrackSpacerSize (MediaTrack* track)
+{
+	static const ConfigVar<int> trackgapmax("trackgapmax");
+
+	if (trackgapmax && (!track || GetMediaTrackInfo_Value(track, "I_SPACER")))
+		return *trackgapmax;
+
+	return 0;
 }
 
 /******************************************************************************
@@ -2819,6 +2832,7 @@ MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext, POINT ptScreen)
 	MediaTrack* track = NULL;
 	HWND hwndParent = GetParent(hwnd);
 	int context = 0;
+	bool inSpacer = false;
 
 	if (!track)
 	{
@@ -2838,12 +2852,16 @@ MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext, POINT ptScreen)
 					if (!GetMediaTrackInfo_Value(chktrack, "B_SHOWINTCP"))
 						continue;
 
-					const double ypos = GetMediaTrackInfo_Value(chktrack, "I_TCPY"),
-					             h    = GetMediaTrackInfo_Value(chktrack, "I_TCPH");
+					const int spacerSize = GetTrackSpacerSize(chktrack);
+
+					const double ypos = GetMediaTrackInfo_Value(chktrack, "I_TCPY") - spacerSize,
+					             h    = GetMediaTrackInfo_Value(chktrack, "I_TCPH") + spacerSize;
 
 					if (ptloc.y >= ypos && ptloc.y < ypos + h)
 					{
 						track = chktrack;
+						if (ptloc.y < ypos + spacerSize)
+							inSpacer = true;
 						break;
 					}
 				}
@@ -2855,9 +2873,9 @@ MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext, POINT ptScreen)
 			track = (MediaTrack*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
 
 		if (track)
-			context = 1;
+			context = HwndToTrack_TCP;
 		else if (hwnd == tcp)
-			context = 1;
+			context = HwndToTrack_TCP;
 	}
 
 	if (!track)
@@ -2881,11 +2899,12 @@ MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext, POINT ptScreen)
 					void *p;
 					if (!(p=GetSetMediaTrackInfo(chktrack,"B_SHOWINMIXER",NULL)) || !*(bool *)p) 
 						continue;
+					int spacerSize = GetTrackSpacerSize(chktrack);
 					p = GetSetMediaTrackInfo(chktrack,"I_MCPX",NULL);
-					const int xpos = p ? *(int *)p : 0;
+					const int xpos = p ? *(int *)p - spacerSize: 0;
 					p = GetSetMediaTrackInfo(chktrack,"I_MCPW",NULL);
-					const int w = p ? *(int *)p : 0;
-					if (ptloc.x < xpos || ptloc.x >= xpos + w) 
+					const int w = p ? *(int *)p + spacerSize : 0;
+					if (ptloc.x < xpos || ptloc.x >= xpos + w)
 						continue;
 					p = GetSetMediaTrackInfo(chktrack,"I_MCPY",NULL);
 					const int ypos = p ? *(int *)p : 0;
@@ -2894,6 +2913,8 @@ MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext, POINT ptScreen)
 					if (ptloc.y >= ypos && ptloc.y < ypos + h)
 					{
 						track = chktrack;
+						if (ptloc.x < xpos + spacerSize)
+							inSpacer = true;
 						break;
 					}
 				}
@@ -2910,13 +2931,16 @@ MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext, POINT ptScreen)
 			track = (MediaTrack*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
 
 		if (track)
-			context = 2;
+			context = HwndToTrack_MCP;
 		else if (hwnd == mcp || hwnd == mixerMaster)
-			context = 2;
+			context = HwndToTrack_MCP;
 	}
 
 	if (!ValidatePtr(track, "MediaTrack*"))
 		track = NULL;
+
+	if (track && inSpacer)
+		context |= HwndToTrack_Spacer;
 
 	WritePtr(hwndContext, context);
 	return track;

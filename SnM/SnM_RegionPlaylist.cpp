@@ -1510,8 +1510,7 @@ static bool IsInCurrentRegion (const double pos)
 
 static bool IsInNextRegion (const double pos)
 {
-	if (g_playCur == g_playNext) {
-		// happens when region is looped
+	if (g_playCur == g_playNext || g_plLoop) {
 		return IsInCurrentRegion(pos);
 	}
 
@@ -1555,10 +1554,11 @@ void PlaylistRun()
 
 		if (!g_plLoop || g_unsync || pos<g_lastRunPos)
 		{
+			// Playlist Item != Region !!
+			const bool isFirstPassInPlItem = g_playCur != g_playNext || (g_plLoop && pos<g_lastRunPos);
 			g_plLoop = false;
-
-			const bool isFirstPassInRegion = g_playCur != g_playNext;
-			if (isFirstPassInRegion)
+			
+			if (isFirstPassInPlItem)
 			{
 #ifdef _SNM_RGNPL_DEBUG1
 					OutputDebugString("\n");
@@ -1574,7 +1574,8 @@ void PlaylistRun()
 				g_curRgnEnd = g_nextRgnEnd;
 			}
 
-			const bool isNewPassInRegion = isFirstPassInRegion || pos<g_lastRunPos;
+			// Playlist Item != Region !!
+			const bool isNewPassInRegion = isFirstPassInPlItem || pos<g_lastRunPos;
 			if (isNewPassInRegion || g_unsync) {
 				updated = true;
 				

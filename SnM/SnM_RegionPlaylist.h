@@ -59,7 +59,6 @@ public:
 	int IsInfinite();
 	double GetLength();
 	int GetNestedRegion();
-	bool EndsWithDedicatedEndRegion();
 	int GetRegionWithUnsafeMarker();
 	int GetGreaterMarkerRegion(double _pos);
 	WDL_FastString m_name;

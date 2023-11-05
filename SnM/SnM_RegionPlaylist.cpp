@@ -240,14 +240,10 @@ int RegionPlaylist::GetNestedRegion()
 	return -1;
 }
 
-constexpr const char* DedicatedEndRegionName = "<END>";
+constexpr double safeDistanceToPreviousMarkerForEndOfPlaylist = 1.0; // in seconds
 
 int RegionPlaylist::GetRegionWithUnsafeMarker()
 {
-	if (EndsWithDedicatedEndRegion ()) {
-		return -1;
-	}
-
 	for (int i=0; i<GetSize(); i++)
 	{
 		if (RgnPlaylistItem* plItem = Get(i))
@@ -266,9 +262,7 @@ int RegionPlaylist::GetRegionWithUnsafeMarker()
 				double markerPos;
 				EnumProjectMarkers2 (NULL, markerIdx, nullptr, &markerPos, nullptr, nullptr, nullptr);
 
-				constexpr double safeDistanceToPreviousMarker = 1.0;
-
-				if (rgnend - markerPos < safeDistanceToPreviousMarker) {
+				if (rgnend - markerPos < safeDistanceToPreviousMarkerForEndOfPlaylist) {
 					return num;
 				}
 			}
@@ -288,20 +282,6 @@ int RegionPlaylist::GetGreaterMarkerRegion(double _pos)
 				return num;
 		}
 	return -1;
-}
-
-bool RegionPlaylist::EndsWithDedicatedEndRegion()
-{
-	const int lastItemIdx = GetSize () - 1;
-	if (IsValidIem (lastItemIdx)) {
-		const RgnPlaylistItem* const plItem = Get(lastItemIdx);
-		const char* name;
-		EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, NULL, NULL, &name, NULL, NULL);
-		if (strcmp (name, DedicatedEndRegionName) == 0 && plItem->m_cnt < 0) {
-			return true;
-		}
-	}
-	return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1561,7 +1541,7 @@ void PlaylistRun()
 			if (isFirstPassInPlItem)
 			{
 #ifdef _SNM_RGNPL_DEBUG1
-					OutputDebugString("\n");
+				OutputDebugString("\n");
 				snprintf(dbg, sizeof(dbg), "NEXT DETECTED - pos = %f\n", pos); OutputDebugString(dbg);
 				snprintf(dbg, sizeof(dbg), "                g_curRgnPos = %f, g_curRgnEnd = %f\n", g_curRgnPos, g_curRgnEnd); OutputDebugString(dbg);
 				snprintf(dbg, sizeof(dbg), "                g_nextRgnPos = %f, g_nextRgnEnd = %f\n", g_nextRgnPos, g_nextRgnEnd); OutputDebugString(dbg);
@@ -1569,7 +1549,7 @@ void PlaylistRun()
 				snprintf(dbg, sizeof(dbg), "                g_unsync = %d, g_lastRunPos = %f\n", g_unsync, g_lastRunPos); OutputDebugString(dbg);
 #endif
 				updated = true;
-				g_playCur = g_playNext;
+								g_playCur = g_playNext;
 				g_curRgnPos = g_nextRgnPos;
 				g_curRgnEnd = g_nextRgnEnd;
 			}
@@ -1610,7 +1590,7 @@ void PlaylistRun()
 	}
 	else if (g_curRgnPos<g_curRgnEnd) // relevant vars?
 	{
-		// seek play requested, waiting for region switch..
+		// seek requested, waiting for region switch..
 		if (IsInCurrentRegion (pos))
 			// a bunch of calls end here!
 			g_unsync = false;
@@ -1722,7 +1702,15 @@ void PlaylistPlay(int _plId, int _itemId)
 		if (unsafeRegion>0)
 		{
 			char msg[512] = "";
-			snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("The playlist #%d might not work as expected!\nSome regions have a marker just before the end (region %d at least).\nPlaylist might end unexpectedly, if such a region is the last one.\nPlease delete all markers that are within 1 second of the end of a region, or consider creating your own region named \"%s\" , with infinite loop, to override this warning.","sws_DLG_165"), _plId+1, unsafeRegion, DedicatedEndRegionName);
+			snprintf(msg, sizeof(msg),
+					 __LOCALIZE_VERFMT(
+						"The playlist #%d might not work as expected!\n"
+						"Some regions contain a marker just before the end (region %d at least).\n"
+						"Playlist might end unexpectedly, if such a region is the last one.\n"
+						"Make sure that no markers are within the last %.1f seconds of any region.",
+						"sws_DLG_165"
+					 ),
+					 _plId+1, unsafeRegion, safeDistanceToPreviousMarkerForEndOfPlaylist);
 			if (IDCANCEL == MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
 				PlaylistStop();
 				return;

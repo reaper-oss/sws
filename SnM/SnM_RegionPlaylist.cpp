@@ -517,13 +517,15 @@ void GetMonitoringInfo(WDL_FastString* _curNum, WDL_FastString* _cur,
 			// => best effort: find region by play pos
 			else
 			{
-				int id, idx = FindMarkerRegion(NULL, GetPlayPositionEx(NULL), SNM_REGION_MASK, &id);
-				if (id > 0)
-				{
-					char buf[64]="";
-					EnumMarkerRegionDesc(NULL, idx, buf, sizeof(buf), SNM_REGION_MASK, false, true, false);
-					_curNum->SetFormatted(16, "%d", GetMarkerRegionNumFromId(id));
-					_cur->Set(buf);
+				if (-1 != g_playCur) {
+					int id, idx = FindMarkerRegion(NULL, GetPlayPositionEx(NULL), SNM_REGION_MASK, &id);
+					if (id > 0)
+					{
+						char buf[64]="";
+						EnumMarkerRegionDesc(NULL, idx, buf, sizeof(buf), SNM_REGION_MASK, false, true, false);
+						_curNum->SetFormatted(16, "%d", GetMarkerRegionNumFromId(id));
+						_cur->Set(buf);
+					}
 				}
 			}
 
@@ -1450,7 +1452,11 @@ bool SeekItem(const int _plId, const int _nextItemId, const int _curItemId, cons
 		// trick to stop the playlist in sync: smooth seek to the end of the project (!)
 		if (_nextItemId<0)
 		{
-			PrepareToEndPlaylist ();
+			if (_curItemId >= 0) {
+				PrepareToEndPlaylist ();
+			} else {
+				SeekPlay(g_nextRgnPos);
+			}
 			return true;
 		}
 		else if (RgnPlaylistItem* next = pl->Get(_nextItemId))
@@ -1549,7 +1555,7 @@ void PlaylistRun()
 				snprintf(dbg, sizeof(dbg), "                g_unsync = %d, g_lastRunPos = %f\n", g_unsync, g_lastRunPos); OutputDebugString(dbg);
 #endif
 				updated = true;
-								g_playCur = g_playNext;
+				g_playCur = g_playNext;
 				g_curRgnPos = g_nextRgnPos;
 				g_curRgnEnd = g_nextRgnEnd;
 			}
@@ -1619,6 +1625,11 @@ void PlaylistRun()
 			}
 #endif
 		}
+	}
+
+	if (-1 == g_playCur && g_unsync) {
+		// Stop the 'SYNC LOSS' text from flashing after playlist ended. Looks unprofessional.
+		updated = false;
 	}
 
 	g_lastRunPos = pos;

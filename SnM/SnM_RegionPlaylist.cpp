@@ -1396,13 +1396,15 @@ void PrepareToEndPlaylist ()
 	EnumProjectMarkers2 (NULL, markerIdx, nullptr, &g_safeTimeToEndPlaylist, nullptr, nullptr, nullptr);
 }
 
-void SeekRegion (const int _reaperRegionId)
+// Should only be called from SeekRegionDelayer and SeekRegion
+void SeekRegionImpl (const int _reaperRegionId)
 {
 	const double cursorpos = GetCursorPositionEx(NULL);
 	PreventUIRefresh(1);
-	GoToRegion (NULL, g_nextRegionId, false);
-	if ((GetPlayStateEx(NULL)&1) != 1)
+	GoToRegion (NULL, _reaperRegionId, false);
+	if ((GetPlayStateEx(NULL)&1) != 1) {
 		OnPlayButton();
+	}
 	SetEditCurPos2(NULL, cursorpos, false, false);
 	PreventUIRefresh(-1);
 
@@ -1411,6 +1413,49 @@ void SeekRegion (const int _reaperRegionId)
 	snprintf(dbg, sizeof(dbg), "GoToRegion() - Reaper Region Id: %d\n", _reaperRegionId);
 	OutputDebugString(dbg);
 #endif
+}
+
+// GoToRegion timing issue workaround
+class SeekRegionDelayer {
+	static constexpr int delayAmount = 5;
+
+	int regionId;
+	int currentDelay = -1;
+
+public:
+	void Schedule (int _regionToSchedule)
+	{
+		regionId = _regionToSchedule;
+		currentDelay = delayAmount;
+	}
+
+	void Reset ()
+	{
+		currentDelay = -1;
+	}
+
+	void Update ()
+	{
+		if (currentDelay > 0)
+			--currentDelay;
+		
+		if (currentDelay == 0) {
+			currentDelay = -1;
+			SeekRegionImpl(regionId);
+		}
+	}
+};
+
+SeekRegionDelayer g_seekRegionDelayer;
+
+void SeekRegion (const int _reaperRegionId)
+{
+	if (g_playPlaylist<0) {
+		// Called from PlaylistPlay to play the very first region --> must not delay
+		SeekRegionImpl(_reaperRegionId);
+	} else {
+		g_seekRegionDelayer.Schedule(_reaperRegionId);
+	}
 }
 
 enum class SeekMethod {
@@ -1456,21 +1501,26 @@ bool SeekItem(const int _plId, const int _nextItemId, const int _curItemId, cons
 	return false;
 }
 
-static bool IsInNextRegion (const double pos)
-{
-	// NF: potentially fix #886
-	// it seems that if '+0.01' isn't added to 'pos' below, adjacent regions are no more occasionally skipped
-	// https://forum.cockos.com/showpost.php?p=1935561&postcount=6 and my own tests so far seem to confirm also
-	// but I'm unsure what potential side effects this might have
-	return g_nextRgnPos <= (pos/*+0.01*/) && pos <= g_nextRgnEnd;	//JFB!! +0.01 because 'pos' can be a bit ahead of time
-																	// +1 sample block would be better, but no API..
-																	// note: sync loss detection will deal with this in the worst case
-}
+constexpr double timeEps = 0.01; // 10 ms
 
 static bool IsInCurrentRegion (const double pos)
 {
-	return g_curRgnPos <= (pos+0.01) && pos <= g_curRgnEnd; 	//JFB!! +0.01 because 'pos' can be a bit ahead of time
-																// +1 sample block would be better, but no API..
+	return (g_curRgnPos-timeEps) <= pos && pos < (g_curRgnEnd+timeEps);
+}
+
+static bool IsInNextRegion (const double pos)
+{
+	if (g_playCur == g_playNext) {
+		// happens when region is looped
+		return IsInCurrentRegion(pos);
+	}
+
+	// We need to be careful because the relaxed intervals
+	// [g_curRgnPos  - timeEps, g_curRgnEnd  + timeEps)
+	// [g_nextRgnPos - timeEps, g_nextRgnEnd + timeEps)
+	// can overlap if the regions are very close or touching
+	return !IsInCurrentRegion(pos) &&
+			(g_nextRgnPos-timeEps) <= pos && pos < (g_nextRgnEnd+timeEps);
 }
 
 // the meat!
@@ -1481,6 +1531,8 @@ void PlaylistRun()
 {
 	if (g_playPlaylist<0)
 		return;
+
+	g_seekRegionDelayer.Update();
 
 #if defined(_SNM_RGNPL_DEBUG1) || defined(_SNM_RGNPL_DEBUG2)
 	char dbg[256] = "";
@@ -1701,6 +1753,7 @@ void PlaylistPlay(int _plId, int _itemId)
 			g_endOfPlaylistSeekIssued = false;
 			if (SeekItem(_plId, _itemId, (g_playPlaylist==_plId ? g_playCur : -1), SeekMethod::IgnoreMarkers))
 			{
+				g_seekRegionDelayer.Reset();
 				g_playPlaylist = _plId; // enables PlaylistRun()
 				if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
 					w->Update(); // for the play button, next/previous region actions, etc....

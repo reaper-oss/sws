@@ -240,7 +240,7 @@ int RegionPlaylist::GetNestedRegion()
 	return -1;
 }
 
-constexpr double safeDistanceToPreviousMarkerForEndOfPlaylist = 1.0; // in seconds
+constexpr double safeDistanceToPreviousMarkerForEndOfPlaylist = 0.5; // in seconds
 
 int RegionPlaylist::GetRegionWithUnsafeMarker()
 {
@@ -263,6 +263,28 @@ int RegionPlaylist::GetRegionWithUnsafeMarker()
 				EnumProjectMarkers2 (NULL, markerIdx, nullptr, &markerPos, nullptr, nullptr, nullptr);
 
 				if (rgnend - markerPos < safeDistanceToPreviousMarkerForEndOfPlaylist) {
+					return num;
+				}
+			}
+		}
+	}
+	return -1;
+}
+
+constexpr double minimalSafeRegionLength = 0.5; // in seconds
+
+int RegionPlaylist::GetDangerouslyShortRegion()
+{
+	for (int i=0; i<GetSize(); i++)
+	{
+		if (RgnPlaylistItem* plItem = Get(i))
+		{
+			double beg, end;
+			int num;
+			const int rgnidx = EnumMarkerRegionById(NULL, plItem->m_rgnId, NULL, &beg, &end, NULL, &num, NULL);
+			if (rgnidx>=0) {
+				const double length = end - beg;
+				if (length < minimalSafeRegionLength) {
 					return num;
 				}
 			}
@@ -1714,14 +1736,21 @@ void PlaylistPlay(int _plId, int _itemId)
 		{
 			char msg[512] = "";
 			snprintf(msg, sizeof(msg),
-					 __LOCALIZE_VERFMT(
-						"The playlist #%d might not work as expected!\n"
-						"Some regions contain a marker just before the end (region %d at least).\n"
-						"Playlist might end unexpectedly, if such a region is the last one.\n"
-						"Make sure that no markers are within the last %.1f seconds of any region.",
-						"sws_DLG_165"
-					 ),
+					 __LOCALIZE_VERFMT("The playlist #%d might not work as expected!\nSome regions contain a marker just before the end (region %d at least).\nPlaylist might end unexpectedly, if such a region is the last one.\nMake sure that no markers are within the last %.1f seconds of any region.", "sws_DLG_165"),
 					 _plId+1, unsafeRegion, safeDistanceToPreviousMarkerForEndOfPlaylist);
+			if (IDCANCEL == MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
+				PlaylistStop();
+				return;
+			}
+		}
+
+		const int dangerouslyShortRegion = pl->GetDangerouslyShortRegion();
+		if (dangerouslyShortRegion>0)
+		{
+			char msg[256] = "";
+			snprintf(msg, sizeof(msg),
+					 __LOCALIZE_VERFMT("The playlist #%d might not work as expected!\nRegion %d is too short.\nRegions shorter than %.1f seconds are not supported.", "sws_DLG_165"),
+					 _plId+1, dangerouslyShortRegion, minimalSafeRegionLength);
 			if (IDCANCEL == MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
 				PlaylistStop();
 				return;

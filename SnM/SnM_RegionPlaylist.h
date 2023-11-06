@@ -60,6 +60,7 @@ public:
 	double GetLength();
 	int GetNestedRegion();
 	int GetRegionWithUnsafeMarker();
+	int GetDangerouslyShortRegion();
 	int GetGreaterMarkerRegion(double _pos);
 	WDL_FastString m_name;
 };

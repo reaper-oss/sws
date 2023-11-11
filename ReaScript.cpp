@@ -37,6 +37,7 @@
 #include "cfillion/cfillion.hpp"
 #include "nofish/NF_ReaScript.h"
 #include "Misc/Analysis.h"
+#include "TRM/trm.h"
 
 
 // if _TEST_REASCRIPT_EXPORT is #define'd, you'll need to rename "APITESTFUNC" into "APIFUNC" in g_apidefs too
@@ -384,6 +385,10 @@ I_PITCHMODE    highest 16 bits=pitch shift mode (see EnumPitchShiftModes), lower
 	{ APIFUNC(CF_Preview_Play), "bool", "CF_Preview*", "preview", "Start playback of the configured preview object.", },
 	{ APIFUNC(CF_Preview_Stop), "bool", "CF_Preview*", "preview", "Stop and destroy a preview object.", },
 	{ APIFUNC(CF_Preview_StopAll), "void", "", "", "Stop and destroy all currently active preview objects.", },
+
+
+	{ APIFUNC(TRM_DEV_TimerPush), "void", "const char*", "measurePointName", "", },
+	{ APIFUNC(TRM_DEV_TimerPop), "void", "", "", "", },
 
 	{ NULL, } // denote end of table
 };

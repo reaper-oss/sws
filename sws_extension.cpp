@@ -57,6 +57,7 @@
 #include "Wol/wol.h"
 #include "nofish/nofish.h"
 #include "snooks/snooks.h"
+#include "TRM/trm.h"
 
 #define LOCALIZE_IMPORT_PREFIX "sws_"
 #include <WDL/localize/localize-import.h>
@@ -1295,6 +1296,8 @@ error:
 			ERR_RETURN("nofish init error.")
 		if (!snooks_Init())
 			ERR_RETURN("snooks init error.")
+		if (!TRM_Init())
+			ERR_RETURN("TRM init error.")
 		if (!SNM_Init(rec)) // keep it as the last init (for cycle actions)
 			ERR_RETURN("S&M init error.")
 

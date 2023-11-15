@@ -1672,11 +1672,10 @@ void CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _s
 {
 	if (_iCol == COL_L_NAME)
 	{
-		if (strchr(_str, CA_TGL1) || strchr(_str, CA_TGL2) || strchr(_str, CA_SEP) || 
-			strchr(_str, '\"') || strchr(_str, '\'') || strchr(_str, '`'))
+		if (strchr(_str, CA_TGL1) || strchr(_str, CA_TGL2) || strchr(_str, CA_SEP))
 		{
 			WDL_FastString msg(__LOCALIZE("Cycle action names cannot contain any of the following characters:","sws_DLG_161"));
-			msg.AppendFormatted(256, "%c %c %c \" ' ` ", CA_TGL1, CA_TGL2, CA_SEP);
+			msg.AppendFormatted(256, "%c %c %c", CA_TGL1, CA_TGL2, CA_SEP);
 			MessageBox(g_caWndMgr.GetMsgHWND(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
 			return;
 		}

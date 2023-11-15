@@ -32,6 +32,7 @@
 #include "TrackParams.h"
 #include "TrackSel.h"
 #include "../nofish/nofish.h" // NF_IsObeyTrackHeightLockEnabled
+#include "../SnM/SnM_Dlg.h"   // SNM_GetIconTheme
 
 #include <WDL/localize/localize.h>
 
@@ -230,6 +231,7 @@ void DisableMasterFX(COMMAND_T*) { GetSetMediaTrackInfo(CSurf_TrackFromID(0, fal
 
 void MinimizeTracks(COMMAND_T*)
 {
+	const int minTrackHeight = SNM_GetIconTheme()->tcp_small_height;
 	const bool obeyHeightLock = NF_IsObeyTrackHeightLockEnabled();
 
 	for (int i = 0; i <= GetNumTracks(); i++)
@@ -237,7 +239,7 @@ void MinimizeTracks(COMMAND_T*)
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (GetMediaTrackInfo_Value(tr, "I_SELECTED") &&
 				(!obeyHeightLock || !GetMediaTrackInfo_Value(tr, "B_HEIGHTLOCK")))
-			SetMediaTrackInfo_Value(tr, "I_HEIGHTOVERRIDE", 1);
+			SetMediaTrackInfo_Value(tr, "I_HEIGHTOVERRIDE", minTrackHeight);
 	}
 	TrackList_AdjustWindows(false);
 	UpdateTimeline();

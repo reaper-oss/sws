@@ -31,6 +31,7 @@
 
 #include "TrackParams.h"
 #include "TrackSel.h"
+#include "../nofish/nofish.h" // NF_IsObeyTrackHeightLockEnabled
 
 #include <WDL/localize/localize.h>
 
@@ -227,13 +228,16 @@ void RestMasterFXEn(COMMAND_T*)  { GetSetMediaTrackInfo(CSurf_TrackFromID(0, fal
 void EnableMasterFX(COMMAND_T*)  { GetSetMediaTrackInfo(CSurf_TrackFromID(0, false), "I_FXEN", &g_i1); }
 void DisableMasterFX(COMMAND_T*) { GetSetMediaTrackInfo(CSurf_TrackFromID(0, false), "I_FXEN", &g_i0); }
 
-void MinimizeTracks(COMMAND_T* = NULL)
+void MinimizeTracks(COMMAND_T*)
 {
+	const bool obeyHeightLock = NF_IsObeyTrackHeightLockEnabled();
+
 	for (int i = 0; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-			GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", &g_i1);
+		if (GetMediaTrackInfo_Value(tr, "I_SELECTED") &&
+				(!obeyHeightLock || !GetMediaTrackInfo_Value(tr, "B_HEIGHTLOCK")))
+			SetMediaTrackInfo_Value(tr, "I_HEIGHTOVERRIDE", 1);
 	}
 	TrackList_AdjustWindows(false);
 	UpdateTimeline();

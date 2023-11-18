@@ -115,9 +115,10 @@ bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr)
 	bool match = false;
 	if (_tr)
 	{
+		const MediaTrackID trId = TrackToTrackID(_tr);
 		for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++)
 		{
-			if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == _tr)
+			if (g_SNM_TrackNotes.Get()->Get(i)->GetTrackID() == trId)
 			{
 				match = stristr(g_SNM_TrackNotes.Get()->Get(i)->GetNotes(), _searchStr) != NULL;
 				break;

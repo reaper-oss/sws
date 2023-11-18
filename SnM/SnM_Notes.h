@@ -55,26 +55,26 @@ enum {
 
 class SNM_TrackNotes {
 public:
+	// The current project (project == NULL) doesn't always match
+	// the notes' project when saving in SaveExtensionConfig [#1141]
 	SNM_TrackNotes(ReaProject* project, const GUID* guid, const char* notes)
-		: m_project{project}, m_guid{*guid}, m_notes{notes}
-	{
-		// The current project (project == NULL) doen't always match
-		// the notes' project when saving in SaveExtensionConfig [#1141]
+		: m_trackId{(project == nullptr ? EnumProjects(-1, nullptr, 0) : project), *guid}
+		, m_notes{notes}
+	{}
 
-		if (!project)
-			m_project = EnumProjects(-1, nullptr, 0);
-	}
+	const MediaTrackID& GetTrackID	  () const { return m_trackId; 			 }
+	const GUID* 		GetGUID		  () const { return &m_trackId.guid; 	 }
+	const char* 		GetNotes	  () const { return m_notes.Get(); 		 }
+	int 				GetNotesLength() const { return m_notes.GetLength(); }
 
-	MediaTrack* GetTrack() { return GuidToTrack(m_project, &m_guid); }
-	const GUID* GetGUID() { return &m_guid; }
-	const char *GetNotes() const { return m_notes.Get(); }
-	int GetNotesLength() const { return m_notes.GetLength(); }
-	void SetNotes(const char *notes) { m_notes.Set(notes); }
+	// use MediaTrackID for lookup instead of this
+	MediaTrack* 	GetTrack	  () const { return TrackIDToTrack(m_trackId); }
+
+	void 			SetNotes(const char *notes) { m_notes.Set(notes); }
 
 private:
-	ReaProject *m_project;
-	GUID m_guid;
-	WDL_FastString m_notes;
+	const MediaTrackID m_trackId;
+	WDL_FastString     m_notes;
 };
 
 class SNM_RegionSubtitle {

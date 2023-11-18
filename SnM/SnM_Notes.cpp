@@ -769,10 +769,12 @@ void NotesWnd::SaveCurrentTrackNotes(bool _wantUndo)
 	if (g_trNote && CSurf_TrackToID(g_trNote, false) >= 0)
 	{
 		GetWindowText(m_edit, g_lastText, sizeof(g_lastText));
+
+		const MediaTrackID trId = TrackToTrackID(g_trNote);
 		bool found = false;
 		for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++) 
 		{
-			if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == g_trNote)
+			if (g_SNM_TrackNotes.Get()->Get(i)->GetTrackID() == trId)
 			{
 				g_SNM_TrackNotes.Get()->Get(i)->SetNotes(g_lastText); // CRLF removed only when saving the project..
 				found = true;
@@ -1007,8 +1009,9 @@ int NotesWnd::UpdateTrackNotes()
 		{
 			g_trNote = selTr;
 
+			const MediaTrackID trId = TrackToTrackID(g_trNote);
 			for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++)
-				if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == g_trNote) {
+				if (g_SNM_TrackNotes.Get()->Get(i)->GetTrackID() == trId) {
 					SetText(g_SNM_TrackNotes.Get()->Get(i)->GetNotes());
 					return REQUEST_REFRESH;
 				}
@@ -1690,8 +1693,13 @@ int IsNotesLocked(COMMAND_T*) {
 ******************************************************************************/
 const char* NFDoGetSWSTrackNotes(MediaTrack* track)
 {
+	bool isValid = false;
+	const MediaTrackID trId = TrackToTrackID(track, &isValid);
+	if (!isValid)
+		return "";
+
 	for (int i = 0; i < g_SNM_TrackNotes.Get()->GetSize(); i++) {
-		if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == track) {
+		if (g_SNM_TrackNotes.Get()->Get(i)->GetTrackID() == trId) {
 			return g_SNM_TrackNotes.Get()->Get(i)->GetNotes();
 			break;
 		}
@@ -1702,12 +1710,17 @@ const char* NFDoGetSWSTrackNotes(MediaTrack* track)
 
 void NFDoSetSWSTrackNotes(MediaTrack* track, const char* buf)
 {
+	bool isValid = false;
+	const MediaTrackID trId = TrackToTrackID(track, &isValid);
+	if (!isValid)
+		return;
+
 	if (MarkProjectDirty)
 		MarkProjectDirty(NULL);
 
 	for (int i = 0; i < g_SNM_TrackNotes.Get()->GetSize(); i++) {
 
-		if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == track) {
+		if (g_SNM_TrackNotes.Get()->Get(i)->GetTrackID() == trId) {
 			g_SNM_TrackNotes.Get()->Get(i)->SetNotes(buf);
 
 			// update displayed text if Notes window is visible and notes for set track are displayed

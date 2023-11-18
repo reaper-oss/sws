@@ -223,25 +223,44 @@ void SaveWindowPos(HWND hwnd, const char* cKey);
 void RestoreWindowPos(HWND hwnd, const char* cKey, bool bRestoreSize = true);
 void SetWindowPosAtMouse(HWND hwnd);
 
-MediaTrack* GetFirstSelectedTrack();
-int NumSelTracks();
-void SaveSelected();
-void RestoreSelected();
-void ClearSelected();
-int GetFolderDepth(MediaTrack* tr, int* iType, MediaTrack** nextTr);
-int GetTrackVis(MediaTrack* tr); // &1 == mcp, &2 == tcp
-void SetTrackVis(MediaTrack* tr, int vis); // &1 == mcp, &2 == tcp
-int AboutBoxInit(); // Not worth its own .h
-HWND GetTrackWnd();
-HWND GetRulerWnd();
-const GUID* TrackToGuid(ReaProject*, MediaTrack*);
-inline const GUID* TrackToGuid(MediaTrack* tr) { return TrackToGuid(nullptr, tr); }
-MediaTrack* GuidToTrack(ReaProject*, const GUID*);
-inline MediaTrack* GuidToTrack(const GUID* guid) { return GuidToTrack(nullptr, guid); }
-bool GuidsEqual(const GUID* g1, const GUID* g2);
-bool TrackMatchesGuid(ReaProject*, MediaTrack*, const GUID*);
-inline bool TrackMatchesGuid(MediaTrack* tr, const GUID* g) { return TrackMatchesGuid(nullptr, tr, g); }
-const char *stristr(const char* a, const char* b);
+MediaTrack* 	GetFirstSelectedTrack();
+int 			NumSelTracks();
+void 			SaveSelected();
+void 			RestoreSelected();
+void 			ClearSelected();
+int 			GetFolderDepth(MediaTrack* tr, int* iType, MediaTrack** nextTr);
+int 			GetTrackVis(MediaTrack* tr); // &1 == mcp, &2 == tcp
+void 			SetTrackVis(MediaTrack* tr, int vis); // &1 == mcp, &2 == tcp
+int 			AboutBoxInit(); // Not worth its own .h
+HWND 			GetTrackWnd();
+HWND 			GetRulerWnd();
+bool 			GuidsEqual(const GUID* g1, const GUID* g2);
+const char*		stristr(const char* a, const char* b);
+ReaProject*		GetProject(MediaTrack* track);
+
+bool 			TrackMatchesGuid(ReaProject*, MediaTrack*, const GUID*);
+inline bool 	TrackMatchesGuid(MediaTrack* tr, const GUID* g) { return TrackMatchesGuid(nullptr, tr, g); }
+
+const GUID* 		TrackToGuid(ReaProject*, MediaTrack*);
+inline const GUID* 	TrackToGuid(MediaTrack* tr) { return TrackToGuid(nullptr, tr); }
+
+MediaTrack* 		GuidToTrack(ReaProject*, const GUID*);
+inline MediaTrack* 	GuidToTrack(const GUID* guid) { return GuidToTrack(nullptr, guid); }
+
+
+struct MediaTrackID {
+	ReaProject* project;
+	GUID		guid;
+};
+
+MediaTrackID 		TrackToTrackID(MediaTrack* tr, bool* isValidOut = nullptr);
+inline MediaTrack* 	TrackIDToTrack(const MediaTrackID& id) { return GuidToTrack(id.project, &id.guid); }
+
+inline bool operator==(const MediaTrackID& a, const MediaTrackID& b)
+{
+	return a.project == b.project && GuidsEqual(&a.guid, &b.guid);
+}
+
 
 // adjust take start offset obeying play rate and its stretch markers
 // caller must check for take != NULL

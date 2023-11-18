@@ -473,6 +473,39 @@ HWND GetRulerWnd()
 	return GetRulerWndAlt(); // BR: will take care of any localization issues
 }
 
+ReaProject* GetProject(MediaTrack* const track)
+{
+	if (track == nullptr)
+		return nullptr;
+
+	ReaProject* proj = GetCurrentProjectInLoadSave();
+	if (proj != nullptr && ValidatePtr2(proj, track, "MediaTrack*"))
+		return proj;
+
+	int idx  = -1;	// current project
+	while((proj = EnumProjects(idx++, nullptr, 0))) {
+		if (ValidatePtr2(proj, track, "MediaTrack*"))
+			return proj;
+	}
+
+	return nullptr;
+}
+
+MediaTrackID TrackToTrackID(MediaTrack* const track, bool* const isValidOut /* = nullptr */)
+{
+	MediaTrackID id{};
+	id.project = GetProject(track);
+
+	if (isValidOut != nullptr)
+		*isValidOut = id.project != nullptr;
+
+	if (id.project != nullptr) {
+		id.guid = *TrackToGuid(id.project, track);
+	}
+
+	return id;
+}
+
 // overrides the native GetTrackGUID(): returns a special GUID for the master track
 // (useful for persistence as no GUID is stored in RPP files for the master..)
 // note: TrackToGuid(NULL) will return also NULL, contrary to GetTrackGUID(NULL)

@@ -58,7 +58,8 @@ public:
 	int IsInPlaylist(double _pos, bool _repeat, int _startWith);
 	int IsInfinite();
 	double GetLength();
-	int GetNestedMarkerRegion();
+	int GetNestedRegion();
+	int GetRegionWithUnsafeMarker();
 	int GetGreaterMarkerRegion(double _pos);
 	WDL_FastString m_name;
 };

@@ -485,13 +485,15 @@ void GetMonitoringInfo(WDL_FastString* _curNum, WDL_FastString* _cur,
 			// => best effort: find region by play pos
 			else
 			{
-				int id, idx = FindMarkerRegion(NULL, GetPlayPositionEx(NULL), SNM_REGION_MASK, &id);
-				if (id > 0)
-				{
-					char buf[64]="";
-					EnumMarkerRegionDesc(NULL, idx, buf, sizeof(buf), SNM_REGION_MASK, false, true, false);
-					_curNum->SetFormatted(16, "%d", GetMarkerRegionNumFromId(id));
-					_cur->Set(buf);
+				if (-1 != g_playCur) {
+					int id, idx = FindMarkerRegion(NULL, GetPlayPositionEx(NULL), SNM_REGION_MASK, &id);
+					if (id > 0)
+					{
+						char buf[64]="";
+						EnumMarkerRegionDesc(NULL, idx, buf, sizeof(buf), SNM_REGION_MASK, false, true, false);
+						_curNum->SetFormatted(16, "%d", GetMarkerRegionNumFromId(id));
+						_cur->Set(buf);
+					}
 				}
 			}
 
@@ -1367,67 +1369,72 @@ bool SeekItem(int _plId, int _nextItemId, int _curItemId)
 	return false;
 }
 
+static bool IsInNextRegion (const double pos)
+{
+	// NF: potentially fix #886
+	// it seems that if '+0.01' isn't added to 'pos' below, adjacent regions are no more occasionally skipped
+	// https://forum.cockos.com/showpost.php?p=1935561&postcount=6 and my own tests so far seem to confirm also
+	// but I'm unsure what potential side effects this might have
+	return g_nextRgnPos <= (pos/*+0.01*/) && pos <= g_nextRgnEnd;	//JFB!! +0.01 because 'pos' can be a bit ahead of time
+																	// +1 sample block would be better, but no API..
+																	// note: sync loss detection will deal with this in the worst case
+}
+
+static bool IsInCurrentRegion (const double pos)
+{
+	return g_curRgnPos <= (pos+0.01) && pos <= g_curRgnEnd; 	//JFB!! +0.01 because 'pos' can be a bit ahead of time
+																// +1 sample block would be better, but no API..
+}
+
 // the meat!
 // polls the playing position and smooth seeks if needed
 // remember we always lookup one region ahead!
 // made as idle as possible, polled via SNM_CSurfRun()
 void PlaylistRun()
 {
-	if (g_playPlaylist>=0)
-	{
+	if (g_playPlaylist<0)
+		return;
+
 #if defined(_SNM_RGNPL_DEBUG1) || defined(_SNM_RGNPL_DEBUG2)
-		char dbg[256] = "";
+	char dbg[256] = "";
 #endif
-		bool updated = false;
-		double pos = GetPlayPosition2Ex(NULL);
+	bool updated = false;
+	const double pos = GetPlayPosition2Ex(NULL);
 
-		// NF: potentially fix #886
-		// it seems that if '+0.01' isn't added to 'pos' below, adjacent regions are no more occasionally skipped
-		// https://forum.cockos.com/showpost.php?p=1935561&postcount=6 and my own tests so far seem to confirm also
-		// but I'm unsure what potential side effects this might have
-		if ((pos/*+0.01*/) >= g_nextRgnPos && pos <= g_nextRgnEnd)	//JFB!! +0.01 because 'pos' can be a bit ahead of time
-																// +1 sample block would be better, but no API..
-																// note: sync loss detection will deal with this in the worst case
+	if (IsInNextRegion (pos))
+	{
+		// a bunch of calls end here when looping!!
+
+		if (!g_plLoop || g_unsync || pos<g_lastRunPos)
 		{
-			// a bunch of calls end here when looping!!
+			// Playlist Item != Region !!
+			const bool isFirstPassInPlItem = g_playCur != g_playNext || (g_plLoop && pos<g_lastRunPos);
+			g_plLoop = false;
 
-			if (!g_plLoop || g_unsync || pos<g_lastRunPos)
+			if (isFirstPassInPlItem)
 			{
-				g_plLoop = false;
-
-				bool first = false;
-				if (g_playCur != g_playNext 
-/*JFB those vars are only altered here
-					|| g_curRgnPos != g_nextRgnPos || g_curRgnEnd != g_nextRgnEnd
-*/
-					)
-				{
 #ifdef _SNM_RGNPL_DEBUG1
-					 OutputDebugString("\n");
-					snprintf(dbg, sizeof(dbg), "NEXT DETECTED - pos = %f\n", pos); OutputDebugString(dbg);
-					snprintf(dbg, sizeof(dbg), "                g_curRgnPos = %f, g_curRgnEnd = %f\n", g_curRgnPos, g_curRgnEnd); OutputDebugString(dbg);
-					snprintf(dbg, sizeof(dbg), "                g_nextRgnPos = %f, g_nextRgnEnd = %f\n", g_nextRgnPos, g_nextRgnEnd); OutputDebugString(dbg);
-					snprintf(dbg, sizeof(dbg), "                g_playCur = %d, g_playNext = %d\n", g_playCur, g_playNext); OutputDebugString(dbg);
-					snprintf(dbg, sizeof(dbg), "                g_unsync = %d, g_lastRunPos = %f\n", g_unsync, g_lastRunPos); OutputDebugString(dbg);
+					OutputDebugString("\n");
+				snprintf(dbg, sizeof(dbg), "NEXT DETECTED - pos = %f\n", pos); OutputDebugString(dbg);
+				snprintf(dbg, sizeof(dbg), "                g_curRgnPos = %f, g_curRgnEnd = %f\n", g_curRgnPos, g_curRgnEnd); OutputDebugString(dbg);
+				snprintf(dbg, sizeof(dbg), "                g_nextRgnPos = %f, g_nextRgnEnd = %f\n", g_nextRgnPos, g_nextRgnEnd); OutputDebugString(dbg);
+				snprintf(dbg, sizeof(dbg), "                g_playCur = %d, g_playNext = %d\n", g_playCur, g_playNext); OutputDebugString(dbg);
+				snprintf(dbg, sizeof(dbg), "                g_unsync = %d, g_lastRunPos = %f\n", g_unsync, g_lastRunPos); OutputDebugString(dbg);
 #endif
-					first = updated = true;
-					g_playCur = g_playNext;
-					g_curRgnPos = g_nextRgnPos;
-					g_curRgnEnd = g_nextRgnEnd;
-				}
+				updated = true;
+				g_playCur = g_playNext;
+				g_curRgnPos = g_nextRgnPos;
+				g_curRgnEnd = g_nextRgnEnd;
+			}
 
+			// Playlist Item != Region !!
+			const bool isNewPassInRegion = isFirstPassInPlItem || pos<g_lastRunPos;
+			if (isNewPassInRegion || g_unsync) {
+				updated = true;
+				
 				// region loop?
-				if (g_rgnLoop && (first || g_unsync || pos<g_lastRunPos))
-				{
-					updated = true;
-					if (g_rgnLoop>0)
-						g_rgnLoop--;
-					if (g_rgnLoop)
-						SeekPlay(g_nextRgnPos); // then exit
-				}
-
-				if (!g_rgnLoop) // if, not else if!
-				{
+				const bool isLastPassInRegion = g_rgnLoop == 0 || g_rgnLoop == 1;
+				if (isLastPassInRegion) {
 					int nextId = GetNextValidItem(g_playPlaylist, g_playCur, false, g_repeatPlaylist, g_shufflePlaylist);
 
 					// loop corner cases
@@ -1444,76 +1451,77 @@ void PlaylistRun()
 #endif
 					if (!SeekItem(g_playPlaylist, nextId, g_playCur))
 						SeekItem(g_playPlaylist, -1, g_playCur); // end of playlist..
-					updated = true;
+				} else {
+					if (g_rgnLoop>0)
+						g_rgnLoop--;
+
+					SeekPlay(g_nextRgnPos);
 				}
 			}
+		}
+		g_unsync = false;
+	}
+	else if (g_curRgnPos<g_curRgnEnd) // relevant vars?
+	{
+		// seek play requested, waiting for region switch..
+		if (IsInCurrentRegion (pos))
+			// a bunch of calls end here!
 			g_unsync = false;
-		}
-		else if (g_curRgnPos<g_curRgnEnd) // relevant vars?
+		// playlist no more in sync?
+		else if (!g_unsync)
 		{
-			// seek play requested, waiting for region switch..
-			if ((pos+0.01) >= g_curRgnPos && pos <= g_curRgnEnd) //JFB!! +0.01 because 'pos' can be a bit ahead of time
-																 // +1 sample block would be better, but no API..
+#ifdef _SNM_RGNPL_DEBUG2
+			snprintf(dbg, sizeof(dbg), ">>> SYNC LOSS - pos = %f\n", pos); OutputDebugString(dbg);
+			snprintf(dbg, sizeof(dbg), "                g_curRgnPos = %f, g_curRgnEnd = %f\n", g_curRgnPos, g_curRgnEnd); OutputDebugString(dbg);
+			snprintf(dbg, sizeof(dbg), "                g_nextRgnPos = %f, g_nextRgnEnd = %f\n", g_nextRgnPos, g_nextRgnEnd); OutputDebugString(dbg);
+#endif
+			updated = g_unsync = true;
+			int spareItemId = -1;
+			if (RegionPlaylist* pl = g_pls.Get()->Get(g_playPlaylist))
+				spareItemId = pl->IsInPlaylist(pos, g_repeatPlaylist, g_playCur>=0?g_playCur:0);
+			if (spareItemId<0 || !SeekItem(g_playPlaylist, spareItemId, -1))
 			{
-				// a bunch of calls end here!
-				g_unsync = false;
+#ifdef _SNM_RGNPL_DEBUG2
+				snprintf(dbg, sizeof(dbg), ">>> SYNC LOSS, SEEK expected region pos = %f\n", g_nextRgnPos); OutputDebugString(dbg);
+#endif
+				SeekPlay(g_nextRgnPos);	// try to resync the expected region, best effort
 			}
-			// playlist no more in sync?
-			else if (!g_unsync)
-			{
 #ifdef _SNM_RGNPL_DEBUG2
-				snprintf(dbg, sizeof(dbg), ">>> SYNC LOSS - pos = %f\n", pos); OutputDebugString(dbg);
-				snprintf(dbg, sizeof(dbg), "                g_curRgnPos = %f, g_curRgnEnd = %f\n", g_curRgnPos, g_curRgnEnd); OutputDebugString(dbg);
-				snprintf(dbg, sizeof(dbg), "                g_nextRgnPos = %f, g_nextRgnEnd = %f\n", g_nextRgnPos, g_nextRgnEnd); OutputDebugString(dbg);
-#endif
-				updated = g_unsync = true;
-				int spareItemId = -1;
-				if (RegionPlaylist* pl = g_pls.Get()->Get(g_playPlaylist))
-					spareItemId = pl->IsInPlaylist(pos, g_repeatPlaylist, g_playCur>=0?g_playCur:0);
-				if (spareItemId<0 || !SeekItem(g_playPlaylist, spareItemId, -1))
-				{
-#ifdef _SNM_RGNPL_DEBUG2
-					snprintf(dbg, sizeof(dbg), ">>> SYNC LOSS, SEEK expected region pos = %f\n", g_nextRgnPos); OutputDebugString(dbg);
-#endif
-					SeekPlay(g_nextRgnPos);	// try to resync the expected region, best effort
-				}
-#ifdef _SNM_RGNPL_DEBUG2
-				else {
-					snprintf(dbg, sizeof(dbg), ">>> SYNC LOSS, SEEK - Current = %d, Next = %d\n", -1, spareItemId); OutputDebugString(dbg);
-				}
-#endif
+			else {
+				snprintf(dbg, sizeof(dbg), ">>> SYNC LOSS, SEEK - Current = %d, Next = %d\n", -1, spareItemId); OutputDebugString(dbg);
 			}
+#endif
 		}
+	}
 
-		g_lastRunPos = pos;
-		if (updated && (g_osc || g_rgnplWndMgr.Get()))
+	g_lastRunPos = pos;
+	if (updated && (g_osc || g_rgnplWndMgr.Get()))
+	{
+		// one call to GetMonitoringInfo() for both the wnd & osc
+		WDL_FastString cur, curNum, next, nextNum;
+		GetMonitoringInfo(&curNum, &cur, &nextNum, &next);
+
+		if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+			w->Update(1, &curNum, &cur, &nextNum, &next); // 1: fast update flag
+
+		if (g_osc)
 		{
-			// one call to GetMonitoringInfo() for both the wnd & osc
-			WDL_FastString cur, curNum, next, nextNum;
-			GetMonitoringInfo(&curNum, &cur, &nextNum, &next);
+			static WDL_FastString sOSC_CURRENT_RGN(OSC_CURRENT_RGN);
+			static WDL_FastString sOSC_NEXT_RGN(OSC_NEXT_RGN);
 
-			if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
-				w->Update(1, &curNum, &cur, &nextNum, &next); // 1: fast update flag
+			if (curNum.GetLength() && cur.GetLength()) curNum.Append(" ");
+			curNum.Append(&cur);
 
-			if (g_osc)
-			{
-				static WDL_FastString sOSC_CURRENT_RGN(OSC_CURRENT_RGN);
-				static WDL_FastString sOSC_NEXT_RGN(OSC_NEXT_RGN);
+			if (nextNum.GetLength() && next.GetLength()) nextNum.Append(" ");
+			nextNum.Append(&next);
 
-				if (curNum.GetLength() && cur.GetLength()) curNum.Append(" ");
-				curNum.Append(&cur);
-
-				if (nextNum.GetLength() && next.GetLength()) nextNum.Append(" ");
-				nextNum.Append(&next);
-
-				WDL_PtrList<WDL_FastString> strs;
-				strs.Add(&sOSC_CURRENT_RGN);
-				strs.Add(&curNum);
-				strs.Add(&sOSC_NEXT_RGN);
-				strs.Add(&nextNum);
-				g_osc->SendStrBundle(&strs);
-				strs.Empty(false);
-			}
+			WDL_PtrList<WDL_FastString> strs;
+			strs.Add(&sOSC_CURRENT_RGN);
+			strs.Add(&curNum);
+			strs.Add(&sOSC_NEXT_RGN);
+			strs.Add(&nextNum);
+			g_osc->SendStrBundle(&strs);
+			strs.Empty(false);
 		}
 	}
 }

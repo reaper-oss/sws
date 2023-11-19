@@ -1644,6 +1644,11 @@ void PlaylistRun()
 		}
 	}
 
+	if (-1 == g_playCur && g_unsync) {
+		// Stop the 'SYNC LOSS' text from flashing after playlist ended. Looks unprofessional.
+		updated = false;
+	}
+
 	g_lastRunPos = pos;
 	if (updated && (g_osc || g_rgnplWndMgr.Get()))
 	{

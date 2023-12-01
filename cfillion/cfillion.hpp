@@ -61,7 +61,7 @@ int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time,
   double *endTime, bool *isRegion, char *name, const int nameSize, bool *isChapter);
 bool CF_ExportMediaSource(PCM_source *source, const char *file);
 bool CF_PCM_Source_SetSectionInfo(PCM_source *section, PCM_source *source,
-  double offset, double length, bool reverse);
+  double offset, double length, bool reverse, const double *fade);
 
 BOOL CF_GetScrollInfo(HWND, int bar, LPSCROLLINFO);
 

@@ -437,7 +437,7 @@ bool CF_ExportMediaSource(PCM_source *source, const char *file)
 // cannot return CreateFromType("SECTION"): if not added to the project,
 // the ReaScript argument validator won't recognize the new section as valid
 bool CF_PCM_Source_SetSectionInfo(PCM_source *section, PCM_source *source,
-  const double offset, double length, const bool reverse)
+  const double offset, double length, const bool reverse, const double *fade)
 {
   if(!section || section == source || strcmp(section->GetType(), "SECTION"))
     return false;
@@ -460,6 +460,7 @@ bool CF_PCM_Source_SetSectionInfo(PCM_source *section, PCM_source *source,
   ProjectStateContext *ctx { ProjectCreateMemCtx(&buffer) };
   ctx->AddLine("LENGTH %f", length);
   ctx->AddLine("STARTPOS %f", offset);
+  ctx->AddLine("OVERLAP %f", fade ? *fade : 0);
   ctx->AddLine("MODE %d", mode);
   ctx->AddLine("<SOURCE %s", source->GetType());
   source->SaveState(ctx);

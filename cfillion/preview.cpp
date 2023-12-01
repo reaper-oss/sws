@@ -115,8 +115,9 @@ bool CF_Preview::play(const bool obeyMeasureAlign)
 
 void CF_Preview::stop(const bool startFadeOut)
 {
-  if(startFadeOut) {
-    m_src.setFadeOutEnd(getPosition() + getFadeOutLen());
+  const double fadeOutLen { getFadeOutLen() };
+  if(startFadeOut && fadeOutLen) {
+    m_src.setFadeOutEnd(getPosition() + fadeOutLen);
     m_state = FadeOut;
     return;
   }

@@ -507,7 +507,7 @@ static const APIParam<CF_Preview> PREVIEW_PARAMS[] {
 
 CF_Preview *CF_CreatePreview(PCM_source *source)
 {
-  if(!source || source->GetSampleRate() < 1.0) // only accept sources with audio
+  if(!source)
     return nullptr;
 
   return new CF_Preview { source };
@@ -572,6 +572,8 @@ bool CF_Preview_Stop(CF_Preview *preview)
   if(!CF_Preview::isValid(preview))
     return false;
 
+  // The internal API returns false if the stop request triggers a fade-out or
+  // async stop. Return true to users to indicate the request has been received.
   preview->stop();
   return true;
 }

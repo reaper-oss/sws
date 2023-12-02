@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "pitchshiftsource.hpp"
 
+#include <WDL/denormal.h>
+
 PitchShiftSource::PitchShiftSource(PCM_source *src)
   : m_pitch { 0.0 }, m_rate { 1.0 }, m_volume { 1.0 }, m_pan { 0.0 },
     m_fadeInLen { 0.0 }, m_fadeOutLen { 0.0 }, m_preservePitch { true },
@@ -10,6 +12,8 @@ PitchShiftSource::PitchShiftSource(PCM_source *src)
 {
   updateTempoShift();
   m_ps->SetQualityParameter(m_mode);
+
+  m_peaks.resize(GetNumChannels());
 }
 
 PitchShiftSource::~PitchShiftSource()
@@ -48,9 +52,22 @@ bool PitchShiftSource::isPastEnd(const double position)
   return position >= currentLength() || (m_fadeOutEnd && position >= m_fadeOutEnd);
 }
 
+bool PitchShiftSource::readPeak(const size_t chan, double *out)
+{
+  if(chan >= m_peaks.size())
+    return false;
+
+  WDL_MutexLockExclusive lock { &m_mutex };
+  Peak &peak { m_peaks[chan] };
+  peak.read = true;
+  *out = peak.max;
+  return true;
+}
+
 void PitchShiftSource::GetSamples(PCM_source_transfer_t *block)
 {
-  WDL_MutexLockShared lock { &m_mutex };
+  m_mutex.LockShared();
+
   if(m_rate == 1.0 && m_pitch == 0.0)
     m_src->GetSamples(block);
   else
@@ -66,6 +83,11 @@ void PitchShiftSource::GetSamples(PCM_source_transfer_t *block)
     applyGain(block, sampleTime, fadeOutStart);
   else
     m_playTime += block->length * sampleTime;
+
+  m_mutex.UnlockShared();
+
+  WDL_MutexLockExclusive lock { &m_mutex };
+  updatePeaks(block);
 }
 
 void PitchShiftSource::applyGain(PCM_source_transfer_t *block,
@@ -126,6 +148,22 @@ void PitchShiftSource::getShiftedSamples(PCM_source_transfer_t *block)
     m_ps->BufferDone(sourceBlock.samples_out);
     m_readTime += sourceBlock.samples_out * sampleTime;
   } while(sourceBlock.samples_out == sourceBlock.length); // until EOF
+}
+
+void PitchShiftSource::updatePeaks(const PCM_source_transfer_t *block)
+{
+  for(Peak &peak : m_peaks) {
+    if(peak.read)
+      peak = {};
+  }
+
+  const size_t peakChans { std::min<size_t>(m_peaks.size(), block->nch) };
+  for(ReaSample *sample { block->samples },
+                *lastSample { sample + (block->samples_out * block->nch) };
+      sample < lastSample; sample += block->nch) {
+    for(size_t c = 0; c < peakChans; ++c)
+      GetDoubleMaxAbsValue(&m_peaks[c].max, &sample[c]);
+  }
 }
 
 void PitchShiftSource::updateTempoShift()

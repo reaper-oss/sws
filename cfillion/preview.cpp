@@ -142,17 +142,6 @@ void CF_Preview::setPosition(const double newpos)
   m_reg.curpos = newpos;
 }
 
-bool CF_Preview::getPeak(const int channel, double *out)
-{
-  if(channel < 0 || channel >= 2)
-    return false;
-
-  LockPreviewMutex lock { m_reg };
-  *out = m_reg.peakvol[channel];
-  m_reg.peakvol[channel] = 0;
-  return true;
-}
-
 void CF_Preview::setOutput(const int channel)
 {
   if(channel < 0)

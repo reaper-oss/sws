@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include <vector>
 #include <WDL/mutex.h>
 
 class PitchShiftSource : public PCM_source {
@@ -71,12 +72,19 @@ public:
   void   setFadeOutLen(double);
   double getFadeOutEnd() { return m_fadeOutEnd; }
   void   setFadeOutEnd(double);
+  bool   readPeak(size_t, double *);
 
 private:
+  struct Peak {
+    bool read;
+    double max;
+  };
+
   // must lock m_mutex before using these
   double currentLength();
-  void getShiftedSamples(PCM_source_transfer_t *);
   void applyGain(PCM_source_transfer_t *, double sampleTime, double fadeOutStart);
+  void getShiftedSamples(PCM_source_transfer_t *);
+  void updatePeaks(const PCM_source_transfer_t *);
   void updateTempoShift();
 
   double m_pitch, m_rate, m_volume, m_pan, m_fadeInLen, m_fadeOutLen;
@@ -89,4 +97,5 @@ private:
   double m_readTime, m_writeTime; // for pitch-shifting
   double m_playTime; // position-independent
   double m_fadeOutEnd;
+  std::vector<Peak> m_peaks;
 };

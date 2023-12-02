@@ -39,7 +39,7 @@ public:
 
   double getPosition();
   void   setPosition(double);
-  bool   getPeak(int channel, double *out);
+  bool   getPeak(int chan, double *out) { return m_src.readPeak(chan, out); }
   int    getOutputChannel() { return m_reg.m_out_chan; }
   void   setOutput(int channel);
   void   setOutput(MediaTrack *);

@@ -373,7 +373,7 @@ D_LENGTH       (read only) length of the source * playback rate
 D_MEASUREALIGN >0 = wait until the next bar before starting playback (note: this causes playback to silently continue when project is paused and previewing through a track)
 D_PAN          playback pan
 D_PITCH        pitch adjustment in semitones
-D_PLAYRATE     playback rate
+D_PLAYRATE     playback rate (0.01..100)
 D_POSITION     current playback position
 D_VOLUME       playback volume
 I_OUTCHAN      first hardware output channel (&1024=mono, reads -1 when playing through a track, see CF_Preview_SetOutputTrack)

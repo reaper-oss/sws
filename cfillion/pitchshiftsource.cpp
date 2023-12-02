@@ -85,10 +85,11 @@ void PitchShiftSource::getShiftedSamples(PCM_source_transfer_t *block)
   m_ps->set_srate(block->samplerate);
   m_ps->set_nch(block->nch);
 
+  const double bufSizeMul { m_rate > 1.0 ? m_rate : 1.0 };
   PCM_source_transfer_t sourceBlock {};
   sourceBlock.samplerate = block->samplerate;
   sourceBlock.nch = block->nch;
-  sourceBlock.length = static_cast<int>(block->length * m_rate);
+  sourceBlock.length = static_cast<int>(block->length * bufSizeMul);
 
   const double sampleTime { 1.0 / block->samplerate };
   if(m_writeTime != block->time_s) {
@@ -150,7 +151,8 @@ void PitchShiftSource::setPan(const double pan)
 
 void PitchShiftSource::setPlayRate(const double playRate)
 {
-  if(playRate < 0.1 || playRate == m_rate)
+  // rubberband crashes at rates < 0.005 and preserving pitch
+  if(playRate < 0.01 || playRate > 100 || playRate == m_rate)
     return;
 
   WDL_MutexLockExclusive lock { &m_mutex };

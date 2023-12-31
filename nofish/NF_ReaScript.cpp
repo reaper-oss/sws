@@ -38,6 +38,7 @@
 #include "../Breeder/BR_Misc.h" // GetProjectTrackSelectionAction
 #include "../Misc/Analysis.h"
 #include "../SnM/SnM.h" // ScheduledJob
+#include "../SnM/SnM_Dlg.h"   // SNM_GetIconTheme
 #include "../SnM/SnM_Chunk.h" // SNM_FXSummaryParser
 #include "../SnM/SnM_Notes.h"
 #include "../SnM/SnM_Project.h" // GetProjectLoadAction, GetGlobalStartupAction
@@ -510,4 +511,13 @@ void NF_Base64_Encode(const char* str, int str_sz, const bool usePadding, char* 
 	Base64 b64;
 	const char* encoded = b64.Encode(str, str_sz, usePadding);
 	CopyToBuffer(encoded, encodedStrOut, encodedStrOut_sz);
+}
+
+void NF_GetThemeDefaultTCPHeights(int* supercollapsedOut, int* smallOut, int* mediumOut, int* fullOut)
+{
+	const IconTheme* theme = SNM_GetIconTheme();
+	*supercollapsedOut = theme->tcp_supercollapsed_height;
+	*smallOut = theme->tcp_small_height;
+	*mediumOut = theme->tcp_medium_height;
+	*fullOut = theme->tcp_full_height;
 }

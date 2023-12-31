@@ -74,3 +74,5 @@ void           NF_ScrollHorizontallyByPercentage(int amount);
 // Base64
 bool          NF_Base64_Decode(const char* base64_str, char* decodedStrOut, int decodedStrOut_sz);
 void          NF_Base64_Encode(const char* str, int str_sz, bool usePadding, char* encodedStrOut, int encodedStrOut_sz);
+
+void          NF_GetThemeDefaultTCPHeights(int* supercollapsedOut, int* smallOut, int* mediumOut, int* fullOut);

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Original script by Cockos (http://landoleet.org/dev/sws/)
+# Original script by Cockos (http://landoleet.org/dev/sws/)v v vf
 # JFB mods: tailored for the SWS/S&M extension:
 # - re-use rpr_ internal functions from reaper_python import
 # - gets function pointers with rpr_getfp()

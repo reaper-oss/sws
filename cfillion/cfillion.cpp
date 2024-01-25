@@ -39,6 +39,12 @@
 #include <WDL/localize/localize.h>
 #include <WDL/projectcontext.h>
 
+#ifdef __APPLE__
+#  include <CoreFoundation/CFString.h>
+#elif !defined(_WIN32)
+#  include <glib.h>
+#endif
+
 #ifdef _WIN32
   constexpr unsigned int CLIPBOARD_FORMAT { CF_UNICODETEXT };
 #else
@@ -486,6 +492,74 @@ BOOL CF_GetScrollInfo(HWND hwnd, const int bar, LPSCROLLINFO si)
   }
 
   return CoolSB_GetScrollInfo(hwnd, bar, si);
+}
+
+void CF_NormalizeUTF8(const char *input, const unsigned int mode,
+  char *output, int outputSize)
+{
+#ifdef __APPLE__
+  constexpr CFStringNormalizationForm forms[] {
+    kCFStringNormalizationFormD,  // 0b00
+    kCFStringNormalizationFormC,  // 0b01
+    kCFStringNormalizationFormKD, // 0b10
+    kCFStringNormalizationFormKC, // 0b11
+  };
+
+  CFMutableStringRef normalized { CFStringCreateMutable(kCFAllocatorDefault, 0) };
+  CFStringAppendCString(normalized, input, kCFStringEncodingUTF8);
+  CFStringNormalize(normalized, forms[mode & 0b11]);
+
+  constexpr char fallback { '?' };
+  CFIndex normalizedSize;
+  const CFRange range { CFRangeMake(0, CFStringGetLength(normalized)) };
+  CFStringGetBytes(normalized, range, kCFStringEncodingUTF8, fallback, false,
+    nullptr, 0, &normalizedSize);
+  if(realloc_cmd_ptr(&output, &outputSize, normalizedSize)) {
+    CFStringGetBytes(normalized, range, kCFStringEncodingUTF8, fallback, false,
+      reinterpret_cast<UInt8 *>(output), outputSize, nullptr);
+  }
+
+  CFRelease(normalized);
+#elif defined(_WIN32)
+  constexpr NORM_FORM forms[] {
+    NormalizationD,  // 0b00
+    NormalizationC,  // 0b01
+    NormalizationKD, // 0b10
+    NormalizationKC, // 0b11
+  };
+  const NORM_FORM form { forms[mode & 0b11] };
+
+  const std::wstring &utf16 { win32::widen(input) };
+  const int normalizedChars
+    { NormalizeString(form, utf16.c_str(), utf16.size(), nullptr, 0) };
+  std::vector<wchar_t> normalized(normalizedChars);
+  NormalizeString(form, utf16.c_str(), utf16.size(),
+    normalized.data(), normalized.size());
+
+  const int normalizedSize { WideCharToMultiByte(CP_UTF8, 0,
+    normalized.data(), normalized.size(), nullptr, 0, nullptr, nullptr) };
+  if(realloc_cmd_ptr(&output, &outputSize, normalizedSize)) {
+    WideCharToMultiByte(CP_UTF8, 0, normalized.data(), normalized.size(),
+      output, outputSize, nullptr, nullptr);
+  }
+#else
+  constexpr GNormalizeMode forms[] {
+    G_NORMALIZE_NFD,  // 0b00
+    G_NORMALIZE_NFC,  // 0b01
+    G_NORMALIZE_NFKD, // 0b10
+    G_NORMALIZE_NFKC, // 0b11
+  };
+
+  gchar *normalized { g_utf8_normalize(input, -1, forms[mode & 0b11]) };
+  if(!normalized)
+    normalized = const_cast<gchar *>(input);
+
+  if(realloc_cmd_ptr(&output, &outputSize, strlen(normalized)))
+    memcpy(output, normalized, outputSize);
+
+  if(normalized != input)
+    g_free(normalized);
+#endif
 }
 
 static const APIParam<CF_Preview> PREVIEW_PARAMS[] {

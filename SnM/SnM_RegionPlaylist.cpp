@@ -2113,17 +2113,13 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 			confStr.Append(" 1\n");
 		else
 			confStr.Append("\n");
-		int iHeaderLen = confStr.GetLength();
 
 		for (int i=0; i < GetPlaylist(j)->GetSize(); i++)
 			if (RgnPlaylistItem* item = GetPlaylist(j)->Get(i))
 				confStr.AppendFormatted(128,"%d %d\n", item->m_rgnId, item->m_cnt);
 
-		// ignore empty playlists when saving but always take them into account for undo
-		if (isUndo || confStr.GetLength() > iHeaderLen) {
-			confStr.Append(">\n");
-			StringToExtensionConfig(&confStr, ctx);
-		}
+		confStr.Append(">\n");
+		StringToExtensionConfig(&confStr, ctx);
 	}
 }
 

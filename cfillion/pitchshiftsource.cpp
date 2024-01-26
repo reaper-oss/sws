@@ -19,6 +19,18 @@ PitchShiftSource::~PitchShiftSource()
   delete m_ps; // unsafe on Windows (different C++ runtime = different heap)?
 }
 
+int PitchShiftSource::GetNumChannels()
+{
+  // Force stereo for applying pan when outputting to a stereo hardware output.
+  //
+  // REAPER already calls GetSamples with block->nch=2 when outputting through
+  // a track even when the source reports having a single channel.
+  //
+  // This does not interfere with the preview's mono flag (I_OUTCHAN | 1024).
+  const int chans { m_src->GetNumChannels() };
+  return chans == 1 ? 2 : chans;
+}
+
 double PitchShiftSource::GetLength()
 {
   WDL_MutexLockShared lock { &m_mutex };

@@ -38,7 +38,7 @@ public:
   bool   IsAvailable() override { return m_src->IsAvailable(); }
   const  char *GetType() override { return "SWS_PITCHSHIFT"; }
   bool   SetFileName(const char *) override { return false; }
-  int    GetNumChannels() override { return m_src->GetNumChannels(); }
+  int    GetNumChannels() override;
   double GetSampleRate() override { return m_src->GetSampleRate(); }
   double GetLength() override;
   int    PropertiesWindow(HWND) override { return 0; }

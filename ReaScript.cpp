@@ -340,6 +340,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_GetFocusedFXChain), "FxChain*", "", "", "Return a handle to the currently focused FX chain window.", },
 	{ APIFUNC(CF_EnumSelectedFX), "int", "FxChain*,int", "hwnd,index", "Return the index of the next selected effect in the given FX chain. Start index should be -1. Returns -1 if there are no more selected effects.", },
 	{ APIFUNC(CF_SelectTrackFX), "bool", "MediaTrack*,int", "track,index", "Set which track effect is active in the track's FX chain. The FX chain window does not have to be open.", },
+	{ APIFUNC(CF_SelectTakeFX), "bool", "MediaItem_Take*,int", "take,index", "Set which take effect is active in the take's FX chain. The FX chain window does not have to be open.", },
 
 	{ APIFUNC(CF_GetSWSVersion), "void", "char*,int", "versionOut,versionOut_sz", "Return the current SWS version number.", },
 	{ APIFUNC(CF_GetCustomColor), "int", "int", "index", "Get one of 16 SWS custom colors (0xBBGGRR on Windows, 0xRRGGBB everyhwere else). Index is zero-based.", },

@@ -32,6 +32,7 @@
 #include "Breeder/BR_Util.h"
 #include "Color/Color.h"
 #include "preview.hpp"
+#include "SnM/SnM_Chunk.h"
 #include "SnM/SnM_FX.h"
 #include "SnM/SnM_Window.h"
 #include "version.h"
@@ -336,6 +337,33 @@ bool CF_SelectTrackFX(MediaTrack *track, const int index)
 {
   // track and index are validated in SelectTrackFX
   return SelectTrackFX(track, index);
+}
+
+bool CF_SelectTakeFX(MediaItem_Take *take, const int index)
+{
+  if(!take || index < 0 || index >= TakeFX_GetCount(take))
+    return false;
+
+  if(TakeFX_GetChainVisible(take) != -1) {
+    TakeFX_Show(take, index, 1);
+    return true;
+  }
+
+  MediaItem *item { GetMediaItemTake_Item(take) };
+  const int takeId { GetTakeId(take, item) };
+  int takeChunkPos, takeChunkLen;
+  WDL_FastString takeChunk;
+  SNM_TakeParserPatcher itemPatcher { item, CountTakes(item) };
+  if(!itemPatcher.GetTakeChunk(takeId, &takeChunk, &takeChunkPos, &takeChunkLen))
+    return false;
+
+  char lastsel[12];
+  snprintf(lastsel, sizeof(lastsel), "%d", index);
+  SNM_ChunkParserPatcher takePatcher { &takeChunk, false };
+  if(takePatcher.ParsePatch(SNM_SET_CHUNK_CHAR, 1, "TAKEFX", "LASTSEL", 0, 1, lastsel) < 1)
+    return false;
+
+  return itemPatcher.ReplaceTake(takeChunkPos, takeChunkLen, takePatcher.GetChunk());
 }
 
 int CF_GetMediaSourceBitDepth(PCM_source *source)

@@ -1112,6 +1112,7 @@ error:
 		IMPAPI(TakeFX_SetOpen);
 		IMPAPI(TakeFX_Show);
 		IMPAPI(TakeIsMIDI);
+		IMPAPI(ThemeLayout_GetLayout); // v5.974+
 		IMPAPI(time_precise);
 		IMPAPI(TimeMap_GetDividedBpmAtTime);
 		IMPAPI(TimeMap_GetTimeSigAtTime);

@@ -37,15 +37,6 @@
 #include <WDL/localize/localize.h>
 #include <WDL/projectcontext.h>
 
-#define PRI_UP_MSG         0x10000
-#define PRI_DOWN_MSG       0x10001
-#define TYPETYPE_MSG       0x100F0
-#define FILTERTYPE_MSG     0x10100
-#define COLORTYPE_MSG      0x10110
-#define LOAD_ICON_MSG      0x110000
-#define CLEAR_ICON_MSG     0x110001
-#define LAYOUTTYPE_TCP_MSG 0x110002
-#define LAYOUTTYPE_MCP_MSG 0x110003
 
 
 // INI params
@@ -64,8 +55,18 @@ enum { AC_CUSTOM, AC_GRADIENT, AC_RANDOM, AC_NONE, AC_PARENT, AC_IGNORE, NUM_COL
 enum { COL_ID=0, COL_TYPE, COL_FILTER, COL_COLOR, COL_ICON, COL_TCP_LAYOUT, COL_MCP_LAYOUT, COL_COUNT };
 enum { AC_TRACK=0, AC_MARKER, AC_REGION, NUM_TYPETYPES }; // keep this order and 2^ values
                                                           // (values used as masks => adding a 4th type would require another solution)
-enum { AC_HIDE_TCP=0, NUM_TCP_LAYOUTTYPES };
-enum { AC_HIDE_MCP=0, NUM_MCP_LAYOUTTYPES };
+
+enum Commands : WPARAM {
+	PRI_UP_MSG = 0x10000,
+	PRI_DOWN_MSG,
+	TYPETYPE_MSG,
+	FILTERTYPE_MSG = TYPETYPE_MSG   + NUM_TYPETYPES,
+	COLORTYPE_MSG  = FILTERTYPE_MSG + NUM_FILTERTYPES,
+	LOAD_ICON_MSG  = COLORTYPE_MSG  + NUM_COLORTYPES,
+	CLEAR_ICON_MSG,
+	LAYOUTTYPE_MSG      = 1<<17, // all lower bits = layout index (0 = hide)
+	LAYOUTTYPE_MCP_FLAG = 1<<18,
+};
 
 // Larger allocs for localized strings..
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_115
@@ -73,7 +74,7 @@ static SWS_LVColumn g_cols[] = { {25, 0, "#" }, {25, 0, "Rule type"}, { 185, 1, 
 static const char cTypes[][256] = {"Track", "Marker", "Region" }; // keep this order, see above
 static const char cFilterTypes[][256] = { "(any)", "(unnamed)", "(folder)", "(children)", "(receive)", "(master)", "(record armed)", "(vca master)", "(instrument)", "(audio input)", "(audio output)", "(MIDI input)", "(MIDI output)" };
 static const char cColorTypes[][256] = { "Custom", "Gradient", "Random", "None", "Parent", "Ignore" };
-static const char cLayoutTypes[][256] = { "(hide)" }; // #1008, additional '(hide)' layout, same for TCP and MCP
+static const char *cHideLayout = "(hide)"; // #1008, additional '(hide)' layout, same for TCP and MCP
 // !WANT_LOCALIZE_STRINGS_END
 
 
@@ -505,18 +506,20 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					item->m_color = -1 - ((int)wParam - COLORTYPE_MSG);
 				Update();
 			}
-			else if (wParam >= LAYOUTTYPE_TCP_MSG && wParam < LAYOUTTYPE_TCP_MSG + NUM_TCP_LAYOUTTYPES)
+			else if (wParam & LAYOUTTYPE_MSG)
 			{
-				SWS_RuleItem* item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(NULL);
-				if (item)
-					item->m_layout[0].Set(cLayoutTypes[wParam - LAYOUTTYPE_TCP_MSG]);
-				Update();
-			}
-			else if (wParam >= LAYOUTTYPE_MCP_MSG && wParam < LAYOUTTYPE_MCP_MSG + NUM_MCP_LAYOUTTYPES)
-			{
-				SWS_RuleItem* item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(NULL);
-				if (item)
-					item->m_layout[1].Set(cLayoutTypes[wParam - LAYOUTTYPE_MCP_MSG]);
+				const bool isMCP   = wParam & LAYOUTTYPE_MCP_FLAG;
+				const int layoutId = wParam & (LAYOUTTYPE_MSG - 1);
+				char layoutName[255];
+				if (layoutId == 0)
+					strcpy(layoutName, cHideLayout);
+				else
+					ThemeLayout_GetLayout(isMCP ? "mcp" : "tcp", layoutId, layoutName, sizeof(layoutName));
+
+				int x = 0;
+				SWS_RuleItem* item;
+				while ((item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(&x)))
+					item->m_layout[isMCP].Set(layoutName);
 				Update();
 			}
 			else
@@ -667,17 +670,25 @@ HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				break;
 			}
 			case COL_TCP_LAYOUT:
-				for (int i = 0; i < NUM_TCP_LAYOUTTYPES; i++)
-					AddToMenu(hMenu, __localizeFunc(cLayoutTypes[i], "sws_DLG_115", LOCALIZE_FLAG_NOCACHE), LAYOUTTYPE_TCP_MSG + i);
-
-				AddToMenu(hMenu, __LOCALIZE("(Double-click to edit layout name)", "sws_DLG_115"), 0, -1, false, MF_GRAYED);
-				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				break;
 			case COL_MCP_LAYOUT:
-				for (int i = 0; i < NUM_MCP_LAYOUTTYPES; i++)
-					AddToMenu(hMenu, __localizeFunc(cLayoutTypes[i], "sws_DLG_115", LOCALIZE_FLAG_NOCACHE), LAYOUTTYPE_MCP_MSG + i);
+				AddToMenu(hMenu, __LOCALIZE("(Double-click to edit layout name)", "sws_DLG_115"), 0, -1, false, MF_GRAYED);
+				const char *section = "tcp";
+				int command = LAYOUTTYPE_MSG;
+				if (iCol == COL_MCP_LAYOUT)
+				{
+					command |= LAYOUTTYPE_MCP_FLAG;
+					section = "mcp";
+				}
+				AddToMenu(hMenu, __localizeFunc(cHideLayout, "sws_DLG_115", 0), command);
+				char layout[255];
+				// starting from 1 to skip "global layout default"
+				for (int i = 1; i < LAYOUTTYPE_MSG && ThemeLayout_GetLayout(section, i, layout, sizeof(layout)); ++i)
+				{
+					if (!layout[0])
+						snprintf(layout, sizeof(layout), "Layout %d", i);
+					AddToMenu(hMenu, layout, command | i);
+				}
 
-				AddToMenu(hMenu, __LOCALIZE("(Double-click to edit layout name)","sws_DLG_115"), 0, -1, false, MF_GRAYED);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				break;
 		}

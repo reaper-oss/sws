@@ -951,12 +951,18 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 						// 'normal' track layout
 						if (_stricmp(rule->m_layout[k].Get(), cHideLayout))
 						{
+							const bool needUnhide = !_stricmp(pACTrack->m_layout[k].Get(), cHideLayout) && !IsTrackVisible(tr, k ? true : false);
 							const char *curlayout = (const char*)GetSetMediaTrackInfo(tr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", NULL);
 							if (curlayout && _stricmp(curlayout, rule->m_layout[k].Get()))
 							{
 								// Only overwrite the layout if there's no layout, or we're forcing, or we set it ourselves earlier
-								if (bForce || !_stricmp(curlayout, pACTrack->m_layout[k].Get()))
+								if (bForce || needUnhide || !_stricmp(curlayout, pACTrack->m_layout[k].Get()))
 									GetSetMediaTrackInfo(tr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", (void*)rule->m_layout[k].Get());
+							}
+							if (needUnhide)
+							{
+								GetSetMediaTrackInfo(tr, k ? "B_SHOWINMIXER" : "B_SHOWINTCP", &g_i1); // hide the track
+								TrackList_AdjustWindows(k ? false : true); // t=208275
 							}
 						}
 						// '(hide)' layout

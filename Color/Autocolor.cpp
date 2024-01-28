@@ -744,8 +744,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 			MediaTrack* tr = CSurf_TrackFromID(i, false);
 			bool bColor = bDoColors;
 			bool bIcon  = bDoIcons;
-			bool bLayout[2];
-			bLayout[0]=bLayout[1]=bDoLayout;
+			bool bLayout[2] = { bDoLayout, bDoLayout };
 
 			bool bFound = false;
 			SWS_RuleTrack* pACTrack = NULL;
@@ -945,37 +944,32 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 					// Set the layout
 					for (int k=0; k<2; k++) if (bLayout[k])
 					{
+						pACTrack->m_bLayouted[k] = true;
+						if (!_stricmp(rule->m_layout[k].Get(), pACTrack->m_layout[k].Get()))
+							continue;
+
 						// 'normal' track layout
-						if (_stricmp(rule->m_layout[k].Get(), pACTrack->m_layout[k].Get()) && _stricmp(rule->m_layout[k].Get(), "(hide)"))
+						if (_stricmp(rule->m_layout[k].Get(), cHideLayout))
 						{
 							const char *curlayout = (const char*)GetSetMediaTrackInfo(tr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", NULL);
 							if (curlayout && _stricmp(curlayout, rule->m_layout[k].Get()))
 							{
 								// Only overwrite the layout if there's no layout, or we're forcing, or we set it ourselves earlier
 								if (bForce || !_stricmp(curlayout, pACTrack->m_layout[k].Get()))
-								{
 									GetSetMediaTrackInfo(tr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", (void*)rule->m_layout[k].Get());
-								}
 							}
-							pACTrack->m_layout[k].Set(rule->m_layout[k].Get());
 						}
 						// '(hide)' layout
-						if (_stricmp(rule->m_layout[k].Get(), pACTrack->m_layout[k].Get()) && !_stricmp(rule->m_layout[k].Get(), "(hide)"))
+						// Only hide the track if visible, or we're forcing, or we hid it ourselves earlier
+						else if (IsTrackVisible(tr, k ? true : false))
 						{
-							bool isTrackVisible = IsTrackVisible(tr, k ? true : false);
-
-							if (isTrackVisible && !_stricmp(rule->m_layout[k].Get(), "(hide)"))
+							if (bForce || IsTrackVisible(pACTrack->m_pTr, k ? true : false))
 							{
-								// Only hide the track if visible, or we're forcing, or we hid it ourselves earlier
-								if (bForce || isTrackVisible == IsTrackVisible(pACTrack->m_pTr, k ? true : false))
-								{
-									GetSetMediaTrackInfo(tr, k ? "B_SHOWINMIXER" : "B_SHOWINTCP", &g_i0); // hide the track
-									TrackList_AdjustWindows(k ? false : true); // https://forum.cockos.com/showthread.php?t=208275
-								}
+								GetSetMediaTrackInfo(tr, k ? "B_SHOWINMIXER" : "B_SHOWINTCP", &g_i0); // hide the track
+								TrackList_AdjustWindows(k ? false : true); // t=208275
 							}
-							pACTrack->m_layout[k].Set(rule->m_layout[k].Get());
 						}
-						pACTrack->m_bLayouted[k] = true;
+						pACTrack->m_layout[k].Set(rule->m_layout[k].Get());
 					}
 				} // /if (bMatch)
 			} // /Do the track rule matching
@@ -1071,32 +1065,25 @@ void AutoColorTrack(bool bForce)
 			pACTrack->m_icon.Set("");
 		}
 
-		if (bDoLayouts) for (int k=0; k<2; k++)
+		if (bDoLayouts) for (int k=0; k<2; k++) if (!pACTrack->m_bLayouted[k] && pACTrack->m_layout[k].GetLength())
 		{
 			// There's a layout set, but there shouldn't be!
 			// 'normal' track layout
-			if (!pACTrack->m_bLayouted[k] && pACTrack->m_layout[k].GetLength() && _stricmp(pACTrack->m_layout[k].Get(), "(hide)"))
+			if (_stricmp(pACTrack->m_layout[k].Get(), cHideLayout))
 			{
 				// Only remove the layout if we set it ourselves
 				const char *curlayout = (const char*)GetSetMediaTrackInfo(pACTrack->m_pTr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", NULL);
 				if (curlayout && !_stricmp(pACTrack->m_layout[k].Get(), curlayout))
-				{
 					GetSetMediaTrackInfo(pACTrack->m_pTr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", (void*)"");
-				}
-				pACTrack->m_layout[k].Set("");
 			}
 			// '(hide)' layout
-			if (!pACTrack->m_bLayouted[k] && pACTrack->m_layout[k].GetLength() && !_stricmp(pACTrack->m_layout[k].Get(), "(hide)"))
+			// Only unhide the track if we hid it ourselves
+			else if (!IsTrackVisible(pACTrack->m_pTr, k ? true : false))
 			{
-				// Only unhide the track if we hid it ourselves
-				bool isTrackVisible = IsTrackVisible(pACTrack->m_pTr, k ? true : false);
-				if (!isTrackVisible && !_stricmp(pACTrack->m_layout[k].Get(), "(hide)"))
-				{
-					GetSetMediaTrackInfo(pACTrack->m_pTr, k ? "B_SHOWINMIXER" : "B_SHOWINTCP", &g_i1); // show the track
-					TrackList_AdjustWindows((k ? false : true));
-				}
-				pACTrack->m_layout[k].Set("");
+				GetSetMediaTrackInfo(pACTrack->m_pTr, k ? "B_SHOWINMIXER" : "B_SHOWINTCP", &g_i1); // show the track
+				TrackList_AdjustWindows(k ? false : true);
 			}
+			pACTrack->m_layout[k].Set("");
 		}
 	}
 

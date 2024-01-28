@@ -43,9 +43,37 @@ COLORREF g_crGradStart = 0;
 COLORREF g_crGradEnd = 0;
 static bool g_bRecRedRuler = false;
 
+int SWS_ColorToNative(int xrgb)
+{
+#ifdef _WIN32
+	xrgb = (xrgb >> 16 & 0x000000ff) |
+	       (xrgb       & 0xff00ff00) |
+	       (xrgb << 16 & 0x00ff0000) ;
+#endif
+	return xrgb;
+}
+
+constexpr int PORTABLE_FLAG = 0x2000000;
+
+int ImportColor(int stored)
+{
+	if (stored <= 0)
+		return stored;
+	else if (!(stored & PORTABLE_FLAG))
+		stored = SWS_ColorFromNative(stored);
+
+	return stored & 0x1FFFFFF;
+}
+
+int ExportColor(const int rgb_or_neg)
+{
+	return rgb_or_neg > 0 ? rgb_or_neg | PORTABLE_FLAG : rgb_or_neg;
+}
+
 void UpdateCustomColors()
 {
 #ifndef __APPLE__
+	// no BGR/RGB conversion: setting owned by REAPER
 	GetPrivateProfileStruct("REAPER", "custcolors", g_custColors, sizeof(g_custColors), get_ini_file());
 #else
 	GetCustomColors(g_custColors);
@@ -64,9 +92,10 @@ bool AllBlack()
 void PersistColors()
 {
 	char str[256];
-	sprintf(str, "%d %d", g_crGradStart, g_crGradEnd);
+	sprintf(str, "%d %d", ExportColor(g_crGradStart), ExportColor(g_crGradEnd));
 	WritePrivateProfileString(SWS_INI, GRADIENT_COLOR_KEY, str, get_ini_file());
 #ifndef __APPLE__
+	// no BGR/RGB conversion: setting owned by REAPER
 	WritePrivateProfileStruct("REAPER", "custcolors", g_custColors, sizeof(g_custColors), get_ini_file());
 #else
 	SetCustomColors(g_custColors);
@@ -94,10 +123,10 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			switch (pDI->CtlID)
 			{
 				case IDC_COLOR1:
-					hb = CreateSolidBrush(g_crGradStart);
+					hb = CreateSolidBrush(SWS_ColorToNative(g_crGradStart));
 					break;
 				case IDC_COLOR2:
-					hb = CreateSolidBrush(g_crGradEnd);
+					hb = CreateSolidBrush(SWS_ColorToNative(g_crGradEnd));
 					break;
 			}
 			FillRect(pDI->hDC, &pDI->rcItem, hb);
@@ -113,10 +142,10 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				switch (iSettingColor)
 				{
 				case 0:
-					g_crGradStart = cr;
+					g_crGradStart = SWS_ColorFromNative(cr);
 					break;
 				case 1:
-					g_crGradEnd = cr;
+					g_crGradEnd = SWS_ColorFromNative(cr);
 					break;
 				case 2:
 					UpdateCustomColors();
@@ -149,10 +178,10 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 					if (wParam == IDC_COLOR1)
 					{
-						cc.rgbResult = g_crGradStart;
+						cc.rgbResult = SWS_ColorToNative(g_crGradStart);
 						if (ChooseColor(&cc))
 						{
-							g_crGradStart = cc.rgbResult;
+							g_crGradStart = SWS_ColorFromNative(cc.rgbResult) & 0xFFFFFF;
 							PersistColors();
 							RedrawWindow(hwndDlg, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
 						}
@@ -171,13 +200,13 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						PersistColors();
 #elif !defined(__APPLE__)
 					COLORREF cc = 0;
-					if (wParam == IDC_COLOR1) cc = g_crGradStart;
-					if (wParam == IDC_COLOR2) cc = g_crGradEnd;
+					if (wParam == IDC_COLOR1) cc = SWS_ColorToNative(g_crGradStart);
+					if (wParam == IDC_COLOR2) cc = SWS_ColorToNative(g_crGradEnd);
 
 					if (SWELL_ChooseColor(hwndDlg,&cc,16,g_custColors))
 					{
-						if (wParam == IDC_COLOR1) g_crGradStart = cc;
-						if (wParam == IDC_COLOR2) g_crGradEnd = cc;
+						if (wParam == IDC_COLOR1) g_crGradStart = SWS_ColorFromNative(cc);
+						if (wParam == IDC_COLOR2) g_crGradEnd = SWS_ColorFromNative(cc);
 						PersistColors();
 						InvalidateRect(hwndDlg,NULL,FALSE);
 					}
@@ -214,12 +243,12 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 							for (int i = 0; i < 16; i++)
 							{
 								sprintf(key, "custcolor%d", i+1);
-								sprintf(val, "%d", g_custColors[i]);
+								sprintf(val, "%d", ExportColor(SWS_ColorFromNative(g_custColors[i])));
 								WritePrivateProfileString("SWS Color", key, val, cFilename);
 							}
-							sprintf(val, "%d", g_crGradStart);
+							sprintf(val, "%d", ExportColor(g_crGradStart));
 							WritePrivateProfileString("SWS Color", "gradientStart", val, cFilename);
-							sprintf(val, "%d", g_crGradEnd);
+							sprintf(val, "%d", ExportColor(g_crGradEnd));
 							WritePrivateProfileString("SWS Color", "gradientEnd", val, cFilename);
 						}
 					}
@@ -253,7 +282,7 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 								int iColor = GetPrivateProfileInt("SWS Color", key, -1, cPath);
 								if (iColor != -1)
 								{
-									g_custColors[i] = iColor;
+									g_custColors[i] = SWS_ColorToNative(ImportColor(iColor));
 									bFound = true;
 								}
 
@@ -267,6 +296,7 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 							g_crGradStart = GetPrivateProfileInt("SWS Color", "gradientStart", g_crGradStart, cPath);
 							g_crGradEnd   = GetPrivateProfileInt("SWS Color", "gradientEnd", g_crGradEnd, cPath);
+							g_crGradStart = ImportColor(g_crGradStart), g_crGradEnd = ImportColor(g_crGradEnd);
 							PersistColors();
 #ifdef _WIN32
 							RedrawWindow(hwndDlg, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
@@ -783,7 +813,7 @@ void TrackGradient(COMMAND_T* = NULL)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			COLORREF cr = CalcGradient(g_crGradStart, g_crGradEnd, (double)iCurPos++ / (iNumSel-1)) | 0x1000000;
-			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &cr);
+			SetMediaTrackInfo_Value(tr, "I_CUSTOMCOLOR", SWS_ColorToNative(cr));
 		}
 	}
 	Undo_OnStateChangeEx(__LOCALIZE("Set tracks to color gradient","sws_undo"), UNDO_STATE_TRACKCFG, -1);
@@ -824,7 +854,7 @@ void ItemTrackGrad(COMMAND_T* = NULL)
 				MediaItem* mi = GetTrackMediaItem(tr, j);
 				if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL))
 				{
-					COLORREF cr = g_crGradStart | 0x1000000;
+					COLORREF cr = SWS_ColorToNative(g_crGradStart | 0x1000000);
 					GetSetMediaItemInfo(mi, "I_CUSTOMCOLOR", &cr);
 				}
 			}
@@ -837,7 +867,7 @@ void ItemTrackGrad(COMMAND_T* = NULL)
 				if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL))
 				{
 					COLORREF cr = CalcGradient(g_crGradStart, g_crGradEnd, (double)iCurPos++ / (iNumSel-1)) | 0x1000000;
-					GetSetMediaItemInfo(mi, "I_CUSTOMCOLOR", &cr);
+					SetMediaItemInfo_Value(mi, "I_CUSTOMCOLOR", SWS_ColorToNative(cr));
 				}
 			}
 		}
@@ -868,7 +898,7 @@ void ItemGradient(COMMAND_T* = NULL)
 			if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL))
 			{
 				COLORREF cr = CalcGradient(g_crGradStart, g_crGradEnd, (double)iCurPos++ / (iNumSel-1)) | 0x1000000;
-				GetSetMediaItemInfo(mi, "I_CUSTOMCOLOR", &cr);
+				SetMediaItemInfo_Value(mi, "I_CUSTOMCOLOR", SWS_ColorToNative(cr));
 			}
 		}
 	}
@@ -890,7 +920,7 @@ void TakeGradient(COMMAND_T* = NULL)
 				for (int h = 0; h < CountTakes(mi); h++)
 				{
 					COLORREF cr = CalcGradient(g_crGradStart, g_crGradEnd, (double)tCurPos++ / (CountTakes(mi)-1)) | 0x1000000;
-					GetSetMediaItemTakeInfo(GetTake(mi, h), "I_CUSTOMCOLOR", &cr);
+					SetMediaItemTakeInfo_Value(GetTake(mi, h), "I_CUSTOMCOLOR", SWS_ColorToNative(cr));
 				}
 				tCurPos = 0;
 			}
@@ -1270,8 +1300,8 @@ int ColorInit()
 	LineParser lp(false);
 	if (!lp.parse(str))
 	{
-		g_crGradStart = lp.gettoken_int(0);
-		g_crGradEnd = lp.gettoken_int(1);
+		g_crGradStart = ImportColor(lp.gettoken_int(0));
+		g_crGradEnd = ImportColor(lp.gettoken_int(1));
 	}
 	g_bRecRedRuler = GetPrivateProfileInt(SWS_INI, RECREDRULER_KEY, g_bRecRedRuler, get_ini_file()) ? true : false;
 	if (g_bRecRedRuler) plugin_register("timer", (void*)ColorTimer);

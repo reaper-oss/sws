@@ -953,7 +953,7 @@ void AWDoAutoGroup(bool rec)
 				int rndColor;
 				if (g_AWAutoGroupRndColor)
 					// use WDL Mersenne Twister
-					rndColor = ColorToNative(g_MTRand.randInt(255), g_MTRand.randInt(255), g_MTRand.randInt(255)) | 0x1000000;
+					rndColor = RGB(g_MTRand.randInt(255), g_MTRand.randInt(255), g_MTRand.randInt(255)) | 0x1000000;
 
 				for (int i = 0; i < selItems.GetSize(); i++) {
 					MediaItem* item = selItems.Get()[i];
@@ -1026,7 +1026,7 @@ void NFDoAutoGroupTakesMode(WDL_TypedBuf<MediaItem*> origSelItems)
 
 	int rndColor;
 	if (g_AWAutoGroupRndColor)
-		rndColor = ColorToNative(g_MTRand.randInt(255), g_MTRand.randInt(255), g_MTRand.randInt(255)) | 0x1000000;
+		rndColor = RGB(g_MTRand.randInt(255), g_MTRand.randInt(255), g_MTRand.randInt(255)) | 0x1000000;
 
 	// do column-wise grouping
 	// loop through columns of items

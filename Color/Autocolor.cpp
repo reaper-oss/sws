@@ -156,11 +156,7 @@ void SWS_AutoColorView::GetItemText(SWS_ListItem* item, int iCol, char* str, int
 		if (pItem->m_color<0 && (-pItem->m_color-1) < __ARRAY_SIZE(cColorTypes))
 			lstrcpyn(str, __localizeFunc(cColorTypes[-pItem->m_color-1],"sws_DLG_115",LOCALIZE_FLAG_NOCACHE), iStrMax);
 		else
-#ifdef _WIN32
-			snprintf(str, iStrMax, "0x%02x%02x%02x", pItem->m_color & 0xFF, (pItem->m_color >> 8) & 0xFF, (pItem->m_color >> 16) & 0xFF); //Brado: I think this is in reverse. Ini file dec to hex conversion (correct value for color) shows opposite of what this outputs to screen. e.g. 0xFFFF80 instead of 0x80FFFF
-#else
 			snprintf(str, iStrMax, "0x%06x", pItem->m_color);
-#endif
 		break;
 	case COL_ICON:
 		if (pItem->m_type == AC_TRACK)
@@ -197,11 +193,8 @@ void SWS_AutoColorView::SetItemText(SWS_ListItem* item, int iCol, const char* st
 					pItem->m_str_filter.Set(str);
 				break;
 			case COL_COLOR:
-			{
-				int iNewCol = strtol(str, NULL, 0);
-				pItem->m_color = RGB((iNewCol >> 16) & 0xFF, (iNewCol >> 8) & 0xFF, iNewCol & 0xFF);
-			}
-			break;
+				pItem->m_color = strtol(str, nullptr, 0) & 0xFFFFFF;
+				break;
 			case COL_TCP_LAYOUT:
 				pItem->m_layout[0].Set(str);
 				break;
@@ -389,12 +382,13 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				UpdateCustomColors();
 				cc.lpCustColors = g_custColors;
 				cc.Flags = CC_FULLOPEN | CC_RGBINIT;
-				cc.rgbResult = item->m_color;
+				cc.rgbResult = SWS_ColorToNative(item->m_color);
 				if (ChooseColor(&cc))
 				{
+					cc.rgbResult = SWS_ColorFromNative(cc.rgbResult & 0xFFFFFF); // ANDing for issue 600
 					int x = 0;
 					while ((item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(&x)))
-						item->m_color = cc.rgbResult & 0xFFFFFF; // fix for issue 600
+						item->m_color = cc.rgbResult;
 				}
 				Update();
 #elif defined(__APPLE__)
@@ -407,9 +401,10 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				COLORREF cc = item->m_color;
 				if (SWELL_ChooseColor(m_hwnd,&cc,16,g_custColors))
 				{
+					cc = SWS_ColorFromNative(cc & 0xFFFFFF);
 					int x = 0;
 					while ((item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(&x)))
-						item->m_color = cc & 0xFFFFFF;
+						item->m_color = cc;
 				}
 				Update();
 #endif
@@ -530,6 +525,7 @@ void SWS_AutoColorWnd::OnTimer(WPARAM wParam)
 	COLORREF cr;
 	if (m_bSettingColor && GetChosenColor(&cr))
 	{
+		cr &= 0xFFFFFF;
 		int x = 0;
 		SWS_RuleItem* item;
 		while ((item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(&x)))
@@ -566,7 +562,7 @@ INT_PTR SWS_AutoColorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam
 			while ((item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(&x)))
 			{
 				if (col < 0)
-					col = item->m_color;
+					col = SWS_ColorToNative(item->m_color);
 				else if (col != item->m_color)
 				{
 					col = -1;
@@ -721,7 +717,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 		PreventUIRefresh(1);
 
 		int iCount = 0;
-		WDL_PtrList<void> gradientTracks;
+		WDL_PtrList<MediaTrack> gradientTracks;
 
 		if (rule->m_color == -AC_CUSTOM-1)
 			UpdateCustomColors();
@@ -900,15 +896,15 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 							}
 						}
 						else
-							newCol = rule->m_color | 0x1000000;
+							newCol = SWS_ColorToNative(rule->m_color | 0x1000000);
 
 						// Only set the color if the user hasn't changed the color manually (but record it as being changed)
-						if ((bForce || iCurColor == pACTrack->m_col) && newCol != iCurColor)
+						if ((bForce || iCurColor == SWS_ColorToNative(pACTrack->m_col)) && newCol != iCurColor)
 						{
 							GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &newCol);
 						}
 
-						pACTrack->m_col = newCol;
+						pACTrack->m_col = SWS_ColorFromNative(newCol);
 						pACTrack->m_bColored = true;
 					}
 
@@ -977,12 +973,12 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 			if (i && gradientTracks.GetSize() > 1)
 				newCol = CalcGradient(g_crGradStart, g_crGradEnd, (double)i / (gradientTracks.GetSize()-1)) | 0x1000000;
 			for (int j = 0; j < g_pACTracks.Get()->GetSize(); j++)
-				if (g_pACTracks.Get()->Get(j)->m_pTr == (MediaTrack*)gradientTracks.Get(i))
+				if (g_pACTracks.Get()->Get(j)->m_pTr == gradientTracks.Get(i))
 				{
 					g_pACTracks.Get()->Get(j)->m_col = newCol;
 					break;
 				}
-			GetSetMediaTrackInfo((MediaTrack*)gradientTracks.Get(i), "I_CUSTOMCOLOR", &newCol);
+			SetMediaTrackInfo_Value(gradientTracks.Get(i), "I_CUSTOMCOLOR", SWS_ColorToNative(newCol));
 		}
 
 		PreventUIRefresh(-1);
@@ -1040,7 +1036,7 @@ void AutoColorTrack(bool bForce)
 				iCurColor = 0;
 
 			// Only remove color on tracks that we colored ourselves
-			if (pACTrack->m_col == iCurColor)
+			if (SWS_ColorToNative(pACTrack->m_col) == iCurColor)
 			{
 				GetSetMediaTrackInfo(pACTrack->m_pTr, "I_CUSTOMCOLOR", &g_i0);
 			}
@@ -1119,7 +1115,7 @@ void ApplyColorRuleToMarkerRegion(SWS_RuleItem* _rule, int _flags)
 				((_flags&AC_REGION && isRgn && _rule->m_type==AC_REGION) ||
 				(_flags&AC_MARKER && !isRgn && _rule->m_type==AC_MARKER)))
 			{
-				SetProjectMarkerByIndex(NULL, x-1, isRgn, pos, end, num, NULL, _rule->m_color==-AC_NONE-1 ? (isRgn?ct->marker:ct->region) : _rule->m_color | 0x1000000);
+				SetProjectMarkerByIndex(NULL, x-1, isRgn, pos, end, num, NULL, _rule->m_color==-AC_NONE-1 ? (isRgn?ct->marker:ct->region) : SWS_ColorToNative(_rule->m_color | 0x1000000));
 			}
 		}
 	}
@@ -1218,7 +1214,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 				if (tr)
 				{
 					SWS_RuleTrack* rt = g_pACTracks.Get()->Add(new SWS_RuleTrack(tr));
-					rt->m_col = lp.gettoken_int(1);
+					rt->m_col = ImportColor(lp.gettoken_int(1));
 					rt->m_icon.Set(lp.gettoken_str(2));
 					rt->m_layout[0].Set(lp.gettoken_str(3));
 					rt->m_layout[1].Set(lp.gettoken_str(4));
@@ -1254,7 +1250,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 				if (CSurf_TrackToID(rt->m_pTr, false))
 					g = *(GUID*)GetSetMediaTrackInfo(rt->m_pTr, "GUID", NULL);
 				guidToString(&g, str);
-				ctx->AddLine("%s %d \"%s\" \"%s\" \"%s\"", str, rt->m_col, rt->m_icon.Get(), rt->m_layout[0].Get(), rt->m_layout[1].Get());
+				ctx->AddLine("%s %d \"%s\" \"%s\" \"%s\"", str, ExportColor(rt->m_col), rt->m_icon.Get(), rt->m_layout[0].Get(), rt->m_layout[1].Get());
 			}
 		}
 		ctx->AddLine(">");
@@ -1322,7 +1318,7 @@ int AutoColorInit()
 			WritePrivateProfileString(SWS_INI, key, NULL, get_ini_file());
 		LineParser lp(false);
 		if (!lp.parse(str) && lp.getnumtokens() >= 4)
-			g_pACItems.Add(new SWS_RuleItem(lp.gettoken_int(0), lp.gettoken_str(1), lp.gettoken_int(2), lp.gettoken_str(3), lp.gettoken_str(4), lp.gettoken_str(5)));
+			g_pACItems.Add(new SWS_RuleItem(lp.gettoken_int(0), lp.gettoken_str(1), ImportColor(lp.gettoken_int(2)), lp.gettoken_str(3), lp.gettoken_str(4), lp.gettoken_str(5)));
 		else if(!lp.parse(str) && lp.getnumtokens() == 3) //Reformat old format Autocolor line to new format (i.e. region + marker)
 			g_pACItems.Add(new SWS_RuleItem(AC_TRACK, lp.gettoken_str(0), lp.gettoken_int(1), lp.gettoken_str(2), "", ""));
 	}
@@ -1367,7 +1363,7 @@ void AutoColorSaveState()
 		makeEscapedConfigString(g_pACItems.Get(i)->m_icon.Get(), &tmp[1]);
 		makeEscapedConfigString(g_pACItems.Get(i)->m_layout[0].Get(), &tmp[2]);
 		makeEscapedConfigString(g_pACItems.Get(i)->m_layout[1].Get(), &tmp[3]);
-		snprintf(str, BUFFER_SIZE, "%d %s %d %s %s %s", g_pACItems.Get(i)->m_type, tmp[0].Get(), g_pACItems.Get(i)->m_color, tmp[1].Get(), tmp[2].Get(), tmp[3].Get());
+		snprintf(str, BUFFER_SIZE, "%d %s %d %s %s %s", g_pACItems.Get(i)->m_type, tmp[0].Get(), ExportColor(g_pACItems.Get(i)->m_color), tmp[1].Get(), tmp[2].Get(), tmp[3].Get());
 
 		snprintf(key, 32, AC_ITEM_KEY, i+1);
 		WritePrivateProfileString(SWS_INI, key, str, g_ACIni.Get());

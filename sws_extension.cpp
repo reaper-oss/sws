@@ -742,7 +742,6 @@ error:
 /* unused
 		IMPAPI(Audio_RegHardwareHook);
 */
-		IMPAPI(ColorToNative)
 		IMPAPI(CoolSB_GetScrollInfo);
 		IMPAPI(CoolSB_SetScrollInfo);
 		IMPAPI(CountActionShortcuts);

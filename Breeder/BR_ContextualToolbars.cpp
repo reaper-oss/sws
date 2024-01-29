@@ -2423,12 +2423,12 @@ HMENU BR_ContextualToolbarsWnd::OnContextMenu (int x, int y, bool* wantDefaultIt
 					if (gi >= 8 && submenu == menu)
 					{
 						submenu = CreatePopupMenu();
-						AddSubMenu(menu, submenu, __LOCALIZE("More", "sws_DLG_181"));
+						AddSubMenuOrdered(menu, submenu, __LOCALIZE("More", "sws_DLG_181"));
 					}
 
 					char toolbarName[512];
 					action.getName(toolbarName, sizeof(toolbarName));
-					AddToMenu(submenu, toolbarName, i + 1, -1, false, &action == currentAction ? MFS_CHECKED : MFS_UNCHECKED); // i + 1 -> because context values can only be > 0
+					AddToMenuOrdered(submenu, toolbarName, i + 1, -1, false, &action == currentAction ? MFS_CHECKED : MFS_UNCHECKED); // i + 1 -> because context values can only be > 0
 				}
 			}
 			break;

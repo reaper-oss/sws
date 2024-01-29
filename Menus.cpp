@@ -104,7 +104,7 @@ void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter, bool bPo
 	}
 }
 
-void AddSubMenuOld(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter, UINT uiSate)
+void AddSubMenuOrdered(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter, UINT uiSate)
 {
 	int iPos = GetMenuItemCount(hMenu);
 	if (iInsertAfter < 0)
@@ -138,7 +138,7 @@ void AddSubMenuOld(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfte
 void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter, UINT uiSate)
 {
 	if(!IsLocalized() || iInsertAfter != -1) {
-		AddSubMenuOld(hMenu, subMenu, text, iInsertAfter, uiSate);
+		AddSubMenuOrdered(hMenu, subMenu, text, iInsertAfter, uiSate);
 		return;
 	}
 

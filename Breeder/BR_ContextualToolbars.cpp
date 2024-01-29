@@ -119,6 +119,24 @@ constexpr ContextAction g_actions[] = {
 	{ 21, ContextAction::Main, 41965, 41941 },
 	{ 22, ContextAction::Main, 41966, 41942 },
 	{ 23, ContextAction::Main, 41967, 41943 },
+	// Main toolbars 17-24 (v7)
+	{ 28, ContextAction::Main, 42761, 42713 },
+	{ 29, ContextAction::Main, 42762, 42714 },
+	{ 30, ContextAction::Main, 42763, 42715 },
+	{ 31, ContextAction::Main, 42764, 42716 },
+	{ 32, ContextAction::Main, 42765, 42717 },
+	{ 33, ContextAction::Main, 42766, 42718 },
+	{ 34, ContextAction::Main, 42767, 42719 },
+	{ 35, ContextAction::Main, 42768, 42720 },
+	// Main toolbars 25-32 (v7)
+	{ 40, ContextAction::Main, 42769, 42721 },
+	{ 41, ContextAction::Main, 42770, 42722 },
+	{ 42, ContextAction::Main, 42771, 42723 },
+	{ 43, ContextAction::Main, 42772, 42724 },
+	{ 44, ContextAction::Main, 42773, 42725 },
+	{ 45, ContextAction::Main, 42774, 42726 },
+	{ 46, ContextAction::Main, 42775, 42727 },
+	{ 47, ContextAction::Main, 42776, 42728 },
 
 	// MIDI toolbars 1-4
 	{ 12, ContextAction::MIDI, 41640, 41687 },
@@ -130,6 +148,16 @@ constexpr ContextAction g_actions[] = {
 	{ 25, ContextAction::MIDI, 41969, 41945 },
 	{ 26, ContextAction::MIDI, 41970, 41946 },
 	{ 27, ContextAction::MIDI, 41971, 41947 },
+	// MIDI toolbars  9-12 (v7)
+	{ 36, ContextAction::MIDI, 42777, 42745 },
+	{ 37, ContextAction::MIDI, 42778, 42746 },
+	{ 38, ContextAction::MIDI, 42779, 42747 },
+	{ 39, ContextAction::MIDI, 42780, 42748 },
+	// MIDI toolbars 13-16 (v7)
+	{ 48, ContextAction::MIDI, 42781, 42749 },
+	{ 49, ContextAction::MIDI, 42782, 42750 },
+	{ 50, ContextAction::MIDI, 42783, 42751 },
+	{ 51, ContextAction::MIDI, 42784, 42752 },
 };
 
 template<typename T>
@@ -2361,8 +2389,9 @@ HMENU BR_ContextualToolbarsWnd::OnContextMenu (int x, int y, bool* wantDefaultIt
 				if (!hasAnyValidContext)
 					break;
 
+				HMENU submenu = menu;
 				ContextAction::Type prevGroup = g_actions[0].type;
-				for (int i = 0; i < __ARRAY_SIZE(g_actions); ++i)
+				for (int i = 0, gi = 0; i < __ARRAY_SIZE(g_actions); ++i, ++gi)
 				{
 					const ContextAction &action = g_actions[i];
 					const bool inheritParent     = action == INHERIT_PARENT,
@@ -2381,16 +2410,25 @@ HMENU BR_ContextualToolbarsWnd::OnContextMenu (int x, int y, bool* wantDefaultIt
 						if (!show)
 							continue;
 					}
+					else if(!action.isBuiltin() && GetToggleCommandState(action.toggleCommand) == -1)
+						continue; // hide new toolbars in older REAPER version
 
 					if (prevGroup != action.type)
 					{
 						AddToMenu(menu, SWS_SEPARATOR, 0);
 						prevGroup = action.type;
+						gi = 0, submenu = menu;
+					}
+
+					if (gi >= 8 && submenu == menu)
+					{
+						submenu = CreatePopupMenu();
+						AddSubMenu(menu, submenu, __LOCALIZE("More", "sws_DLG_181"));
 					}
 
 					char toolbarName[512];
 					action.getName(toolbarName, sizeof(toolbarName));
-					AddToMenu(menu, toolbarName, i + 1, -1, false, &action == currentAction ? MFS_CHECKED : MFS_UNCHECKED); // i + 1 -> because context values can only be > 0
+					AddToMenu(submenu, toolbarName, i + 1, -1, false, &action == currentAction ? MFS_CHECKED : MFS_UNCHECKED); // i + 1 -> because context values can only be > 0
 				}
 			}
 			break;

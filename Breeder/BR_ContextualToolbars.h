@@ -177,6 +177,7 @@ public:
 	/* Get and set toolbar info for specific context (for list of contexts see BR_ToolbarContexts) */
 	bool SetContext (int context, const ContextAction*, const bool* autoClose, const int* positionOffsetX, const int* positionOffsetY);
 	bool GetContext (int context, const ContextAction**, bool* autoclose, int* positionOffsetX, int* positionOffsetY);
+	const ContextAction &GetContextAction (int context) const;
 
 	/* Get and set options for toolbar loading */
 	Options &GetOptions() { return m_options; }
@@ -246,7 +247,6 @@ private:
 	void SetToolbarWndProc (BR_ContextualToolbar::ExecuteOnToolbarLoad& executeOnToolbarLoad, HWND toolbarHwnd, int toggleAction, HWND toolbarParent);
 
 	/* Set and get info for various contexts */
-	const ContextAction &GetContextAction (int context) const;
 	int GetPositionOffsetX (int context);
 	int GetPositionOffsetY (int context);
 	AutoClose GetAutoClose (int context);

@@ -2329,6 +2329,19 @@ HMENU BR_ContextualToolbarsWnd::OnContextMenu (int x, int y, bool* wantDefaultIt
 			case COL_CONTEXT:
 			case COL_TOOLBAR:
 			{
+				const ContextAction *currentAction = nullptr;
+				for (int i = 0; int* selectedContext = (int*)m_list->EnumSelected(&i);)
+				{
+					const ContextAction *selectedAction = &m_currentToolbar.GetContextAction(*selectedContext);
+					if(!currentAction)
+						currentAction = selectedAction;
+					else if(currentAction != selectedAction)
+					{
+						currentAction = nullptr;
+						break;
+					}
+				}
+
 				ContextAction::Type prevGroup = g_actions[0].type;
 				for (int i = 0; i < __ARRAY_SIZE(g_actions); ++i)
 				{
@@ -2358,7 +2371,7 @@ HMENU BR_ContextualToolbarsWnd::OnContextMenu (int x, int y, bool* wantDefaultIt
 
 					char toolbarName[512];
 					action.getName(toolbarName, sizeof(toolbarName));
-					AddToMenu(menu, toolbarName, i + 1, -1, false); // i + 1 -> because context values can only be > 0
+					AddToMenu(menu, toolbarName, i + 1, -1, false, &action == currentAction ? MFS_CHECKED : MFS_UNCHECKED); // i + 1 -> because context values can only be > 0
 				}
 			}
 			break;

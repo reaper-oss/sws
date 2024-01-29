@@ -319,7 +319,7 @@ public:
 
 	void Update ();
 	bool CheckForModificationsAndSave (bool onClose);
-	bool GetPositionOffsetFromUser (int& x, int&y);
+	void SetPositionOffsetFromUser ();
 	BR_ContextualToolbar* GetCurrentContextualToolbar ();
 	WDL_FastString GetPresetName (int preset);
 

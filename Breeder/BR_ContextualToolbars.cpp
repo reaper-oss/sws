@@ -1709,61 +1709,45 @@ bool BR_ContextualToolbarsView::OnItemSelChanging (SWS_ListItem* item, bool bSel
 
 void BR_ContextualToolbarsView::OnItemDblClk (SWS_ListItem* item, int iCol)
 {
-	if (int* context = (int*)item)
+	int* context = (int*)item;
+	BR_ContextualToolbarsWnd* wnd = g_contextToolbarsWndManager.Get();
+	if (!context || !wnd)
+		return;
+	BR_ContextualToolbar* toolbar = wnd->GetCurrentContextualToolbar();
+	if (!toolbar)
+		return;
+
+	SWS_ListView* listView = wnd->GetListView();
+
+	switch (iCol)
 	{
-		if (BR_ContextualToolbarsWnd* wnd = g_contextToolbarsWndManager.Get())
+		case COL_TOOLBAR:
+		case COL_CONTEXT:
 		{
-			if (BR_ContextualToolbar* toolbar = wnd->GetCurrentContextualToolbar())
-			{
-				const ContextAction *action;
-				toolbar->GetContext(*context, &action, NULL, NULL, NULL);
-				SWS_ListView* listView = wnd->GetListView();
-
-				switch (iCol)
-				{
-					case COL_TOOLBAR:
-					case COL_CONTEXT:
-					{
-						POINT p;
-						GetCursorPos(&p);
-						SendMessage(wnd->GetHWND(), WM_CONTEXTMENU, (WPARAM)wnd->GetListView(), MAKELPARAM(p.x, p.y));
-					}
-					break;
-
-					case COL_AUTOCLOSE:
-					{
-						bool autoClose;
-						toolbar->GetContext(*context, NULL, &autoClose, NULL, NULL);
-						autoClose = !autoClose;
-
-						int x = 0;
-						while (int* selectedContext = (int*)listView->EnumSelected(&x)) // double click on OSX won't unselect other items so go through all
-							toolbar->SetContext(*selectedContext, NULL, &autoClose, NULL, NULL);
-					}
-					break;
-
-					case COL_POSITION:
-					{
-						if (action->isBuiltin())
-							break;
-
-						int posX, posY;
-						toolbar->GetContext(*context, NULL, NULL, &posX, &posY);
-
-						if (wnd->GetPositionOffsetFromUser(posX, posY))
-						{
-							int x = 0;
-							while (int* selectedContext = (int*)listView->EnumSelected(&x))
-								toolbar->SetContext(*selectedContext, NULL, NULL, &posX, &posY);
-						}
-					}
-					break;
-				}
-
-				listView->Update();
-			}
+			POINT p;
+			GetCursorPos(&p);
+			SendMessage(wnd->GetHWND(), WM_CONTEXTMENU, (WPARAM)wnd->GetListView(), MAKELPARAM(p.x, p.y));
 		}
+		break;
+
+		case COL_AUTOCLOSE:
+		{
+			bool autoClose;
+			toolbar->GetContext(*context, NULL, &autoClose, NULL, NULL);
+			autoClose = !autoClose;
+
+			int x = 0;
+			while (int* selectedContext = (int*)listView->EnumSelected(&x)) // double click on OSX won't unselect other items so go through all
+				toolbar->SetContext(*selectedContext, NULL, &autoClose, NULL, NULL);
+		}
+		break;
+
+		case COL_POSITION:
+			wnd->SetPositionOffsetFromUser();
+		break;
 	}
+
+	listView->Update();
 }
 
 bool BR_ContextualToolbarsView::HideGridLines ()
@@ -1895,14 +1879,34 @@ bool BR_ContextualToolbarsWnd::CheckForModificationsAndSave (bool onClose)
 	return closeWnd;
 }
 
-bool BR_ContextualToolbarsWnd::GetPositionOffsetFromUser (int& x, int&y)
+void BR_ContextualToolbarsWnd::SetPositionOffsetFromUser ()
 {
-	pair<int,int> positionOffset(x, y);
+	// Find "default" position settings for the dialog
+	bool hasAnyValidContext = false;
+	int x = 0, y = 0;
+	for (int i = 0; int* context = (int*)m_list->EnumSelected(&i);)
+	{
+		const ContextAction *action;
+		if (m_currentToolbar.GetContext(*context, &action, NULL, &x, &y) && !action->isBuiltin())
+		{
+			hasAnyValidContext = true;
+			break;
+		}
+	}
+	if (!hasAnyValidContext)
+		return;
+
+	std::pair<int,int> positionOffset(x, y);
 	INT_PTR result = DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_BR_CONTEXTUAL_TOOLBARS_POS), m_hwnd, BR_ContextualToolbarsWnd::PositionOffsetDialogProc, (LPARAM)&positionOffset);
 
 	x = positionOffset.first;
 	y = positionOffset.second;
-	return (result == IDOK);
+
+	if (result != IDOK)
+		return;
+
+	for (int i = 0; int* context = (int*)m_list->EnumSelected(&i);)
+		m_currentToolbar.SetContext(*context, NULL, NULL, &x, &y);
 }
 
 WDL_FastString BR_ContextualToolbarsWnd::GetPresetName (int preset)
@@ -2299,40 +2303,53 @@ HMENU BR_ContextualToolbarsWnd::OnContextMenu (int x, int y, bool* wantDefaultIt
 		{
 			case COL_AUTOCLOSE:
 			{
-				int x = 0;
-				int toolbarCount = 0;
-				int enabledCount = 0;
-				while (int* selectedContext = (int*)m_list->EnumSelected(&x))
+				int toolbarCount = 0, enabledCount = 0;
+				for (int i = 0; int* selectedContext = (int*)m_list->EnumSelected(&i);)
 				{
 					const ContextAction *action; bool autoClose;
-					if (m_currentToolbar.GetContext(*selectedContext, &action, &autoClose, NULL, NULL))
+					if (m_currentToolbar.GetContext(*selectedContext, &action, &autoClose, NULL, NULL) && !action->isBuiltin())
 					{
-						if (!action->isBuiltin())
-						{
-							++toolbarCount;
-							if (autoClose) ++enabledCount;
-						}
+						++toolbarCount;
+						if (autoClose) ++enabledCount;
 					}
 				}
+				if (!toolbarCount)
+					break;
 
-				bool autoCloseEnabled = toolbarCount > 0 && enabledCount == toolbarCount;
+				const bool autoCloseEnabled = enabledCount == toolbarCount;
 				AddToMenu(menu, __LOCALIZE("Enable toolbar auto close", "sws_DLG_181"), (autoCloseEnabled ? 1 : 2), -1, false, (autoCloseEnabled ? MF_CHECKED : MF_UNCHECKED));
 			}
 			break;
 
 			case COL_POSITION:
 			{
-				AddToMenu(menu, __LOCALIZE("Set toolbar position offset...", "sws_DLG_181"), 1, -1, false);
+				bool hasAnyValidContext = false;
+				for (int i = 0; int* selectedContext = (int*)m_list->EnumSelected(&i);)
+				{
+					if (!m_currentToolbar.GetContextAction(*selectedContext).isBuiltin())
+					{
+						hasAnyValidContext = true;
+						break;
+					}
+				}
+				if(hasAnyValidContext)
+					AddToMenu(menu, __LOCALIZE("Set toolbar position offset...", "sws_DLG_181"), 1, -1, false);
 			}
 			break;
 
 			case COL_CONTEXT:
 			case COL_TOOLBAR:
 			{
+				bool hasAnyValidContext = false;
 				const ContextAction *currentAction = nullptr;
 				for (int i = 0; int* selectedContext = (int*)m_list->EnumSelected(&i);)
 				{
-					const ContextAction *selectedAction = &m_currentToolbar.GetContextAction(*selectedContext);
+					const ContextAction *selectedAction;
+					if (m_currentToolbar.GetContext(*selectedContext, &selectedAction, nullptr, nullptr, nullptr))
+						hasAnyValidContext = true;
+					else
+						continue;
+
 					if(!currentAction)
 						currentAction = selectedAction;
 					else if(currentAction != selectedAction)
@@ -2341,6 +2358,8 @@ HMENU BR_ContextualToolbarsWnd::OnContextMenu (int x, int y, bool* wantDefaultIt
 						break;
 					}
 				}
+				if (!hasAnyValidContext)
+					break;
 
 				ContextAction::Type prevGroup = g_actions[0].type;
 				for (int i = 0; i < __ARRAY_SIZE(g_actions); ++i)
@@ -2396,31 +2415,7 @@ void BR_ContextualToolbarsWnd::ContextMenuReturnId (int id)
 			break;
 
 			case COL_POSITION:
-			{
-				int positionX = 0;
-				int positionY = 0;
-
-				// Find "default" position settings for the dialog
-				int x = 0;
-				while (int* context = (int*)m_list->EnumSelected(&x))
-				{
-					const ContextAction *action; int posX, posY;
-					if (m_currentToolbar.GetContext(*context, &action, NULL, &posX, &posY) && !action->isBuiltin())
-					{
-						positionX = posX;
-						positionY = posY;
-						break;
-					}
-				}
-
-				// Update
-				if (this->GetPositionOffsetFromUser(positionX, positionY))
-				{
-					int x = 0;
-					while (int* context = (int*)m_list->EnumSelected(&x))
-						m_currentToolbar.SetContext(*context, NULL, NULL, &positionX, &positionY);
-				}
-			}
+			  SetPositionOffsetFromUser();
 			break;
 
 			case COL_CONTEXT:

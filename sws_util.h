@@ -112,8 +112,8 @@ public:
 	}
 	PTRTYPE* Get(ReaProject* pProj)
 	{
-		if (!pProj) // If not in a project load/save context, above returns NULL
-			pProj = EnumProjects(-1, NULL, 0);
+		if (!pProj)
+			pProj = EnumProjects(-1, NULL, 0); // this is necessary
 		int i = m_projects.Find(pProj);
 		if (i >= 0)
 			return m_data.Get(i);

@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "SnM/SnM_FX.h"
 #include "SnM/SnM_Misc.h"
+#include "SnM/SnM_Notes.h"
 #include "SnM/SnM_Resources.h"
 #include "SnM/SnM_Routing.h"
 #include "SnM/SnM_Track.h"

@@ -108,7 +108,10 @@ public:
 	virtual ~SWSProjConfig() { Empty(); }
 	PTRTYPE* Get()
 	{
-		ReaProject* pProj = (ReaProject*)GetCurrentProjectInLoadSave();
+		return Get(GetCurrentProjectInLoadSave());
+	}
+	PTRTYPE* Get(ReaProject* pProj)
+	{
 		if (!pProj) // If not in a project load/save context, above returns NULL
 			pProj = EnumProjects(-1, NULL, 0);
 		int i = m_projects.Find(pProj);
@@ -117,7 +120,6 @@ public:
 		m_projects.Add(pProj);
 		return m_data.Add(new PTRTYPE);
 	}
-	PTRTYPE* Get(int iProj) { return m_data.Get(iProj); }
 	int GetNumProj() { return m_data.GetSize(); }
 	void Empty()
 	{

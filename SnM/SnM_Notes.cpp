@@ -1805,17 +1805,17 @@ void NF_DoUpdateSWSMarkerRegionSubWindow()
 	}
 }
 
-const char* JBDoGetSWSExtraProjectNotes(ReaProject* project)
+const char* JB_GetSWSExtraProjectNotes(ReaProject* project)
 {
-	return g_prjNotes.Get()->Get();
+	return g_prjNotes.Get(project)->Get();
 }
 
-void JBDoSetSWSExtraProjectNotes(ReaProject* project, const char* buf)
+void JB_SetSWSExtraProjectNotes(ReaProject* project, const char* buf)
 {
 	if (MarkProjectDirty)
 		MarkProjectDirty(NULL);
 
-	g_prjNotes.Get()->Set(buf);
+	g_prjNotes.Get(project)->Set(buf);
 
 	// update displayed text if Notes window is visible and notes for set track are displayed
 	if (NotesWnd* w = g_notesWndMgr.Get()) {

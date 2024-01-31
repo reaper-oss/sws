@@ -1812,8 +1812,7 @@ const char* JB_GetSWSExtraProjectNotes(ReaProject* project)
 
 void JB_SetSWSExtraProjectNotes(ReaProject* project, const char* buf)
 {
-	if (MarkProjectDirty)
-		MarkProjectDirty(project);
+	MarkProjectDirty(project);
 
 	g_prjNotes.Get(project)->Set(buf);
 

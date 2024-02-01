@@ -129,10 +129,14 @@ bool g_internalMkrRgnChange = false;
 
 SNM_TrackNotes *SNM_TrackNotes::find(MediaTrack *track)
 {
+	const GUID *guid = TrackToGuid(track);
+	if (!guid)
+		return nullptr;
+
 	for (int i = 0; i < g_SNM_TrackNotes.Get()->GetSize(); ++i)
 	{
 		SNM_TrackNotes *notes = g_SNM_TrackNotes.Get()->Get(i);
-		if (notes->GetTrack() == track)
+		if (GuidsEqual(guid, notes->GetGUID()))
 			return notes;
 	}
 	return nullptr;

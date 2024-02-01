@@ -112,9 +112,6 @@ bool TrackNameMatch(MediaTrack* _tr, const char* _searchStr) {
 
 bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr) 
 {
-	if (!_tr)
-		return false;
-
 	SNM_TrackNotes *notes = SNM_TrackNotes::find(_tr);
 	return notes && stristr(notes->GetNotes(), _searchStr);
 }

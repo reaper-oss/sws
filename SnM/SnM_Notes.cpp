@@ -127,6 +127,17 @@ MediaTrack* g_trNote = NULL;
 bool g_internalMkrRgnChange = false;
 
 
+SNM_TrackNotes *SNM_TrackNotes::find(MediaTrack *track)
+{
+	for (int i = 0; i < g_SNM_TrackNotes.Get()->GetSize(); ++i)
+	{
+		SNM_TrackNotes *notes = g_SNM_TrackNotes.Get()->Get(i);
+		if (notes->GetTrack() == track)
+			return notes;
+	}
+	return nullptr;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // NotesWnd
 ///////////////////////////////////////////////////////////////////////////////
@@ -769,18 +780,11 @@ void NotesWnd::SaveCurrentTrackNotes(bool _wantUndo)
 	if (g_trNote && CSurf_TrackToID(g_trNote, false) >= 0)
 	{
 		GetWindowText(m_edit, g_lastText, sizeof(g_lastText));
-		bool found = false;
-		for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++) 
-		{
-			if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == g_trNote)
-			{
-				g_SNM_TrackNotes.Get()->Get(i)->SetNotes(g_lastText); // CRLF removed only when saving the project..
-				found = true;
-				break;
-			}
-		}
-		if (!found)
+		if (SNM_TrackNotes *notes = SNM_TrackNotes::find(g_trNote))
+			notes->SetNotes(g_lastText); // CRLF removed only when saving the project
+		else
 			g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(nullptr, TrackToGuid(g_trNote), g_lastText));
+
 		if (_wantUndo)
 			Undo_OnStateChangeEx2(NULL, __LOCALIZE("Edit track notes","sws_undo"), UNDO_STATE_MISCCFG, -1); //JFB TODO? -1 to replace?
 		else
@@ -1007,11 +1011,11 @@ int NotesWnd::UpdateTrackNotes()
 		{
 			g_trNote = selTr;
 
-			for (int i=0; i < g_SNM_TrackNotes.Get()->GetSize(); i++)
-				if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == g_trNote) {
-					SetText(g_SNM_TrackNotes.Get()->Get(i)->GetNotes());
-					return REQUEST_REFRESH;
-				}
+			if (SNM_TrackNotes *notes = SNM_TrackNotes::find(g_trNote))
+			{
+				SetText(notes->GetNotes());
+				return REQUEST_REFRESH;
+			}
 
 			g_SNM_TrackNotes.Get()->Add(new SNM_TrackNotes(nullptr, TrackToGuid(g_trNote), ""));
 			SetText("");
@@ -1688,36 +1692,25 @@ int IsNotesLocked(COMMAND_T*) {
 /******************************************************************************
 * ReaScript export #755                                                       *
 ******************************************************************************/
-const char* NFDoGetSWSTrackNotes(MediaTrack* track)
+const char* NF_GetSWSTrackNotes(MediaTrack* track)
 {
-	for (int i = 0; i < g_SNM_TrackNotes.Get()->GetSize(); i++) {
-		if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == track) {
-			return g_SNM_TrackNotes.Get()->Get(i)->GetNotes();
-			break;
-		}
-	}
-
-	return "";
+	SNM_TrackNotes* notes = SNM_TrackNotes::find(track);
+	return notes ? notes->GetNotes() : "";
 }
 
-void NFDoSetSWSTrackNotes(MediaTrack* track, const char* buf)
+void NF_SetSWSTrackNotes(MediaTrack* track, const char* buf)
 {
-	if (MarkProjectDirty)
-		MarkProjectDirty(NULL);
+	MarkProjectDirty(NULL);
 
-	for (int i = 0; i < g_SNM_TrackNotes.Get()->GetSize(); i++) {
+	if (SNM_TrackNotes* notes = SNM_TrackNotes::find(track))
+	{
+		notes->SetNotes(buf);
 
-		if (g_SNM_TrackNotes.Get()->Get(i)->GetTrack() == track) {
-			g_SNM_TrackNotes.Get()->Get(i)->SetNotes(buf);
-
-			// update displayed text if Notes window is visible and notes for set track are displayed
-			if (NotesWnd* w = g_notesWndMgr.Get()) {
-				if (w->IsWndVisible() && g_notesType == SNM_NOTES_TRACK && g_trNote == track) {
-					w->SetText(buf);
-				}
-			}
-			return;
-		}		
+		// update displayed text if Notes window is visible and notes for set track are displayed
+		NotesWnd* w = g_notesWndMgr.Get();
+		if (w && w->IsWndVisible() && g_notesType == SNM_NOTES_TRACK && g_trNote == track)
+			w->SetText(buf);
+		return;
 	}
 
 	// tracknote for the track doesn't exist yet, add new one 

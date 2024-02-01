@@ -38,6 +38,8 @@
 
 #include <WDL/localize/localize.h>
 
+static bool AWFillGapsAcquireItems(MediaTrack* track, int itemIndex, int itemCount, MediaItem** item1, MediaItem** item2, bool fixedLane);
+
 // Globals for copy and paste
 
 namespace ItemClickMoveCurs { enum {
@@ -321,6 +323,28 @@ int AWCountItemGroups()
 	return maxGroupId;
 }
 
+static bool AWFillGapsAcquireItems(MediaTrack* track, int itemIndex, int itemCount, MediaItem** item1, MediaItem** item2, bool fixedLane)
+{
+	MediaItem* i1 = GetTrackMediaItem(track, itemIndex);
+	const double i1Lane = fixedLane ? GetMediaItemInfo_Value(i1, "I_FIXEDLANE") : 0.0;
+
+	for (int ct = 1; itemIndex + ct < itemCount; ++ct)
+	{
+		MediaItem* it = GetTrackMediaItem(track, itemIndex + ct);
+		const double itLane = fixedLane ? GetMediaItemInfo_Value(it, "I_FIXEDLANE") : 0.0;
+		if (itLane == i1Lane)
+		{
+			*item1 = i1;
+			*item2 = it;
+			return true;
+		}
+	}
+	*item1 = NULL;
+	*item2 = NULL;
+
+	return false;
+}
+
 void AWFillGapsAdv(const char* title, char* retVals)
 {
 	// Divided by 1000 to convert to milliseconds except maxStretch
@@ -350,19 +374,21 @@ void AWFillGapsAdv(const char* title, char* retVals)
 	// Run loop for every track in project
 	for (int trackIndex = 0; trackIndex < GetNumTracks(); trackIndex++)
 	{
-
 		// Gets current track in loop
 		MediaTrack* track = GetTrack(0, trackIndex);
 
-		// Run loop for every item on track
+		int freeMode = (int)GetMediaTrackInfo_Value(track, "I_FREEMODE");
 
+		// Run loop for every item on track
 		int itemCount = GetTrackNumMediaItems(track);
 
 		for (int itemIndex = 0; itemIndex < (itemCount - 1); itemIndex++)
 		{
+			MediaItem* item1;
+			MediaItem* item2;
 
-			MediaItem* item1 = GetTrackMediaItem(track, itemIndex);
-			MediaItem* item2 = GetTrackMediaItem(track, itemIndex + 1);
+			if (!AWFillGapsAcquireItems(track, itemIndex, itemCount, &item1, &item2, freeMode == 2))
+				continue; // ?
 			// errorFlag = 0;
 
 
@@ -584,16 +610,18 @@ void AWFillGapsQuick(COMMAND_T* t)
 		// Gets current track in loop
 		MediaTrack* track = GetTrack(0, trackIndex);
 
-		// Run loop for every item on track
+		int freeMode = (int)GetMediaTrackInfo_Value(track, "I_FREEMODE");
 
+		// Run loop for every item on track
 		int itemCount = GetTrackNumMediaItems(track);
 
 		for (int itemIndex = 0; itemIndex < (itemCount - 1); itemIndex++)
 		{
+			MediaItem* item1;
+			MediaItem* item2;
 
-			MediaItem* item1 = GetTrackMediaItem(track, itemIndex);
-			MediaItem* item2 = GetTrackMediaItem(track, itemIndex + 1);
-
+			if (!AWFillGapsAcquireItems(track, itemIndex, itemCount, &item1, &item2, freeMode == 2))
+				continue;
 
 			// BEGIN FIX OVERLAP CODE --------------------------------------------------------------
 
@@ -673,16 +701,18 @@ void AWFillGapsQuickXFade(COMMAND_T* t)
 		// Gets current track in loop
 		MediaTrack* track = GetTrack(0, trackIndex);
 
-		// Run loop for every item on track
+		int freeMode = (int)GetMediaTrackInfo_Value(track, "I_FREEMODE");
 
+		// Run loop for every item on track
 		int itemCount = GetTrackNumMediaItems(track);
 
 		for (int itemIndex = 0; itemIndex < (itemCount - 1); itemIndex++)
 		{
+			MediaItem* item1;
+			MediaItem* item2;
 
-			MediaItem* item1 = GetTrackMediaItem(track, itemIndex);
-			MediaItem* item2 = GetTrackMediaItem(track, itemIndex + 1);
-
+			if (!AWFillGapsAcquireItems(track, itemIndex, itemCount, &item1, &item2, freeMode == 2))
+				continue;
 
 			// BEGIN FIX OVERLAP CODE --------------------------------------------------------------
 
@@ -766,16 +796,18 @@ void AWFixOverlaps(COMMAND_T* t)
 		// Gets current track in loop
 		MediaTrack* track = GetTrack(0, trackIndex);
 
-		// Run loop for every item on track
+		int freeMode = (int)GetMediaTrackInfo_Value(track, "I_FREEMODE");
 
+		// Run loop for every item on track
 		int itemCount = GetTrackNumMediaItems(track);
 
 		for (int itemIndex = 0; itemIndex < (itemCount - 1); itemIndex++)
 		{
+			MediaItem* item1;
+			MediaItem* item2;
 
-			MediaItem* item1 = GetTrackMediaItem(track, itemIndex);
-			MediaItem* item2 = GetTrackMediaItem(track, itemIndex + 1);
-
+			if (!AWFillGapsAcquireItems(track, itemIndex, itemCount, &item1, &item2, freeMode == 2))
+				continue;
 
 			// BEGIN FIX OVERLAP CODE --------------------------------------------------------------
 

@@ -380,6 +380,7 @@ I_OUTCHAN      first hardware output channel (&1024=mono, reads -1 when playing 
 I_PITCHMODE    highest 16 bits=pitch shift mode (see EnumPitchShiftModes), lower 16 bits=pitch shift submode (see EnumPitchShiftSubModes))", },
 	{ APIFUNC(CF_Preview_GetPeak), "bool", "CF_Preview*,int,double*", "preview,channel,peakvolOut", "Return the maximum sample value played since the last read. Refresh speed depends on buffer size.", },
 	{ APIFUNC(CF_Preview_SetValue), "bool", "CF_Preview*,const char*,double", "preview,name,newValue", "See CF_Preview_GetValue.", },
+	{ APIFUNC(CF_Preview_GetOutputTrack), "MediaTrack*", "CF_Preview*", "preview", "", },
 	{ APIFUNC(CF_Preview_SetOutputTrack), "bool", "CF_Preview*,ReaProject*,MediaTrack*", "preview,project,track", "", },
 	{ APIFUNC(CF_Preview_Play), "bool", "CF_Preview*", "preview", "Start playback of the configured preview object.", },
 	{ APIFUNC(CF_Preview_Stop), "bool", "CF_Preview*", "preview", "Stop and destroy a preview object.", },

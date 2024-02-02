@@ -41,6 +41,7 @@ public:
   void   setPosition(double);
   bool   getPeak(int chan, double *out) { return m_src.readPeak(chan, out); }
   int    getOutputChannel() { return m_reg.m_out_chan; }
+  MediaTrack *getOutputTrack() const { return static_cast<MediaTrack *>(m_reg.preview_track); }
   void   setOutput(int channel);
   void   setOutput(MediaTrack *);
   bool   getLoop() { return m_reg.loop; }

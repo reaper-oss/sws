@@ -547,6 +547,11 @@ bool CF_Preview_SetValue(CF_Preview *preview, const char *name, double newValue)
   return false;
 }
 
+MediaTrack *CF_Preview_GetOutputTrack(CF_Preview *preview)
+{
+  return CF_Preview::isValid(preview) ? preview->getOutputTrack() : nullptr;
+}
+
 // the ReaProject argument is there only to satisfy REAPER's argument validator
 bool CF_Preview_SetOutputTrack(CF_Preview *preview, ReaProject *, MediaTrack *track)
 {
@@ -559,10 +564,7 @@ bool CF_Preview_SetOutputTrack(CF_Preview *preview, ReaProject *, MediaTrack *tr
 
 bool CF_Preview_Play(CF_Preview *preview)
 {
-  if(!CF_Preview::isValid(preview))
-    return false;
-
-  return preview->play();
+  return CF_Preview::isValid(preview) ? preview->play() : false;
 }
 
 bool CF_Preview_Stop(CF_Preview *preview)

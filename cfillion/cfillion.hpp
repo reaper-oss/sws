@@ -70,6 +70,7 @@ CF_Preview *CF_CreatePreview(PCM_source *);
 bool CF_Preview_GetValue(CF_Preview *, const char *name, double *valueOut);
 bool CF_Preview_GetPeak(CF_Preview *, int channel, double *peakvolOut);
 bool CF_Preview_SetValue(CF_Preview *, const char *name, double newValue);
+MediaTrack *CF_Preview_GetOutputTrack(CF_Preview *);
 bool CF_Preview_SetOutputTrack(CF_Preview *, ReaProject *, MediaTrack *);
 bool CF_Preview_Play(CF_Preview *);
 bool CF_Preview_Stop(CF_Preview *);

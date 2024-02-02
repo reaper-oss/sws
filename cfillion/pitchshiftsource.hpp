@@ -70,8 +70,7 @@ public:
   void   setFadeInLen(double);
   double getFadeOutLen() { return m_fadeOutLen; }
   void   setFadeOutLen(double);
-  double getFadeOutEnd() { return m_fadeOutEnd; }
-  void   setFadeOutEnd(double);
+  bool   startFadeOut();
   bool   readPeak(size_t, double *);
 
 private:
@@ -83,7 +82,7 @@ private:
   // must lock m_mutex before using these
   double currentLength();
   void applyGain(PCM_source_transfer_t *, double sampleTime, double fadeOutStart);
-  void getShiftedSamples(PCM_source_transfer_t *);
+  void getShiftedSamples(PCM_source_transfer_t *, bool isSeek);
   void updatePeaks(const PCM_source_transfer_t *);
   void updateTempoShift();
 

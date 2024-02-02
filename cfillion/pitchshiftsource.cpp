@@ -68,15 +68,22 @@ void PitchShiftSource::GetSamples(PCM_source_transfer_t *block)
 {
   m_mutex.LockShared();
 
-  if(m_rate == 1.0 && m_pitch == 0.0)
-    m_src->GetSamples(block);
-  else
-    getShiftedSamples(block);
-
   const double sampleTime   { 1.0 / block->samplerate },
                fadeOutEnd   { m_fadeOutEnd ? m_fadeOutEnd : currentLength() },
                fadeOutStart { fadeOutEnd - m_fadeOutLen },
                blockEndTime { block->time_s + (block->length * sampleTime) };
+
+  const bool isSeek { m_writeTime != block->time_s };
+  if(isSeek)
+    m_writeTime = block->time_s;
+  m_writeTime += block->length * sampleTime;
+
+  if(m_rate == 1.0 && m_pitch == 0.0) {
+    m_src->GetSamples(block);
+    m_readTime = 0;
+  }
+  else
+    getShiftedSamples(block, isSeek);
 
   if(m_volume != 1.0 || m_pan != 0.0 ||
      m_playTime < m_fadeInLen || blockEndTime >= fadeOutStart)
@@ -114,7 +121,7 @@ void PitchShiftSource::applyGain(PCM_source_transfer_t *block,
   }
 }
 
-void PitchShiftSource::getShiftedSamples(PCM_source_transfer_t *block)
+void PitchShiftSource::getShiftedSamples(PCM_source_transfer_t *block, const bool isSeek)
 {
   m_ps->set_srate(block->samplerate);
   m_ps->set_nch(block->nch);
@@ -126,13 +133,10 @@ void PitchShiftSource::getShiftedSamples(PCM_source_transfer_t *block)
   sourceBlock.length = static_cast<int>(block->length * bufSizeMul);
 
   const double sampleTime { 1.0 / block->samplerate };
-  if(m_writeTime != block->time_s) {
-    // reset m_readTime when seeking
-    m_readTime  = block->time_s * m_rate;
-    m_writeTime = block->time_s;
+  if(isSeek || !m_readTime) {
+    m_readTime = block->time_s * m_rate;
     m_ps->Reset(); // to give immediate feedback with very slow play rates
   }
-  m_writeTime += block->length * sampleTime;
 
   do {
     const int remaining { block->length - block->samples_out };
@@ -258,11 +262,12 @@ void PitchShiftSource::setFadeOutLen(const double len)
   m_fadeOutLen = len;
 }
 
-void PitchShiftSource::setFadeOutEnd(const double time)
+bool PitchShiftSource::startFadeOut()
 {
-  if(time == m_fadeOutEnd)
-    return;
+  if(!m_fadeOutLen)
+    return false;
 
   WDL_MutexLockExclusive lock { &m_mutex };
-  m_fadeOutEnd = time;
+  m_fadeOutEnd = m_writeTime + m_fadeOutLen;
+  return true;
 }

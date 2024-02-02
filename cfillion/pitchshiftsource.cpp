@@ -106,7 +106,7 @@ void PitchShiftSource::applyGain(PCM_source_transfer_t *block,
     const double fadeIn { m_playTime < m_fadeInLen ? m_playTime / m_fadeInLen : 1.0 },
                  timeInFadeOut { m_fadeOutLen ? time - fadeOutStart : 0.0 },
                  fadeOut { timeInFadeOut > 0 ? 1 - (timeInFadeOut / m_fadeOutLen) : 1.0 },
-                 gain { m_volume * fadeIn * fadeOut };
+                 gain { m_volume * std::max(0.0, fadeIn * fadeOut) };
     for(int i {}; i < block->nch; ++i)
       sample[i] *= gain * pan[i & 1];
     time += sampleTime;

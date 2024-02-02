@@ -90,7 +90,8 @@ CF_Preview::~CF_Preview()
 bool CF_Preview::isDangling()
 {
   return
-    m_state == Idle || (!m_reg.loop && m_src.isPastEnd(getPosition())) ||
+    m_state == Idle ||
+    ((!m_reg.loop || m_state == FadeOut) && m_src.isPastEnd(getPosition())) ||
     (m_project && (!ValidatePtr(m_project, "ReaProject*") ||
                    !ValidatePtr2(m_project, m_reg.preview_track, "MediaTrack*")))
   ;

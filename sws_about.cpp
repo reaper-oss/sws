@@ -35,7 +35,8 @@
 #include "Prompt.h"
 #include <WDL/localize/localize.h>
 
-static HWND s_hwndAbout = NULL;
+static HWND s_hwndAbout;
+static bool s_isPackaged;
 
 bool IsOfficialVersion()
 {
@@ -77,9 +78,26 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SetWindowText(GetDlgItem(hwndDlg, IDC_VERSION), cVersionDate);
 			SetWindowText(GetDlgItem(hwndDlg, IDC_WEBSITE), SWS_URL);
 			SetWindowText(GetDlgItem(hwndDlg, IDC_EDIT), LICENSE_AUTHORS "\r\n" LICENSE_TEXT);
-			bool official, beta; GetStartupSearchOptions(&official, &beta, NULL);
-			CheckDlgButton(hwndDlg, IDC_CHECK1, official);
-			CheckDlgButton(hwndDlg, IDC_CHECK2, beta);
+
+			if (s_isPackaged)
+			{
+				constexpr int controls[] { IDC_CHECK1, IDC_CHECK2, IDC_FILTERGROUP, IDC_UPDATE };
+				for (const int control : controls)
+					ShowWindow(GetDlgItem(hwndDlg, control), SW_HIDE);
+
+				RECT wndRect, groupBoxRect;
+				GetWindowRect(hwndDlg, &wndRect);
+				GetClientRect(GetDlgItem(hwndDlg, IDC_FILTERGROUP), &groupBoxRect);
+				SetWindowPos(hwndDlg, nullptr, 0, 0, wndRect.right - wndRect.left,
+					(wndRect.bottom - wndRect.top) - (groupBoxRect.bottom - groupBoxRect.top),
+					SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
+			}
+			else
+			{
+				bool official, beta; GetStartupSearchOptions(&official, &beta, NULL);
+				CheckDlgButton(hwndDlg, IDC_CHECK1, official);
+				CheckDlgButton(hwndDlg, IDC_CHECK2, beta);
+			}
 
 			s_hwndAbout = hwndDlg;
 			ShowWindow(hwndDlg, SW_SHOW);
@@ -147,8 +165,12 @@ static COMMAND_T g_commandTable[] =
 {
 	{ { DEFACCEL, "SWS: About" }, "SWS_ABOUT", OpenAboutBox, "About SWS Extensions", 0, IsAboutBoxOpen, },
 	{ { DEFACCEL, "SWS/S&M: What's new..." }, "S&M_WHATSNEW", WhatsNew, },
-	{ { DEFACCEL, "SWS/BR: Check for new SWS version..." }, "BR_VERSION_CHECK", VersionCheckAction, },
 	{ {}, LAST_COMMAND, }, // Denote end of table
+};
+static COMMAND_T g_legacyInstallCmds[] =
+{
+	{ { DEFACCEL, "SWS/BR: Check for new SWS version..." }, "BR_VERSION_CHECK", VersionCheckAction, },
+	{ {}, LAST_COMMAND, },
 };
 //!WANT_LOCALIZE_1ST_STRING_END
 
@@ -156,4 +178,43 @@ int AboutBoxInit()
 {
 	SWSRegisterCommands(g_commandTable);
 	return 1;
+}
+
+static bool IsFromReaPack()
+{
+#ifdef _WIN32
+	HMODULE dll;
+	if (!GetModuleHandleExW(
+			GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+			GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+			reinterpret_cast<LPCWSTR>(&PackageInit), &dll))
+		return false;
+
+	char filename[MAX_PATH];
+	GetModuleFileNameUTF8(dll, filename, sizeof(filename));
+#else
+	Dl_info info;
+	if (!dladdr(reinterpret_cast<const void *>(&PackageInit), &info))
+		return false;
+	const char *filename { info.dli_fname };
+#endif
+
+	// v1 API
+	ReaPack_PackageEntry *entry;
+	if (ReaPack_GetOwner && ReaPack_FreeEntry && (entry = ReaPack_GetOwner(filename, nullptr, 0)))
+	{
+		ReaPack_FreeEntry(entry);
+		return true;
+	}
+
+	return false;
+}
+
+void PackageInit()
+{
+	if ((s_isPackaged = IsFromReaPack()))
+		return;
+
+	SWSRegisterCommands(g_legacyInstallCmds);
+	VersionCheckInitExit(true);
 }

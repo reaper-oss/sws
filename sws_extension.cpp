@@ -475,6 +475,11 @@ static void importExtensionAPI()
 
 	// import functions exposed by third-party extensions
 	osara_isShortcutHelpEnabled = (decltype(osara_isShortcutHelpEnabled))plugin_getapi("osara_isShortcutHelpEnabled");
+
+	ReaPack_GetOwner  = (decltype(ReaPack_GetOwner)) plugin_getapi("ReaPack_GetOwner");
+	ReaPack_FreeEntry = (decltype(ReaPack_FreeEntry))plugin_getapi("ReaPack_FreeEntry");
+
+	PackageInit();
 }
 
 // Fake control surface to get a low priority periodic time slice from Reaper

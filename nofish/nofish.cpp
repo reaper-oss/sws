@@ -377,7 +377,7 @@ void ME_CycleMIDIRecordingModes(COMMAND_T* ct, int val, int valhw, int relmode, 
 void CycleTrackAutomationModes(COMMAND_T* ct)
 {
 	WDL_TypedBuf<MediaTrack*> selTracks;
-	SWS_GetSelectedTracks(&selTracks, false);
+	SWS_GetSelectedTracks(&selTracks, true);
 
 	for (int i = 0; i < selTracks.GetSize(); i++) {
 		MediaTrack* track = selTracks.Get()[i];

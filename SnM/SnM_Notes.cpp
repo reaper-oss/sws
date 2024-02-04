@@ -493,7 +493,7 @@ void NotesWnd::OnResize()
 		// room for buttons?
 		if (
 #ifdef WANT_ACTION_HELP
-		g_notesType==SNM_NOTES_ACTION_HELP || 
+		g_notesType==SNM_NOTES_ACTION_HELP ||
 #endif
 		(g_notesType>=SNM_NOTES_MKR_SUB && g_notesType<=SNM_NOTES_MKRRGN_SUB)) {
 			m_resize.get_item(IDC_EDIT1)->orig.bottom = m_resize.get_item(IDC_EDIT1)->real_orig.bottom - 41; //JFB!! 41 is tied to the current .rc!
@@ -1212,9 +1212,7 @@ bool GetStringFromNotesChunk(WDL_FastString* _notesIn, char* _bufOut, int _bufOu
 		while (pNotes[i] && j < _bufOutSz)
 		{
 			if (pNotes[i] != '\r' && pNotes[i] != '\n')
-			{
-		_bufOut[j++] = (pNotes[i]=='|'&&pNotes[i-1]=='\n' ? '\n' : pNotes[i]); // i is >0 here
-			}
+				_bufOut[j++] = (pNotes[i]=='|'&&pNotes[i-1]=='\n' ? '\n' : pNotes[i]); // i is >0 here
 			i++;
 		}
 		if (j>=1 && !strcmp(_bufOut+j-1, ">")) // remove trailing ">", if any
@@ -1318,7 +1316,7 @@ bool ImportSubRipFile(const char* _fn)
 						if (*buf == '\r' || *buf == '\n') break;
 						notes.Append(buf);
 					}
-					
+
 					WDL_String name(notes.Get());
 					char *p=name.Get();
 					while (*p) {
@@ -1381,9 +1379,7 @@ bool ImportAdvancedSubStationFile(const char* _fn)
 		while(fgets(buf, sizeof(buf), f) && *buf) // searching for Events block
 		{
 			if (strncmp(buf, "[Events]", 8) == 0) // searching for events block, we don't care about styles and stuff
-			{
 				break;
-			}
 		}
 		if (!(fgets(buf, sizeof(buf), f) && *buf))
 			return false; // reading and discarding format line, we're only interested in fields that are fixed
@@ -1394,8 +1390,8 @@ bool ImportAdvancedSubStationFile(const char* _fn)
 			if (commaPos == nullptr) {
 				break;
 			}
-            commaPos++;
-            int commaCount = 1;
+			commaPos++;
+			int commaCount = 1;
 
 			int p1[4], p2[4];
 			if (sscanf(commaPos, "%d:%d:%d%*c%d,%d:%d:%d%*c%d",  // parsing start and end times
@@ -1429,27 +1425,27 @@ bool ImportAdvancedSubStationFile(const char* _fn)
 				memcpy(nameBuf, commaPos, nextCommaPos-commaPos);
 				nameBuf[nextCommaPos-commaPos] = '\0';
 				notes.Append(nameBuf);
-                notes.Append("] ");
+				notes.Append("] ");
 				commaPos = nextCommaPos;
 			}
-            commaCount++;
+			commaCount++;
 			while (commaCount < 9 && !(*commaPos == '\n' || *commaPos == '\r')) {
-                commaPos = strchr(commaPos+1, ',');
-                while (commaPos == nullptr)  {
-                    if (!(fgets(buf, sizeof(buf), f) && *buf && !(*buf == '\n' || *buf == '\r'))) {
-                        break;
-                    }
-                    commaPos = strchr(buf, ',');
-                }
-                if (*buf == '\n' || *buf == '\r') {
-                    break;
-                }
-                commaCount++;
+				commaPos = strchr(commaPos+1, ',');
+				while (commaPos == nullptr)  {
+					if (!(fgets(buf, sizeof(buf), f) && *buf && !(*buf == '\n' || *buf == '\r'))) {
+						break;
+					}
+					commaPos = strchr(buf, ',');
+				}
+				if (*buf == '\n' || *buf == '\r') {
+					break;
+				}
+				commaCount++;
 			}
 			if (commaCount != 9) {
 				break;
 			}
-            char *textPos = commaPos + 1;
+			char *textPos = commaPos + 1;
 
 			char text[1024];
 			int j = 0;
@@ -1509,7 +1505,7 @@ bool ImportAdvancedSubStationFile(const char* _fn)
 					if (!fgets(buf, sizeof(buf), f) || !*buf) {
 						break;
 					}
-                    textPos = buf;
+					textPos = buf;
 				}
 			}
 			text[j] = '\0';
@@ -1523,9 +1519,9 @@ bool ImportAdvancedSubStationFile(const char* _fn)
 			}
 			name.Ellipsize(0, 64); // 64 = native max mkr/rgn name length
 			int num = AddProjectMarker(NULL, true,
-								   float(p1[0])*3600 + float(p1[1])*60 + float(p1[2]) + float(p1[3])/100,
-									   float(p2[0])*3600 + float(p2[1])*60 + float(p2[2]) + float(p2[3])/100,
-								   name.Get(), -1);
+				float(p1[0])*3600 + float(p1[1])*60 + float(p1[2]) + float(p1[3])/100,
+				float(p2[0])*3600 + float(p2[1])*60 + float(p2[2]) + float(p2[3])/100,
+				name.Get(), -1);
 			if (num >= 0)
 			{
 				ok = true; // region added (at least)
@@ -1537,7 +1533,6 @@ bool ImportAdvancedSubStationFile(const char* _fn)
 				if (id > 0) // add the sub, no duplicate mgmt..
 					g_pRegionSubs.Get()->Add(new SNM_RegionSubtitle(nullptr, id, notes.Get()));
 			}
-
 		}
 
 		fclose(f);
@@ -1552,29 +1547,38 @@ bool ImportAdvancedSubStationFile(const char* _fn)
 	return ok;
 }
 
+static bool ImportSubTitleFile(const char *fn)
+{
+	constexpr struct { const char *ext; bool (*reader)(const char *); } formats[] {
+		{ "srt", &ImportSubRipFile             },
+		{ "ass", &ImportAdvancedSubStationFile },
+	};
+
+	for (const auto &format : formats)
+	{
+		if (!HasFileExtension(fn, format.ext))
+			continue;
+
+		if (format.reader(fn)) {
+			Undo_OnStateChangeEx2(NULL, __LOCALIZE("Import subtitle file","sws_DLG_152"), UNDO_STATE_ALL, -1);
+			return true;
+		}
+		else {
+			MessageBox(GetMainHwnd(), __LOCALIZE("Invalid subtitle file!","sws_DLG_152"), __LOCALIZE("S&M - Error","sws_DLG_152"), MB_OK);
+			return false;
+		}
+	}
+
+	MessageBox(GetMainHwnd(), __LOCALIZE("Invalid or unsupported file format!","sws_DLG_152"), __LOCALIZE("S&M - Error","sws_DLG_152"), MB_OK);
+	return false;
+}
+
 void ImportSubTitleFile(COMMAND_T* _ct)
 {
 	if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Import subtitle file","sws_DLG_152"), g_lastImportSubFn, NULL, false, SNM_SUB_IMPORT_EXT_LIST))
 	{
 		lstrcpyn(g_lastImportSubFn, fn, sizeof(g_lastImportSubFn));
-
-		if (HasFileExtension(fn, "srt")) {
-			if (ImportSubRipFile(fn))
-				//JFB hard-coded undo label: _ct might be NULL (when called from a button)
-				//	+ avoid trailing "..." in undo point name (when called from an action)
-				Undo_OnStateChangeEx2(NULL, __LOCALIZE("Import subtitle file","sws_DLG_152"), UNDO_STATE_ALL, -1);
-			else
-				MessageBox(GetMainHwnd(), __LOCALIZE("Invalid subtitle file!","sws_DLG_152"), __LOCALIZE("S&M - Error","sws_DLG_152"), MB_OK);
-		} else if (HasFileExtension(fn, "ass")) {
-			if (ImportAdvancedSubStationFile(fn))
-				//JFB hard-coded undo label: _ct might be NULL (when called from a button)
-				//	+ avoid trailing "..." in undo point name (when called from an action)
-				Undo_OnStateChangeEx2(NULL, __LOCALIZE("Import ASS file","sws_DLG_152"), UNDO_STATE_ALL, -1);
-			else
-				MessageBox(GetMainHwnd(), __LOCALIZE("Invalid ASS file!","sws_DLG_152"), __LOCALIZE("S&M - Error","sws_DLG_152"), MB_OK);
-		} else {
-			MessageBox(GetMainHwnd(), __LOCALIZE("Invalid or unsupported file format!","sws_DLG_152"), __LOCALIZE("S&M - Error","sws_DLG_152"), MB_OK);
-		}
+		ImportSubTitleFile(fn);
 		free(fn);
 	}
 }
@@ -1898,7 +1902,7 @@ int IsNotesLocked(COMMAND_T*) {
 }
 
 /******************************************************************************
-* ReaScript export #755													   *
+* ReaScript export #755                                                       *
 ******************************************************************************/
 const char* NFDoGetSWSTrackNotes(MediaTrack* track)
 {
@@ -2018,35 +2022,13 @@ void NF_DoUpdateSWSMarkerRegionSubWindow()
 }
 
 void NotesWnd::OnDroppedFiles(HDROP _h) {
-	if (g_locked || !(g_notesType == SNM_NOTES_MKR_SUB || g_notesType == SNM_NOTES_RGN_SUB || g_notesType == SNM_NOTES_MKRRGN_SUB)) {
+	if (g_locked || !(g_notesType == SNM_NOTES_MKR_SUB || g_notesType == SNM_NOTES_RGN_SUB || g_notesType == SNM_NOTES_MKRRGN_SUB))
 		return;
+	const int iFiles = DragQueryFile(_h, 0xFFFFFFFF, NULL, 0);
+	char fn[SNM_MAX_PATH];
+	for (int i = 0; i < iFiles; i++)
+	{
+		if (DragQueryFile(_h, i, fn, sizeof(fn)) && !ImportSubTitleFile(fn))
+			break;
 	}
-	int iFiles = DragQueryFile(_h, 0xFFFFFFFF, NULL, 0);
-	char fn[SNM_MAX_PATH] = "";
-	for (int i = 0; i < iFiles; i++) {
-		DragQueryFile(_h, i, fn, sizeof(fn));
-
-		if (HasFileExtension(fn, "srt")) {
-			if (ImportSubRipFile(fn))
-				//JFB hard-coded undo label: _ct might be NULL (when called from a button)
-				//	+ avoid trailing "..." in undo point name (when called from an action)
-				Undo_OnStateChangeEx2(NULL, __LOCALIZE("Import subtitle file", "sws_DLG_152"), UNDO_STATE_ALL,
-									  -1);
-			else
-				MessageBox(GetMainHwnd(), __LOCALIZE("Invalid subtitle file!", "sws_DLG_152"),
-						   __LOCALIZE("S&M - Error", "sws_DLG_152"), MB_OK);
-		} else if (HasFileExtension(fn, "ass")) {
-			if (ImportAdvancedSubStationFile(fn))
-				//JFB hard-coded undo label: _ct might be NULL (when called from a button)
-				//	+ avoid trailing "..." in undo point name (when called from an action)
-				Undo_OnStateChangeEx2(NULL, __LOCALIZE("Import ass file", "sws_DLG_152"), UNDO_STATE_ALL, -1);
-			else
-				MessageBox(GetMainHwnd(), __LOCALIZE("Invalid ass file!", "sws_DLG_152"),
-						   __LOCALIZE("S&M - Error", "sws_DLG_152"), MB_OK);
-		} else {
-			MessageBox(GetMainHwnd(), __LOCALIZE("Invalid or unsupported file format!", "sws_DLG_152"),
-					   __LOCALIZE("S&M - Error", "sws_DLG_152"), MB_OK);
-		}
-	}
-		
 }

@@ -731,6 +731,18 @@ void BR_MouseInfo::GetContext (const POINT& p)
 						{
 							BR_Envelope envelope(mouseInfo.envelope);
 							trackEnvHit = this->IsMouseOverEnvelopeLine(envelope, height-2*ENV_GAP, offset+ENV_GAP, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envPointId);
+
+							// if env is hit, check if underlying envelope outside of automation items is bypassed, #1727
+							if (trackEnvHit)
+							{
+								int bypassUnderlEnvProjDefault = *ConfigVar<int>("pooledenvattach") & 4;
+								int AIoptions = envelope.GetAIoptions(); // -1 == use project default
+								if ((bypassUnderlEnvProjDefault && AIoptions == -1) || (AIoptions & 4))
+								{
+									if (!this->IsMouseOverAI(envelope, height - 2 * ENV_GAP, offset + ENV_GAP, mouseY, mousePos))
+										trackEnvHit = 0;
+								}
+							}
 						}
 
 						if      (trackEnvHit == 1) mouseInfo.details = "env_point";
@@ -778,9 +790,21 @@ void BR_MouseInfo::GetContext (const POINT& p)
 						{
 							if      (trackEnvHit == 1) mouseInfo.details = "env_point";
 							else if (trackEnvHit == 2) mouseInfo.details = "env_segment";
+
+							// if env is hit, check if underlying envelope outside of automation items is bypassed, #1488
+							int bypassUnderlEnvProjDefault = *ConfigVar<int>("pooledenvattach") & 4;
+							BR_Envelope envelope(mouseInfo.envelope);
+							int AIoptions = envelope.GetAIoptions(); // -1 == use project default
+							if ((bypassUnderlEnvProjDefault && AIoptions == -1) || (AIoptions & 4))
+							{
+								if (!this->IsMouseOverAI(envelope, height - 2 * ENV_GAP, offset + ENV_GAP, mouseY, mousePos))
+								{
+									mouseInfo.details = "empty";
+								}
+							}
 						}
 						// Item and things inside it
-						else if (mouseInfo.item)
+						if (!trackEnvHit && mouseInfo.item)
 						{
 							// Take envelope takes priority
 							if (takeEnvHit != 0)
@@ -1309,6 +1333,24 @@ int BR_MouseInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEn
 	}
 	WritePtr(pointUnderMouse, pointId);
 	return mouseHit;
+}
+
+bool BR_MouseInfo::IsMouseOverAI(BR_Envelope & envelope, int drawableEnvHeight, int yOffset, int mouseY, double mousePos)
+{
+	// Check if mouse is in drawable part of envelope lane where line resides
+	if (mouseY >= yOffset && mouseY < yOffset + drawableEnvHeight)
+	{
+		TrackEnvelope* trEnv = envelope.GetPointer();
+		int AIcount = CountAutomationItems(trEnv);
+		for (int i = 0; i < AIcount; i++) {
+			double AIpos = GetSetAutomationItemInfo(trEnv, i, "D_POSITION", 0, false);
+			double AIlength = GetSetAutomationItemInfo(trEnv, i, "D_LENGTH", 0, false);
+
+			if (mousePos >= AIpos && mousePos < AIpos + AIlength)
+				return true;
+		}
+	}
+	return false;
 }
 
 int BR_MouseInfo::IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight, int trackOffset, list<TrackEnvelope*>& laneEnvs, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope, int* pointUnderMouse)

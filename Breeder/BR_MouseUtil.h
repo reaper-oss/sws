@@ -159,6 +159,7 @@ private:
 	int IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight, int yOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, int* pointUnderMouse);
 	int IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight, int trackOffset, list<TrackEnvelope*>& laneEnvs, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope, int* pointUnderMouse);
 	int IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHeight, int takeOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope, int* pointUnderMouse);
+	bool IsMouseOverAI(BR_Envelope& envelope, int drawableEnvHeight, int yOffset, int mouseY, double mousePos);
 	int GetRulerLaneHeight (int rulerH, int lane);
 	int IsHwndMidiEditor (HWND hwnd, HWND* midiEditor, HWND* subView);
 	static bool SortEnvHeightsById (const pair<int,int>& left, const pair<int,int>& right);

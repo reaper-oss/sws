@@ -437,7 +437,7 @@ bool CF_ExportMediaSource(PCM_source *source, const char *file)
 // cannot return CreateFromType("SECTION"): if not added to the project,
 // the ReaScript argument validator won't recognize the new section as valid
 bool CF_PCM_Source_SetSectionInfo(PCM_source *section, PCM_source *source,
-  const double offset, double length, const bool reverse)
+  const double offset, double length, const bool reverse, const double *fade)
 {
   if(!section || section == source || strcmp(section->GetType(), "SECTION"))
     return false;
@@ -460,6 +460,7 @@ bool CF_PCM_Source_SetSectionInfo(PCM_source *section, PCM_source *source,
   ProjectStateContext *ctx { ProjectCreateMemCtx(&buffer) };
   ctx->AddLine("LENGTH %f", length);
   ctx->AddLine("STARTPOS %f", offset);
+  ctx->AddLine("OVERLAP %f", fade ? *fade : 0);
   ctx->AddLine("MODE %d", mode);
   ctx->AddLine("<SOURCE %s", source->GetType());
   source->SaveState(ctx);
@@ -506,7 +507,7 @@ static const APIParam<CF_Preview> PREVIEW_PARAMS[] {
 
 CF_Preview *CF_CreatePreview(PCM_source *source)
 {
-  if(!source || source->GetSampleRate() < 1.0) // only accept sources with audio
+  if(!source)
     return nullptr;
 
   return new CF_Preview { source };
@@ -546,6 +547,11 @@ bool CF_Preview_SetValue(CF_Preview *preview, const char *name, double newValue)
   return false;
 }
 
+MediaTrack *CF_Preview_GetOutputTrack(CF_Preview *preview)
+{
+  return CF_Preview::isValid(preview) ? preview->getOutputTrack() : nullptr;
+}
+
 // the ReaProject argument is there only to satisfy REAPER's argument validator
 bool CF_Preview_SetOutputTrack(CF_Preview *preview, ReaProject *, MediaTrack *track)
 {
@@ -558,10 +564,7 @@ bool CF_Preview_SetOutputTrack(CF_Preview *preview, ReaProject *, MediaTrack *tr
 
 bool CF_Preview_Play(CF_Preview *preview)
 {
-  if(!CF_Preview::isValid(preview))
-    return false;
-
-  return preview->play();
+  return CF_Preview::isValid(preview) ? preview->play() : false;
 }
 
 bool CF_Preview_Stop(CF_Preview *preview)
@@ -569,6 +572,8 @@ bool CF_Preview_Stop(CF_Preview *preview)
   if(!CF_Preview::isValid(preview))
     return false;
 
+  // The internal API returns false if the stop request triggers a fade-out or
+  // async stop. Return true to users to indicate the request has been received.
   preview->stop();
   return true;
 }

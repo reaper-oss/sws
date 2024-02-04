@@ -27,22 +27,25 @@
 
 #pragma once
 
+#include <vector>
 #include <WDL/mutex.h>
 
 class PitchShiftSource : public PCM_source {
 public:
+  static PitchShiftSource *create(PCM_source *src);
+
   PitchShiftSource(PCM_source *src);
   ~PitchShiftSource();
 
   PCM_source *Duplicate() override { return nullptr; }
   bool   IsAvailable() override { return m_src->IsAvailable(); }
-  const  char *GetType() override { return "SWS_PITCHSHIFT"; }
   bool   SetFileName(const char *) override { return false; }
-  int    GetNumChannels() override { return m_src->GetNumChannels(); }
+  int    GetNumChannels() override;
   double GetSampleRate() override { return m_src->GetSampleRate(); }
   double GetLength() override;
   int    PropertiesWindow(HWND) override { return 0; }
-  void   GetSamples(PCM_source_transfer_t *block) override;
+  // marked final: does important bookkeeping that subclasses shouldn't bypassed
+  void   GetSamples(PCM_source_transfer_t *block) override final;
   void   GetPeakInfo(PCM_source_peaktransfer_t *) override {}
   void   SaveState(ProjectStateContext *) override {}
   int    LoadState(const char *, ProjectStateContext *) override { return -1; }
@@ -52,7 +55,7 @@ public:
   void   PeaksBuild_Finish() override {}
 
   // only safe to call from the main thread
-  bool isPastEnd(double position);
+  bool   isPastEnd(double position);
   double getVolume() { return m_volume; }
   void   setVolume(double v);
   double getPan() { return m_pan; }
@@ -61,7 +64,7 @@ public:
   void   setPlayRate(double);
   double getPitch() { return m_pitch; }
   void   setPitch(double);
-  bool   getPreservePitch() { return m_preservePitch; }
+  bool   getPreservePitch() { return m_flags & PreservePitch; }
   void   setPreservePitch(bool);
   int    getMode() { return m_mode; }
   void   setMode(int);
@@ -69,24 +72,79 @@ public:
   void   setFadeInLen(double);
   double getFadeOutLen() { return m_fadeOutLen; }
   void   setFadeOutLen(double);
-  double getFadeOutEnd() { return m_fadeOutEnd; }
-  void   setFadeOutEnd(double);
+  bool   startFadeOut();
+  bool   readPeak(size_t, double *);
+  virtual bool requestStop() { return true; }
 
-private:
+protected:
+  struct Block {
+    PCM_source_transfer_t *tx;
+    double sampleTime, fadeOutStart;
+    bool isSeek;
+  };
+  struct Peak {
+    bool read;
+    double max;
+  };
+  enum Flags {
+    PreservePitch = 1<<0,
+    AllNotesOff   = 1<<1,
+    StopRequest   = 1<<2,
+    StopServiced  = 1<<3,
+  };
+
   // must lock m_mutex before using these
-  double currentLength();
-  void getShiftedSamples(PCM_source_transfer_t *);
-  void applyGain(PCM_source_transfer_t *, double sampleTime, double fadeOutStart);
-  void updateTempoShift();
+  virtual double sourceLength() const = 0;
+  virtual void writeSamples(const Block &) = 0;
+  virtual void writePeaks(const PCM_source_transfer_t *) = 0;
+  virtual void updateTempoShift() = 0;
+  double computeGain(const Block &, double time, int samplesUntilNextCall);
 
   double m_pitch, m_rate, m_volume, m_pan, m_fadeInLen, m_fadeOutLen;
-  bool m_preservePitch;
-  int m_mode;
+  int m_flags, m_mode;
 
   WDL_SharedMutex m_mutex;
   PCM_source *m_src;
-  IReaperPitchShift *m_ps;
-  double m_readTime, m_writeTime; // for pitch-shifting
-  double m_playTime; // position-independent
+  double m_playTime;  // for fade-ins, position-independent
+  double m_writeTime; // for seek detection and fade-outs
   double m_fadeOutEnd;
+  std::vector<Peak> m_peaks;
+};
+
+class PitchShiftSource_Audio final : public PitchShiftSource {
+public:
+  PitchShiftSource_Audio(PCM_source *);
+  ~PitchShiftSource_Audio() override;
+
+  const char *GetType() override { return "SWS_PITCHSHIFT_AUDIO"; }
+
+protected:
+  double sourceLength() const override;
+  void writeSamples(const Block &) override;
+  void writePeaks(const PCM_source_transfer_t *) override;
+  void updateTempoShift() override;
+
+private:
+  void getShiftedSamples(const Block &);
+
+  double m_readTime; // for pitch-shifting
+  IReaperPitchShift *m_ps;
+};
+
+class PitchShiftSource_MIDI final : public PitchShiftSource {
+public:
+  PitchShiftSource_MIDI(PCM_source *);
+
+  const char *GetType() override { return "SWS_PITCHSHIFT_MIDI"; }
+
+  bool requestStop() override;
+
+protected:
+  double sourceLength() const override;
+  void writeSamples(const Block &) override;
+  void writePeaks(const PCM_source_transfer_t *) override;
+  void updateTempoShift() override;
+
+private:
+  void addCCAllChans(MIDI_eventlist *events, unsigned char cc, unsigned char val);
 };

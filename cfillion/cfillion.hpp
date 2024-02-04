@@ -61,7 +61,7 @@ int CF_EnumMediaSourceCues(PCM_source *source, const int index, double *time,
   double *endTime, bool *isRegion, char *name, const int nameSize, bool *isChapter);
 bool CF_ExportMediaSource(PCM_source *source, const char *file);
 bool CF_PCM_Source_SetSectionInfo(PCM_source *section, PCM_source *source,
-  double offset, double length, bool reverse);
+  double offset, double length, bool reverse, const double *fade);
 
 BOOL CF_GetScrollInfo(HWND, int bar, LPSCROLLINFO);
 
@@ -70,6 +70,7 @@ CF_Preview *CF_CreatePreview(PCM_source *);
 bool CF_Preview_GetValue(CF_Preview *, const char *name, double *valueOut);
 bool CF_Preview_GetPeak(CF_Preview *, int channel, double *peakvolOut);
 bool CF_Preview_SetValue(CF_Preview *, const char *name, double newValue);
+MediaTrack *CF_Preview_GetOutputTrack(CF_Preview *);
 bool CF_Preview_SetOutputTrack(CF_Preview *, ReaProject *, MediaTrack *);
 bool CF_Preview_Play(CF_Preview *);
 bool CF_Preview_Stop(CF_Preview *);

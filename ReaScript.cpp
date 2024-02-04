@@ -364,7 +364,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_GetMediaSourceRPP), "bool", "PCM_source*,char*,int", "src,fnOut,fnOut_sz", "Get the project associated with this source (BWF, subproject...).", },
 	{ APIFUNC(CF_EnumMediaSourceCues), "int", "PCM_source*,int,double*,double*,bool*,char*,int,bool*", "src,index,timeOut,endTimeOut,isRegionOut,nameOut,nameOut_sz,isChapterOut", "Enumerate the source's media cues. Returns the next index or 0 when finished.", },
 	{ APIFUNC(CF_ExportMediaSource), "bool", "PCM_source*,const char*", "src,fn", "Export the source to the given file (MIDI only).", },
-	{ APIFUNC(CF_PCM_Source_SetSectionInfo), "bool", "PCM_source*,PCM_source*,double,double,bool", "section,source,offset,length,reverse", "Give a section source created using PCM_Source_CreateFromType(\"SECTION\"). Offset and length are ignored if 0. Negative length to subtract from the total length of the source." },
+	{ APIFUNC(CF_PCM_Source_SetSectionInfo), "bool", "PCM_source*,PCM_source*,double,double,bool,double*", "section,source,offset,length,reverse,fadeInOptional", "Give a section source created using PCM_Source_CreateFromType(\"SECTION\"). Offset and length are ignored if 0. Negative length to subtract from the total length of the source." },
 
 	{ APIFUNC(CF_CreatePreview), "CF_Preview*", "PCM_source*", "source", R"(Create a new preview object. Does not take ownership of the source (don't forget to destroy it unless it came from a take!). See CF_Preview_Play and the others CF_Preview_* functions.
 
@@ -381,13 +381,14 @@ D_LENGTH       (read only) length of the source * playback rate
 D_MEASUREALIGN >0 = wait until the next bar before starting playback (note: this causes playback to silently continue when project is paused and previewing through a track)
 D_PAN          playback pan
 D_PITCH        pitch adjustment in semitones
-D_PLAYRATE     playback rate
+D_PLAYRATE     playback rate (0.01..100)
 D_POSITION     current playback position
 D_VOLUME       playback volume
 I_OUTCHAN      first hardware output channel (&1024=mono, reads -1 when playing through a track, see CF_Preview_SetOutputTrack)
 I_PITCHMODE    highest 16 bits=pitch shift mode (see EnumPitchShiftModes), lower 16 bits=pitch shift submode (see EnumPitchShiftSubModes))", },
-	{ APIFUNC(CF_Preview_GetPeak), "bool", "CF_Preview*,int,double*", "preview,channel,peakvolOut", "Read peak volume for channel 0 or 1. Only available when outputting to a hardware output (not through a track).", },
+	{ APIFUNC(CF_Preview_GetPeak), "bool", "CF_Preview*,int,double*", "preview,channel,peakvolOut", "Return the maximum sample value played since the last read. Refresh speed depends on buffer size.", },
 	{ APIFUNC(CF_Preview_SetValue), "bool", "CF_Preview*,const char*,double", "preview,name,newValue", "See CF_Preview_GetValue.", },
+	{ APIFUNC(CF_Preview_GetOutputTrack), "MediaTrack*", "CF_Preview*", "preview", "", },
 	{ APIFUNC(CF_Preview_SetOutputTrack), "bool", "CF_Preview*,ReaProject*,MediaTrack*", "preview,project,track", "", },
 	{ APIFUNC(CF_Preview_Play), "bool", "CF_Preview*", "preview", "Start playback of the configured preview object.", },
 	{ APIFUNC(CF_Preview_Stop), "bool", "CF_Preview*", "preview", "Stop and destroy a preview object.", },

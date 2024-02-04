@@ -39,8 +39,9 @@ public:
 
   double getPosition();
   void   setPosition(double);
-  bool   getPeak(int channel, double *out);
-  int    getOutputChannel() { return m_reg.m_out_chan; }
+  bool   getPeak(int chan, double *out) { return m_src->readPeak(chan, out); }
+  int    getOutputChannel() { return writableInst().m_out_chan; }
+  MediaTrack *getOutputTrack() { return static_cast<MediaTrack *>(writableInst().preview_track); }
   void   setOutput(int channel);
   void   setOutput(MediaTrack *);
   bool   getLoop() { return m_reg.loop; }
@@ -49,34 +50,44 @@ public:
   void   setMeasureAlign(double ma) { m_measureAlign = ma; }
 
   // proxy to/from PitchShiftSource
-  double getLength() { return m_src.GetLength(); }
+  double getLength() { return m_src->GetLength(); }
   // m_reg.volume does not apply when previewing through a track!
-  double getVolume() { return m_src.getVolume(); }
-  void   setVolume(double v) { m_src.setVolume(v); }
-  double getPan() { return m_src.getPan(); }
-  void   setPan(double pan) { m_src.setPan(pan); }
-  double getPlayRate() { return m_src.getPlayRate(); }
-  void   setPlayRate(double playRate) { m_src.setPlayRate(playRate); }
-  double getPitch() { return m_src.getPitch(); }
-  void   setPitch(double pitch) { m_src.setPitch(pitch); }
-  bool   getPreservePitch() { return m_src.getPreservePitch(); }
-  void   setPreservePitch(bool preserve) { m_src.setPreservePitch(preserve); }
-  int    getPitchMode() { return m_src.getMode(); }
-  void   setPitchMode(int mode) { m_src.setMode(mode); }
-  double getFadeInLen() { return m_src.getFadeInLen(); }
-  void   setFadeInLen(double len) { m_src.setFadeInLen(len); }
-  double getFadeOutLen() { return m_src.getFadeOutLen(); }
-  void   setFadeOutLen(double len) { m_src.setFadeOutLen(len); }
+  double getVolume() { return m_src->getVolume(); }
+  void   setVolume(double v) { m_src->setVolume(v); }
+  double getPan() { return m_src->getPan(); }
+  void   setPan(double pan) { m_src->setPan(pan); }
+  double getPlayRate() { return m_src->getPlayRate(); }
+  void   setPlayRate(double playRate) { m_src->setPlayRate(playRate); }
+  double getPitch() { return m_src->getPitch(); }
+  void   setPitch(double pitch) { m_src->setPitch(pitch); }
+  bool   getPreservePitch() { return m_src->getPreservePitch(); }
+  void   setPreservePitch(bool preserve) { m_src->setPreservePitch(preserve); }
+  int    getPitchMode() { return m_src->getMode(); }
+  void   setPitchMode(int mode) { m_src->setMode(mode); }
+  double getFadeInLen() { return m_src->getFadeInLen(); }
+  void   setFadeInLen(double len) { m_src->setFadeInLen(len); }
+  double getFadeOutLen() { return m_src->getFadeOutLen(); }
+  void   setFadeOutLen(double len) { m_src->setFadeOutLen(len); }
 
   bool isDangling();
   bool play(bool useMeasureAlign = true);
-  void stop(bool startFadeOut = true);
+  bool stop(bool allowFadeOut = true, bool allowAsync = true);
 
 private:
-  enum State { Idle, Playing, FadeOut };
+  enum State { Idle, Playing, FadeOut, AsyncStop, AsyncRestart };
+
+  struct PreviewInst : preview_register_t {
+    PreviewInst(PitchShiftSource *);
+    PreviewInst(const PreviewInst &) = delete; // don't copy mutex/cs
+    ReaProject *project;
+  };
+
+  static void stopWatch();
+  void asyncTick();
+  PreviewInst &writableInst();
+
   State m_state;
   double m_measureAlign;
-  ReaProject *m_project;
-  PitchShiftSource m_src;
-  preview_register_t m_reg;
+  PitchShiftSource *m_src;
+  PreviewInst m_reg, m_async;
 };

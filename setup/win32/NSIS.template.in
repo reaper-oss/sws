@@ -53,6 +53,7 @@ Section "Python ReaScript support" sws_python
 SectionEnd
 
 Section "Grooves" grooves
+  Rename "$OUTDIR\Grooves" "$OUTDIR\Data\Grooves"
   !insertmacro ComponentFiles grooves
 SectionEnd
 
@@ -64,7 +65,7 @@ SectionEnd
     "Allow Python ReaScripts to use SWS functions. Installed in $OUTDIR\Scripts"
 
   !insertmacro MUI_DESCRIPTION_TEXT ${grooves} \
-    "Grooves are used with the groove tool. Installed in $OUTDIR."
+    "Grooves are used with the groove tool. Installed in $OUTDIR\Data."
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 Function .onInit

@@ -250,14 +250,16 @@ set_target_properties(sws PROPERTIES
   OUTPUT_NAME "reaper_sws-${ARCH_NAME}"
 )
 
-set(REAPER_USER_PLUGINS "UserPlugins")
+set(REAPER_DATA         "Data")
 set(REAPER_SCRIPTS      "Scripts")
+set(REAPER_USER_PLUGINS "UserPlugins")
 
 if(NO_INSTALL_PREFIX)
   # Used for .dmg generation to avoid getting directories
   # Maybe there's a better way?
-  set(REAPER_USER_PLUGINS ".")
+  set(REAPER_DATA         ".")
   set(REAPER_SCRIPTS      ".")
+  set(REAPER_USER_PLUGINS ".")
 endif()
 
 install(TARGETS sws
@@ -275,7 +277,7 @@ endif()
 
 install(DIRECTORY "FingersExtras/Grooves"
   COMPONENT   grooves
-  DESTINATION .
+  DESTINATION "${REAPER_DATA}"
   EXCLUDE_FROM_ALL
 )
 

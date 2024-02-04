@@ -53,6 +53,10 @@ REAPER_EXTRA_API_DECL bool (*ListView_HeaderHitTest)(HWND, POINT);
 // jcsteh/osara#359
 REAPER_EXTRA_API_DECL bool (*osara_isShortcutHelpEnabled)();
 
+struct ReaPack_PackageEntry;
+REAPER_EXTRA_API_DECL ReaPack_PackageEntry *(*ReaPack_GetOwner)(const char *fn, char *errOut, int errOut_sz);
+REAPER_EXTRA_API_DECL void (*ReaPack_FreeEntry)(ReaPack_PackageEntry *);
+
 // Avoid VWnd collisions
 #define WDL_VirtualWnd_ScaledBlitBG WDL_VirtualWnd_ScaledBlitBG_fptr
 #define WDL_VirtualWnd_BGCfg WDL_VirtualWnd_BGCfg_stub

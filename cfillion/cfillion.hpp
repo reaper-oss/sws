@@ -65,6 +65,8 @@ bool CF_PCM_Source_SetSectionInfo(PCM_source *section, PCM_source *source,
 
 BOOL CF_GetScrollInfo(HWND, int bar, LPSCROLLINFO);
 
+void CF_NormalizeUTF8(const char *input, unsigned int mode, char *output, int outputSize);
+
 class CF_Preview;
 CF_Preview *CF_CreatePreview(PCM_source *);
 bool CF_Preview_GetValue(CF_Preview *, const char *name, double *valueOut);

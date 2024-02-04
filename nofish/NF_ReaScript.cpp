@@ -297,16 +297,6 @@ bool NF_AnalyzeTakeLoudness2(MediaItem_Take * take, bool analyzeTruePeak, double
 }
 
 // #755, Track notes
-const char* NF_GetSWSTrackNotes(MediaTrack* track)
-{
-	return NFDoGetSWSTrackNotes(track);
-}
-
-void NF_SetSWSTrackNotes(MediaTrack* track, const char* buf)
-{
-	NFDoSetSWSTrackNotes(track, buf);
-}
-
 const char* NF_GetSWSMarkerRegionSub(int mkrRgnIdx)
 {
 	return NFDoGetSWSMarkerRegionSub(mkrRgnIdx);

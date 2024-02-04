@@ -50,6 +50,7 @@ HWND CF_GetTrackFXChainEx(ReaProject *, MediaTrack *, bool inputChain);
 HWND CF_GetTakeFXChain(MediaItem_Take *);
 int CF_EnumSelectedFX(HWND chain, int index = -1);
 bool CF_SelectTrackFX(MediaTrack *, int index);
+bool CF_SelectTakeFX(MediaItem_Take *, int index);
 
 int CF_GetMediaSourceBitDepth(PCM_source *);
 double CF_GetMediaSourceBitRate(PCM_source *);

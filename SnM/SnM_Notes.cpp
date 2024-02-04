@@ -126,6 +126,7 @@ MediaTrack* g_trNote = NULL;
 // to distinguish internal marker/region updates from external ones
 bool g_internalMkrRgnChange = false;
 
+static bool DoImportSubTitleFile(const char *fn);
 
 ///////////////////////////////////////////////////////////////////////////////
 // NotesWnd
@@ -483,6 +484,19 @@ void NotesWnd::OnTimer(WPARAM wParam)
 		{
 			Update();
 		}
+	}
+}
+
+void NotesWnd::OnDroppedFiles(HDROP _h)
+{
+	if (g_locked || !(g_notesType == SNM_NOTES_MKR_SUB || g_notesType == SNM_NOTES_RGN_SUB || g_notesType == SNM_NOTES_MKRRGN_SUB))
+		return;
+	const int iFiles = DragQueryFile(_h, 0xFFFFFFFF, NULL, 0);
+	char fn[SNM_MAX_PATH];
+	for (int i = 0; i < iFiles; i++)
+	{
+		if (DragQueryFile(_h, i, fn, sizeof(fn)) && !DoImportSubTitleFile(fn))
+			break;
 	}
 }
 
@@ -1415,13 +1429,16 @@ bool ImportAdvancedSubStationFile(const char* _fn)
 			WDL_FastString notes;
 			if (*commaPos != ',') {  // if Name field isn't empty
 				notes.Append("[");
-				char* nextCommaPos = strchr(commaPos, ',');
-				while (!nextCommaPos && !strchr(buf, '\n') && fgets(buf, sizeof(buf), f) && *buf) { // in case comma
+				char* nextCommaPos;
+				while (!(nextCommaPos = strchr(commaPos, ',')) && !strchr(buf, '\n')) {
 					notes.Append(commaPos);
 					commaPos = buf;
-					nextCommaPos = strchr(buf, ',');
+					if (!fgets(buf, sizeof(buf), f) || !*buf)
+						break;
 				}
-				char nameBuf[1024];
+				if (!nextCommaPos)
+					break;
+				char nameBuf[sizeof(buf)];
 				memcpy(nameBuf, commaPos, nextCommaPos-commaPos);
 				nameBuf[nextCommaPos-commaPos] = '\0';
 				notes.Append(nameBuf);
@@ -1429,7 +1446,7 @@ bool ImportAdvancedSubStationFile(const char* _fn)
 				commaPos = nextCommaPos;
 			}
 			commaCount++;
-			while (commaCount < 9 && !(*commaPos == '\n' || *commaPos == '\r')) {
+			while (commaCount < 9 && commaPos && !(*commaPos == '\n' || *commaPos == '\r')) {
 				commaPos = strchr(commaPos+1, ',');
 				while (commaPos == nullptr)  {
 					if (!(fgets(buf, sizeof(buf), f) && *buf && !(*buf == '\n' || *buf == '\r'))) {
@@ -1442,9 +1459,8 @@ bool ImportAdvancedSubStationFile(const char* _fn)
 				}
 				commaCount++;
 			}
-			if (commaCount != 9) {
+			if (commaCount != 9 || !commaPos)
 				break;
-			}
 			char *textPos = commaPos + 1;
 
 			char text[1024];
@@ -1547,7 +1563,7 @@ bool ImportAdvancedSubStationFile(const char* _fn)
 	return ok;
 }
 
-static bool ImportSubTitleFile(const char *fn)
+bool DoImportSubTitleFile(const char *fn)
 {
 	constexpr struct { const char *ext; bool (*reader)(const char *); } formats[] {
 		{ "srt", &ImportSubRipFile             },
@@ -1578,7 +1594,7 @@ void ImportSubTitleFile(COMMAND_T* _ct)
 	if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Import subtitle file","sws_DLG_152"), g_lastImportSubFn, NULL, false, SNM_SUB_IMPORT_EXT_LIST))
 	{
 		lstrcpyn(g_lastImportSubFn, fn, sizeof(g_lastImportSubFn));
-		ImportSubTitleFile(fn);
+		DoImportSubTitleFile(fn);
 		free(fn);
 	}
 }
@@ -2018,17 +2034,5 @@ void NF_DoUpdateSWSMarkerRegionSubWindow()
 	if (NotesWnd* w = g_notesWndMgr.Get()) {
 		if (w->IsWndVisible() && g_notesType <= SNM_NOTES_MKRRGN_SUB && g_notesType >= SNM_NOTES_MKR_SUB)
 			w->ForceUpdateMkrRgnNameOrSub(g_notesType);
-	}
-}
-
-void NotesWnd::OnDroppedFiles(HDROP _h) {
-	if (g_locked || !(g_notesType == SNM_NOTES_MKR_SUB || g_notesType == SNM_NOTES_RGN_SUB || g_notesType == SNM_NOTES_MKRRGN_SUB))
-		return;
-	const int iFiles = DragQueryFile(_h, 0xFFFFFFFF, NULL, 0);
-	char fn[SNM_MAX_PATH];
-	for (int i = 0; i < iFiles; i++)
-	{
-		if (DragQueryFile(_h, i, fn, sizeof(fn)) && !ImportSubTitleFile(fn))
-			break;
 	}
 }

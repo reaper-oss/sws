@@ -89,10 +89,9 @@ std::string GrooveTemplateHandler::GetGrooveDir()
 {
     std::string dir = getReaperProperty("groove_dir");
     if (dir.empty())
-    {        // Installer puts the grooves into the resource path under "Grooves"
-        dir.assign(GetResourcePath());
-        dir += PATH_SLASH_CHAR;
-        dir += "Grooves";
+    {   // Installer puts the grooves into the resource path under "Data/Grooves"
+        dir  = GetResourcePath();
+        dir += WDL_DIRCHAR_STR "Data" WDL_DIRCHAR_STR "Grooves";
     }
     return dir;
 }

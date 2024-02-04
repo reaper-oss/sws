@@ -1804,3 +1804,26 @@ void NF_DoUpdateSWSMarkerRegionSubWindow()
 			w->ForceUpdateMkrRgnNameOrSub(g_notesType);
 	}
 }
+
+const char* JB_GetSWSExtraProjectNotes(ReaProject* project)
+{
+	return g_prjNotes.Get(project)->Get();
+}
+
+void JB_SetSWSExtraProjectNotes(ReaProject* project, const char* buf)
+{
+	MarkProjectDirty(project);
+
+	g_prjNotes.Get(project)->Set(buf);
+
+	// update displayed text if the project is frontmost, the Notes window is visible and notes for project extra are displayed
+	if (g_prjNotes.Get(project) == g_prjNotes.Get(NULL))
+	{
+		if (NotesWnd* w = g_notesWndMgr.Get()) {
+			if (w->IsWndVisible() && g_notesType == SNM_NOTES_PROJECT_EXTRA) {
+				w->SetText(buf);
+			}
+		}
+	}
+	return;
+}

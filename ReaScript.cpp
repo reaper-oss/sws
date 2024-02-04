@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "SnM/SnM_FX.h"
 #include "SnM/SnM_Misc.h"
+#include "SnM/SnM_Notes.h"
 #include "SnM/SnM_Resources.h"
 #include "SnM/SnM_Routing.h"
 #include "SnM/SnM_Track.h"
@@ -391,6 +392,9 @@ I_PITCHMODE    highest 16 bits=pitch shift mode (see EnumPitchShiftModes), lower
 	{ APIFUNC(CF_Preview_Play), "bool", "CF_Preview*", "preview", "Start playback of the configured preview object.", },
 	{ APIFUNC(CF_Preview_Stop), "bool", "CF_Preview*", "preview", "Stop and destroy a preview object.", },
 	{ APIFUNC(CF_Preview_StopAll), "void", "", "", "Stop and destroy all currently active preview objects.", },
+
+	{ APIFUNC(JB_GetSWSExtraProjectNotes), "const char*", "ReaProject*", "project", "", },
+	{ APIFUNC(JB_SetSWSExtraProjectNotes), "void", "ReaProject*,const char*", "project,str", "", },
 
 	{ NULL, } // denote end of table
 };

@@ -1131,6 +1131,8 @@ error:
 		IMPAPI(TimeMap2_timeToBeats);
 		IMPAPI(TimeMap2_timeToQN);
 		IMPAPI(TimeMap_curFrameRate);
+		IMPAPI(TrackFX_CopyToTrack); // v5.95+
+		IMPAPI(TrackFX_Delete);      // v5.95+
 		IMPAPI(TrackFX_FormatParamValue);
 		IMPAPI(TrackFX_GetByName);
 		IMPAPI(TrackFX_GetChainVisible);

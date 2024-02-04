@@ -81,6 +81,7 @@ void SetVertPos(HWND hwnd, int iTrack, bool bPixels, int iExtra = 0) // 1 based 
 	{
 		MediaTrack* track = CSurf_TrackFromID(i, false);
 		int iHeight = *(int*)GetSetMediaTrackInfo(track, "I_WNDH", NULL);
+		iHeight += GetTrackSpacerSize(track);
 		if (track == masterTrack && TcpVis(track)) iHeight += GetMasterTcpGap();
 		if (!bPixels && i < iTrack)
 			si.nPos += iHeight;
@@ -141,7 +142,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 			{
 				SetMediaTrackInfo_Value(tr, "I_HEIGHTOVERRIDE", locked ? minTrackHeight : 0);
 				iMinimizedTracks += 1;
-			}		
+			}
 		}
 
 		Main_OnCommand(40112, 0); // Zoom out vert to minimize envelope lanes too (since vZoom is now 0) (calls refresh)
@@ -679,6 +680,7 @@ MediaTrack* TrackAtPoint(HWND hTrackView, int iY, int* iOffset, int* iYMin, int*
 	{
 		MediaTrack* track = CSurf_TrackFromID(iTrack, false);
 		iTrackH = *(int*)GetSetMediaTrackInfo(track, "I_WNDH", NULL);
+		iTrackH += GetTrackSpacerSize(track);
 		if (iVPos + iTrackH > iY)
 			break;
 		if (iTrack == 0 && TcpVis(track) && iTrackH != 0)

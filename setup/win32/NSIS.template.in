@@ -8,7 +8,7 @@
 AllowSkipFiles off
 Name "@CPACK_NSIS_PACKAGE_NAME@"
 OutFile "@CPACK_TOPLEVEL_DIRECTORY@\@CPACK_OUTPUT_FILE_NAME@"
-RequestExecutionLevel highest
+RequestExecutionLevel user
 SetCompressor @CPACK_NSIS_COMPRESSOR@
 
 !insertmacro MUI_PAGE_LICENSE "@CPACK_RESOURCE_FILE_LICENSE@"

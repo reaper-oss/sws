@@ -112,123 +112,6 @@ static MediaTrack* GetTrackFromY (int y, int* trackHeight, int* offset, int* spa
 	return track;
 }
 
-static MediaItem_Take* GetTakeFromItemY (MediaItem* item, int itemY, MediaTrack* track, int trackHeight, int* takeId)
-{
-	/* Does not check if Y is within the item, caller should handle that */
-
-	if (!CountTakes(item))
-		return NULL;
-
-	MediaItem_Take* take = NULL;
-	WritePtr(takeId, -1);
-
-	const int takeLanes = ConfigVar<int>("projtakelane").value_or(0);
-
-	// Take lanes displayed
-	if (GetBit(takeLanes, 0))
-	{
-		int itemH = GetItemHeight(item, NULL, trackHeight, 0);
-		int effTakeCount;
-		GetEffectiveTakeId(NULL, item, 0, &effTakeCount);
-		int takeH = itemH / effTakeCount; // average take height
-
-		if (takeH < GetMinTakeHeight(track, effTakeCount, trackHeight, itemH))
-			take = GetActiveTake(item);
-		else
-		{
-			int takeCount = CountTakes(item);
-			int effTakeId = 0;
-
-			// No hidden empty takes
-			if (effTakeCount == takeCount)
-			{
-				int id = itemY / takeH;
-				if (id > takeCount-1) // last take might be taller
-					id = takeCount-1;
-
-				take = GetTake(item, id);
-				WritePtr(takeId, id);
-
-				effTakeId = id;
-			}
-			// Empty takes hidden
-			else
-			{
-				int visibleTakes = 0;
-				for (int i = 0; i < takeCount; ++i)
-				{
-					if (MediaItem_Take* currentTake = GetTake(item, i))
-					{
-						int yStart = visibleTakes * takeH;
-						int yEnd = yStart + ((i == takeCount-1) ? (takeH*2) : (takeH)); // last take might be taller
-						if (itemY > yStart && itemY <= yEnd)
-						{
-							take = currentTake;
-							WritePtr(takeId, i);
-
-							break;
-						}
-						++visibleTakes;
-					}
-				}
-				effTakeId = visibleTakes;
-			}
-
-			// If last take, check it's not cropped
-			if (effTakeId == effTakeCount - 1 && IsLastTakeTooTall(itemH, takeH, effTakeCount, NULL))
-				if (itemY > takeH * effTakeCount) // take cropped - check Y is not outside it
-				{
-					WritePtr(takeId, -1);
-					take = NULL;
-				}
-		}
-	}
-	// Take lanes not displayed
-	else
-	{
-		take = GetActiveTake(item);
-		WritePtr(takeId, (int)GetMediaItemInfo_Value(item, "I_CURTAKE"));
-	}
-
-	return take;
-}
-
-static MediaItem* GetItemFromY (int y, double position, MediaItem_Take** take, int* takeId)
-{
-	int trackH, offset, spacer;
-	MediaTrack* track = GetTrackFromY(y, &trackH, &offset, &spacer);
-	MediaItem* item = NULL;
-	int itemYStart = 0;
-
-	double iStartLast = GetMediaItemInfo_Value(GetTrackMediaItem(track, 0), "D_POSITION");
-	int count = CountTrackMediaItems(track);
-	for (int i = 0; i < count ; ++i)
-	{
-		MediaItem* currentItem = GetTrackMediaItem(track, i);
-		double iStart = GetMediaItemInfo_Value(currentItem, "D_POSITION");
-		double iEnd = GetMediaItemInfo_Value(currentItem, "D_LENGTH") + iStart;
-
-		if (position >= iStart && position <= iEnd)
-		{
-			if (iStart >= iStartLast)
-			{
-				int yStart = offset + spacer;                                              // due to FIMP/overlapping items in lanes, check every
-				int yEnd = GetItemHeight(currentItem, &yStart, trackH, yStart) + yStart;   // item - last one closest to cursor and whose height
-				if (y > yStart && y < yEnd)                                                // overlaps with cursor Y position is the correct one
-				{
-					item = currentItem;
-					itemYStart = yStart;
-					break;
-				}
-			}
-			iStartLast = iStart;
-		}
-	}
-
-	WritePtr(take, GetTakeFromItemY(item, y-itemYStart, track, trackH, takeId));
-	return item;
-}
-
 static bool IsPointInArrange (const POINT& p, bool checkPointVisibilty = true, HWND* wndFromPoint = NULL)
 {
 	/* Check if point is in arrange. Since WindowFromPoint is sometimes     *
@@ -367,11 +250,8 @@ MediaItem* ItemAtMouseCursor (double* position, MediaItem_Take** takeAtMouse /*=
 	POINT p; GetCursorPos(&p);
 	if (IsPointInArrange(p))
 	{
-		int y = TranslatePointToArrangeScrollY(p);
-		double pos = PositionAtArrangePoint(p);
-
-		WritePtr(position, pos);
-		return GetItemFromY(y, pos, takeAtMouse, NULL);
+		WritePtr(position, PositionAtArrangePoint(p));
+		return GetItemFromPoint(p.x, p.y, true, takeAtMouse);
 	}
 	WritePtr(position, -1.0);
 	return NULL;
@@ -382,12 +262,9 @@ MediaItem_Take* TakeAtMouseCursor (double* position)
 	POINT p; GetCursorPos(&p);
 	if (IsPointInArrange(p))
 	{
+		WritePtr(position, PositionAtArrangePoint(p));
 		MediaItem_Take* take = NULL;
-		int y = TranslatePointToArrangeScrollY(p);
-		double pos = PositionAtArrangePoint(p);
-
-		WritePtr(position, pos);
-		GetItemFromY(y, pos, &take, NULL);
+		GetItemFromPoint(p.x, p.y, true, &take);
 		return take;
 	}
 	WritePtr(position, -1.0);
@@ -766,7 +643,7 @@ void BR_MouseInfo::GetContext (const POINT& p)
 					else if (mouseInfo.track)
 					{
 						mouseInfo.segment = "track";
-						mouseInfo.item = GetItemFromY(mouseY, mousePos, &mouseInfo.take, &mouseInfo.takeId);
+						mouseInfo.item = GetItemFromPoint(p.x, p.y, true, &mouseInfo.take);
 
 						int trackEnvHit      = 0;
 						int takeEnvHit       = 0;
@@ -865,7 +742,7 @@ void BR_MouseInfo::GetContext (const POINT& p)
 				else
 				{
 					mouseInfo.envelope = NULL; // in case GetTrackOrEnvelopeFromY() found something
-					GetItemFromY(mouseY, mousePos, &mouseInfo.take, nullptr);
+					GetItemFromPoint(p.x, p.y, true, &mouseInfo.take);
 					if (mouseInfo.track && IsOpenInInlineEditor(mouseInfo.take))
 					{
 						int takeOffset;

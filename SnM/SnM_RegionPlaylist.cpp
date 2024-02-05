@@ -257,7 +257,7 @@ int RegionPlaylist::GetRegionWithUnsafeMarker()
 				GetLastMarkerAndCurRegion(NULL, rgnend - SNM_FUDGE_FACTOR, &markerIdx, nullptr);
 				if (-1 == markerIdx)
 					continue;
-				
+
 				double markerPos;
 				EnumProjectMarkers2(NULL, markerIdx, nullptr, &markerPos, nullptr, nullptr, nullptr);
 				if ((rgnend - markerPos) < safeDistanceToPreviousMarkerForEndOfPlaylist)
@@ -1639,7 +1639,8 @@ void PlaylistRun()
 // _itemId: callers must not use no hard coded value but GetNextValidItem() or GetPrevValidItem()
 void PlaylistPlay(int _plId, int _itemId)
 {
-	if (!g_pls.Get()->GetSize()) {
+	if (!g_pls.Get()->GetSize())
+	{
 		PlaylistStop();
 		MessageBox(g_rgnplWndMgr.GetMsgHWND(), __LOCALIZE("No playlist defined!\nUse the tiny button \"+\" to add one.","sws_DLG_165"), __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
 		return;
@@ -1649,101 +1650,95 @@ void PlaylistPlay(int _plId, int _itemId)
 	if (!pl) // e.g. when called via actions
 	{
 		PlaylistStop();
-		char msg[128] = "";
+		char msg[128];
 		snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("Unknown playlist #%d!","sws_DLG_165"), _plId+1);
 		MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
 		return;
 	}
 
-	double prjlen = SNM_GetProjectLength();
-	if (prjlen>0.1)
+	int num;
+	const double prjlen = SNM_GetProjectLength(1);
+	//JFB REAPER bug? workaround, the native pref "stop play at project end" does not work when the project is empty (should not play at all..)
+	if (prjlen > 0.1 && (num = pl->GetGreaterMarkerRegion(prjlen)) >= 0)
 	{
-		//JFB REAPER bug? workaround, the native pref "stop play at project end" does not work when the project is empty (should not play at all..)
-		int num = pl->GetGreaterMarkerRegion(prjlen);
-		if (num>0)
-		{
-			char msg[256] = "";
-			snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("The playlist #%d might end unexpectedly!\nIt constains regions that start after the end of project (region %d at least).","sws_DLG_165"), _plId+1, num);
-			if (IDCANCEL == MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
-				PlaylistStop();
-				return;
-			}
+		char msg[256];
+		snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("The playlist #%d might end unexpectedly!\nIt constains regions that start after the end of project (region %d at least).","sws_DLG_165"), _plId+1, num);
+		if (IDCANCEL == MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
+			PlaylistStop();
+			return;
+		}
+	}
+
+	if ((num = pl->GetNestedRegion()) >= 0)
+	{
+		char msg[256];
+		snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("The playlist #%d might not work as expected!\nIt contains nested regions (inside region %d at least).","sws_DLG_165"), _plId+1, num);
+		if (IDCANCEL == MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
+			PlaylistStop();
+			return;
+		}
+	}
+
+	if ((num = pl->GetRegionWithUnsafeMarker()) >= 0)
+	{
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+				 __LOCALIZE_VERFMT("The playlist #%d might not work as expected!\nSome regions contain a marker just before the end (region %d at least).\nPlaylist might end unexpectedly, if such a region is the last one.\nMake sure there are no markers within the last %.1f seconds of any region.", "sws_DLG_165"),
+				 _plId+1, num, safeDistanceToPreviousMarkerForEndOfPlaylist);
+		if (IDCANCEL == MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
+			PlaylistStop();
+			return;
+		}
+	}
+
+	if ((num = pl->GetDangerouslyShortRegion()) >= 0)
+	{
+		char msg[256];
+		snprintf(msg, sizeof(msg),
+				 __LOCALIZE_VERFMT("The playlist #%d might not work as expected!\nRegion %d is too short.\nRegions shorter than %.1f seconds are not supported.", "sws_DLG_165"),
+				 _plId+1, num, minimalSafeRegionLength);
+		if (IDCANCEL == MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
+			PlaylistStop();
+			return;
+		}
+	}
+
+	// handle empty project corner case
+	if (pl->IsValidIem(_itemId))
+	{
+		if (g_seekImmediate)
+			PlaylistStop();
+
+		// temp override of the "smooth seek" option
+		if (ConfigVar<int> opt = "smoothseek") {
+			g_oldSeekPref = *opt;
+			*opt = 3;
+		}
+		// temp override of the repeat/loop state option
+		if (GetSetRepeat(-1) == 1) {
+			g_oldRepeatState = 1;
+			GetSetRepeat(0);
 		}
 
-		num = pl->GetNestedRegion();
-		if (num>0)
+		g_plLoop = false;
+		g_unsync = false;
+		g_lastRunPos = SNM_GetProjectLength()+1.0;
+		g_nextRegionId = -1;
+		g_safeTimeToEndPlaylist = -1.0;
+		g_endOfPlaylistSeekIssued = false;
+		if (SeekItem(_plId, _itemId, (g_playPlaylist==_plId ? g_playCur : -1), SeekMethod::IgnoreMarkers))
 		{
-			char msg[256] = "";
-			snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("The playlist #%d might not work as expected!\nIt contains nested regions (inside region %d at least).","sws_DLG_165"), _plId+1, num);
-			if (IDCANCEL == MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
-				PlaylistStop();
-				return;
-			}
+			g_playPlaylist = _plId; // enables PlaylistRun()
+			if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
+				w->Update(); // for the play button, next/previous region actions, etc....
 		}
-
-		const int unsafeRegion = pl->GetRegionWithUnsafeMarker();
-		if (unsafeRegion >= 0)
-		{
-			char msg[512] = "";
-			snprintf(msg, sizeof(msg),
-					 __LOCALIZE_VERFMT("The playlist #%d might not work as expected!\nSome regions contain a marker just before the end (region %d at least).\nPlaylist might end unexpectedly, if such a region is the last one.\nMake sure there are no markers within the last %.1f seconds of any region.", "sws_DLG_165"),
-					 _plId+1, unsafeRegion, safeDistanceToPreviousMarkerForEndOfPlaylist);
-			if (IDCANCEL == MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
-				PlaylistStop();
-				return;
-			}
-		}
-
-		const int dangerouslyShortRegion = pl->GetDangerouslyShortRegion();
-		if (dangerouslyShortRegion >= 0)
-		{
-			char msg[256] = "";
-			snprintf(msg, sizeof(msg),
-					 __LOCALIZE_VERFMT("The playlist #%d might not work as expected!\nRegion %d is too short.\nRegions shorter than %.1f seconds are not supported.", "sws_DLG_165"),
-					 _plId+1, dangerouslyShortRegion, minimalSafeRegionLength);
-			if (IDCANCEL == MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"), MB_OKCANCEL)) {
-				PlaylistStop();
-				return;
-			}
-		}
-
-		// handle empty project corner case
-		if (pl->IsValidIem(_itemId))
-		{
-			if (g_seekImmediate)
-				PlaylistStop();
-
-			// temp override of the "smooth seek" option
-			if (ConfigVar<int> opt = "smoothseek") {
-				g_oldSeekPref = *opt;
-				*opt = 3;
-			}
-			// temp override of the repeat/loop state option
-			if (GetSetRepeat(-1) == 1) {
-				g_oldRepeatState = 1;
-				GetSetRepeat(0);
-			}
-
-			g_plLoop = false;
-			g_unsync = false;
-			g_lastRunPos = SNM_GetProjectLength()+1.0;
-			g_nextRegionId = -1;
-			g_safeTimeToEndPlaylist = -1.0;
-			g_endOfPlaylistSeekIssued = false;
-			if (SeekItem(_plId, _itemId, (g_playPlaylist==_plId ? g_playCur : -1), SeekMethod::IgnoreMarkers))
-			{
-				g_playPlaylist = _plId; // enables PlaylistRun()
-				if (RegionPlaylistWnd* w = g_rgnplWndMgr.Get())
-					w->Update(); // for the play button, next/previous region actions, etc....
-			}
-			else
-				PlaylistStopped(); // reset vars & native prefs
-		}
+		else
+			PlaylistStopped(); // reset vars & native prefs
 	}
 
 	if (g_playPlaylist<0)
 	{
-		char msg[128] = "";
+		char msg[128];
 		snprintf(msg, sizeof(msg), __LOCALIZE_VERFMT("Playlist #%d: nothing to play!\n(empty playlist, empty project, removed regions, etc..)","sws_DLG_165"), _plId+1);
 		MessageBox(g_rgnplWndMgr.GetMsgHWND(), msg, __LOCALIZE("S&M - Error","sws_DLG_165"),MB_OK);
 	}

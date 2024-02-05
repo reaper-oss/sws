@@ -244,7 +244,7 @@ WDL_DLGRET AWFillGapsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 					if(wParam == IDOK)
 					{
-						char prms[(128 * 6) + 128];
+						char prms[(128 * 5) + 314 + 24];
 						snprintf(prms, sizeof(prms), "%s,%s,%s,%s,%s,%s,%d,%d",
 							triggerPad, fadeLength, maxGap, !stretch ? "1.0" : maxStretch, (!stretch || !trans) ? "0" : presTrans,
 							transFade, fadeShape, markErrors);

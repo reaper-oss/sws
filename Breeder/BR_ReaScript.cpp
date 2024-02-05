@@ -274,13 +274,11 @@ MediaItem* BR_GetMediaItemByGUID (ReaProject* proj, const char* guidStringIn)
 
 void BR_GetMediaItemGUID (MediaItem* item, char* guidStringOut, int guidStringOut_sz)
 {
-	if (item && guidStringOut && guidStringOut_sz > 0)
-	{
-		char guid[64];
-		if (item) guidToString((GUID*)GetSetMediaItemInfo(item, "GUID", NULL), guid);
-		else      guidToString(&GUID_NULL, guid);
-		snprintf(guidStringOut, guidStringOut_sz, "%s", guid);
-	}
+	if (!guidStringOut || guidStringOut_sz < 64)
+		return;
+
+	const GUID *guid = item ? static_cast<GUID *>(GetSetMediaItemInfo(item, "GUID", nullptr)) : &GUID_NULL;
+	guidToString(guid, guidStringOut);
 }
 
 bool BR_GetMediaItemImageResource (MediaItem* item, char* imageOut, int imageOut_sz, int* imageFlagsOut)

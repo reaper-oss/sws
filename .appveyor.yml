@@ -66,7 +66,7 @@ for:
       - path: build/sws*.tar.xz
       - path: build/reaper_sws*.so
 
-  - matrix: { only: [ appveyor_build_worker_image: macos, appveyor_build_worker_image: macos-mojave ] }
+  - matrix: { only: [ appveyor_build_worker_image: macos-catalina, appveyor_build_worker_image: macos-mojave ] }
     install:
       - |-
         case $ARCH in
@@ -153,7 +153,7 @@ environment:
       appveyor_build_worker_image: macos-mojave
       ARCH: i386
     - job_name: macOS ARM 64-bit
-      appveyor_build_worker_image: macos
+      appveyor_build_worker_image: macos-catalina
       ARCH: arm64
     - job_name: Linux x86 64-bit
       appveyor_build_worker_image: *linux

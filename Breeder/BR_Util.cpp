@@ -399,8 +399,8 @@ double GetMidiOscVal (double min, double max, double step, double currentVal, in
 	{
 		returnVal = TranslateRange(SetToBounds((double)(commandValhw | commandVal << 7), 0.0, 16383.0), 0, 16383, min, max);
 	}
-	// MIDI
-	else if (commandValhw == -1 && commandVal >= 0 && commandVal < 128)
+	// MIDI/mousewheel
+	else if (commandVal >= 0 && commandVal < 128)
 	{
 		// Absolute mode
 		if (!commandRelmode)

@@ -2142,17 +2142,36 @@ int GetMasterTcpGap ()
 	return TCP_MASTER_GAP;
 }
 
+// this is not balanced with SetTrackHeight(), but provides accurate values for v7 tracks with spacers
+int GetTrackHeightWithSpacer (MediaTrack* track, int* offsetY, int* topGap, int* bottomGap)
+{
+	int height = GetTrackHeight(track, offsetY, topGap, bottomGap);
+	int trackSpacerSize = GetTrackSpacerSize(track);
+
+	if (height)
+	{
+		height += trackSpacerSize;
+	}
+
+	if (offsetY)
+	{
+		*offsetY -= trackSpacerSize;
+	}
+
+	return height;
+}
+
+// GetTrackHeight ignores v7 track spacers in its offset and height calculation for legacy reasons
+// use GetTrackHeightWithSpacer() to get accurate offset and height values including spacers
 int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int* bottomGap /*=NULL*/)
 {
-	int spacerSize = GetTrackSpacerSize(track);
-
 	if (offsetY)
 	{
 		// Get track's start Y coordinate
 		SCROLLINFO si{sizeof(SCROLLINFO), SIF_POS};
 		CF_GetScrollInfo(GetArrangeWnd(), SB_VERT, &si);
 
-		*offsetY = si.nPos + static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPY")) - spacerSize;
+		*offsetY = si.nPos + static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPY"));
 	}
 
 	if (!TcpVis(track))
@@ -2162,7 +2181,7 @@ int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int*
 	if (compact == 2)                              // wrong value if track was resized prior to compacting so return here
 		return SNM_GetIconTheme()->tcp_supercollapsed_height;
 
-	const int height = static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPH")) + spacerSize;
+	const int height = static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPH"));
 
 	if (topGap || bottomGap)
 		GetTrackGap(height, topGap, bottomGap);
@@ -2173,7 +2192,7 @@ int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap /*=NULL*/, int*
 int GetItemHeight (MediaItem* item, int* offsetY)
 {
 	int trackOffsetY;
-	int trackH = GetTrackHeight(GetMediaItem_Track(item), &trackOffsetY);
+	int trackH = GetTrackHeightWithSpacer(GetMediaItem_Track(item), &trackOffsetY);
 	return GetItemHeight(item, offsetY, trackH, trackOffsetY);
 }
 
@@ -2313,7 +2332,7 @@ void MoveArrangeToTarget (double target, double reference)
 void ScrollToTrackIfNotInArrange (MediaTrack* track)
 {
 	int offsetY;
-	int height = GetTrackHeight(track, &offsetY);
+	int height = GetTrackHeightWithSpacer(track, &offsetY);
 
 	HWND hwnd = GetArrangeWnd();
 	SCROLLINFO si = { sizeof(SCROLLINFO), };
@@ -3531,7 +3550,7 @@ int GetTakeHeight (MediaItem_Take* take, MediaItem* item, int id, int* offsetY, 
 {
 	MediaItem* validItem = (item) ? (item) : (GetMediaItemTake_Item(take));
 	int trackOffset;
-	int trackHeight = GetTrackHeight(GetMediaItem_Track(validItem), &trackOffset);
+	int trackHeight = GetTrackHeightWithSpacer(GetMediaItem_Track(validItem), &trackOffset);
 	return GetTakeHeight(take, item, id, offsetY, averagedLast, trackHeight, trackOffset);
 }
 

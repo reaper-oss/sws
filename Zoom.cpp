@@ -170,9 +170,12 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 				{
 					int trackHeight = 0;
 					if (obeyHeightLock && locked)
+					{
 						trackHeight = static_cast<int>(GetMediaTrackInfo_Value(tr, "I_HEIGHTOVERRIDE"));
+						trackHeight += GetTrackSpacerSize(tr);
+					}
 					else
-						trackHeight = GetTrackHeightFromVZoomIndex(tr, 0);
+						trackHeight = GetTrackHeightWithSpacer(tr);
 
 					trackHeight += CountTrackEnvelopePanels(tr) * GetEnvHeightFromTrackHeight(trackHeight);
 					iNotZoomedSize += trackHeight;
@@ -224,10 +227,13 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 			if (bZoomed[i])
 			{
 				if (i + 1 == iNum)
-					iEachHeight +=leftOverHeight;
+					iEachHeight += leftOverHeight;
 				MediaTrack* tr = CSurf_TrackFromID(i + iFirst, false);
 				if (!obeyHeightLock || !GetMediaTrackInfo_Value(tr, "B_HEIGHTLOCK"))
+				{
 					GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", &iEachHeight);
+					iEachHeight += GetTrackSpacerSize(tr);
+				}
 			}
 		}
 		TrackList_AdjustWindows(false);
@@ -269,7 +275,10 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 				{
 					const bool locked = GetMediaTrackInfo_Value(tr, "B_HEIGHTLOCK");
 					if (obeyHeightLock && locked)
+					{
 						trackHeight = static_cast<int>(GetMediaTrackInfo_Value(tr, "I_HEIGHTOVERRIDE"));
+						trackHeight += GetTrackSpacerSize(tr);
+					}
 					else
 						trackHeight = GetTrackHeightFromVZoomIndex(tr, iZoom);
 

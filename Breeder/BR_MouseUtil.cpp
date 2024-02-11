@@ -101,7 +101,7 @@ static MediaTrack* GetTrackFromY (int y, int* trackHeight, int* offset, int* spa
 	MediaTrack* track = GetTrackAreaFromY(y, &trackOffset, &spacer);
 	if (track)
 	{
-		trackH = GetTrackHeight(track, NULL);
+		trackH = GetTrackHeightWithSpacer(track);
 		if (y < trackOffset || y >= trackOffset + trackH)
 			track = NULL;
 	}
@@ -1481,7 +1481,7 @@ void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, Me
 	TrackEnvelope* envelope = NULL;
 	if (track)
 	{
-		elementHeight = GetTrackHeight(track, NULL);
+		elementHeight = GetTrackHeightWithSpacer(track);
 		vector<pair<int,int>> envHeights;
 		bool yInTrack = (y < elementOffset + elementHeight) ? true : false;
 

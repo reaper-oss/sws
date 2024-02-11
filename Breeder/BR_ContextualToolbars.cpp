@@ -1732,7 +1732,7 @@ void BR_ContextualToolbarsView::GetItemList (SWS_ListItemList* pList)
 
 bool BR_ContextualToolbarsView::OnItemSelChanging (SWS_ListItem* item, bool bSel)
 {
-	return item && IsContextValid(*(int*)item);
+	return !item || !IsContextValid(*(int*)item); // true = prevent the change
 }
 
 void BR_ContextualToolbarsView::OnItemDblClk (SWS_ListItem* item, int iCol)

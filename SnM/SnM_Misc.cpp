@@ -249,12 +249,8 @@ bool SNM_SetDoubleConfigVarEx(ReaProject *proj, const char *varName, const doubl
 		*ConfigVar<int>("vzoom2", proj) = static_cast<int>(newValue);
 	if (ConfigVar<double> cv{varName, proj})
 		*cv = newValue;
-	else if (ConfigVar<float> cv{varName, proj}) {
-		if (newValue > std::numeric_limits<float>::max() || newValue < std::numeric_limits<float>::min())
-			return false;
-
+	else if (ConfigVar<float> cv{varName, proj})
 		*cv = static_cast<float>(newValue);
-	}
 	else
 		return false;
 

@@ -233,7 +233,7 @@ int GetTakeHeight (MediaItem* item, int id, int* offsetY);
 int GetTakeEnvHeight (MediaItem_Take* take, int* offsetY);
 int GetTakeEnvHeight (MediaItem* item, int id, int* offsetY);
 int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRangeOnly, MediaTrack* parent = NULL);
-int GetTrackSpacerSize (MediaTrack* track);
+int GetTrackSpacerSize (MediaTrack* track, bool isMcp = false);
 
 /******************************************************************************
 * Arrange                                                                     *

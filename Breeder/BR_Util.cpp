@@ -2255,12 +2255,48 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 	return envelopeHeight;
 }
 
-int GetTrackSpacerSize (MediaTrack* track)
+enum TrackFixedLanesFlags
+{
+	// DeleteEmptyAtBottom = 1<<0,
+	ShowBigLanes        = 1<<3,
+};
+
+static int GetTrackFixedLanesFlags (MediaTrack* track)
+{
+	WDL_FastString line;
+	SNM_ChunkParserPatcher parser { track };
+	if (1 > parser.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "FIXEDLANES", -1, -1, &line, nullptr, "SEL"))
+		return 0;
+
+	LineParser lp { false };
+	lp.parse(line.Get());
+	return lp.gettoken_int(1);
+}
+
+// Same logic as REAPER v7.11
+static int LimitTrackSpacerSize (MediaTrack* track, const int maxgap, const bool isMCP)
+{
+	if (!track || isMCP)
+		return maxgap;
+
+	int divisor;
+	if (GetMediaTrackInfo_Value(track, "I_FREEMODE")       == 2 && // fixed lanes mode
+	    GetMediaTrackInfo_Value(track, "C_LANESCOLLAPSED") == 0 &&
+	    GetTrackFixedLanesFlags(track) & ShowBigLanes)
+		divisor = static_cast<int>(GetMediaTrackInfo_Value(track, "I_NUMFIXEDLANES"));
+	else
+		divisor = 1;
+
+	const int height = static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPH"));
+	return std::min(height / divisor, maxgap);
+}
+
+int GetTrackSpacerSize (MediaTrack* track, const bool isMCP)
 {
 	static const ConfigVar<int> trackgapmax("trackgapmax");
 
 	if (trackgapmax && (!track || GetMediaTrackInfo_Value(track, "I_SPACER")))
-		return *trackgapmax;
+		return LimitTrackSpacerSize(track, *trackgapmax, isMCP);
 
 	return 0;
 }
@@ -2918,7 +2954,7 @@ MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext, POINT ptScreen)
 					void *p;
 					if (!(p=GetSetMediaTrackInfo(chktrack,"B_SHOWINMIXER",NULL)) || !*(bool *)p) 
 						continue;
-					int spacerSize = GetTrackSpacerSize(chktrack);
+					int spacerSize = GetTrackSpacerSize(chktrack, true);
 					p = GetSetMediaTrackInfo(chktrack,"I_MCPX",NULL);
 					const int xpos = p ? *(int *)p - spacerSize: 0;
 					p = GetSetMediaTrackInfo(chktrack,"I_MCPW",NULL);

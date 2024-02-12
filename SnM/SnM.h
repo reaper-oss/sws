@@ -203,7 +203,7 @@ vezn/Q+t/AIQiCv/Q4iRxAAAAABJRU5ErkJggg==\n"
 
 extern int g_SNM_Beta, g_SNM_LearnPitchAndNormOSC, g_SNM_MediaFlags, g_SNM_ToolbarRefreshFreq;
 extern WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
-extern bool g_SNM_ToolbarRefresh;
+extern bool g_SNM_ToolbarRefresh, g_SNM_ExtSubmenu;
 
 
 class SNM_TrackInt {

@@ -107,7 +107,7 @@ MIDI Editor:
 Misc:
 +Fix left post-fx dual pan envelopes being detected as pre-fx (issue 1641)
 +Limit toolbars auto refresh to when a watched action's toggle state changes (post https://forum.cockos.com/showthread.php?p=2629385|2629385|)
-+Support REAPER 6.73+devXXXX floating-point vertical zooming (issue 1717)
++Support REAPER 6.76 floating-point vertical zooming (issue 1717)
 +Update TagLib to version https://github.com/taglib/taglib/releases/tag/v1.13|v1.13|
 
 Notes:

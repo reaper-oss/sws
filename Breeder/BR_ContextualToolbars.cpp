@@ -2319,122 +2319,123 @@ bool BR_ContextualToolbarsWnd::NotifyOnContextMenu ()
 
 HMENU BR_ContextualToolbarsWnd::OnContextMenu (int x, int y, bool* wantDefaultItems)
 {
-	HMENU menu = NULL;
 	int column;
-	if ((int*)m_list->GetHitItem(x, y, &column))
+	if (!m_list->GetHitItem(x, y, &column))
+		return nullptr;
+
+	m_contextMenuCol = column;
+	WritePtr(wantDefaultItems, false);
+
+	switch (column)
 	{
-		menu             = CreatePopupMenu();
-		m_contextMenuCol = column;
-		WritePtr(wantDefaultItems, false);
-
-		switch (column)
+		case COL_AUTOCLOSE:
 		{
-			case COL_AUTOCLOSE:
+			int toolbarCount = 0, enabledCount = 0;
+			for (int i = 0; int* selectedContext = (int*)m_list->EnumSelected(&i);)
 			{
-				int toolbarCount = 0, enabledCount = 0;
-				for (int i = 0; int* selectedContext = (int*)m_list->EnumSelected(&i);)
+				const ContextAction *action; bool autoClose;
+				if (m_currentToolbar.GetContext(*selectedContext, &action, &autoClose, NULL, NULL) && !action->isBuiltin())
 				{
-					const ContextAction *action; bool autoClose;
-					if (m_currentToolbar.GetContext(*selectedContext, &action, &autoClose, NULL, NULL) && !action->isBuiltin())
-					{
-						++toolbarCount;
-						if (autoClose) ++enabledCount;
-					}
+					++toolbarCount;
+					if (autoClose) ++enabledCount;
 				}
-				if (!toolbarCount)
-					break;
-
-				const bool autoCloseEnabled = enabledCount == toolbarCount;
-				AddToMenu(menu, __LOCALIZE("Enable toolbar auto close", "sws_DLG_181"), (autoCloseEnabled ? 1 : 2), -1, false, (autoCloseEnabled ? MF_CHECKED : MF_UNCHECKED));
 			}
-			break;
+			if (!toolbarCount)
+				break;
 
-			case COL_POSITION:
+			HMENU menu = CreatePopupMenu();
+			const bool autoCloseEnabled = enabledCount == toolbarCount;
+			AddToMenu(menu, __LOCALIZE("Enable toolbar auto close", "sws_DLG_181"), (autoCloseEnabled ? 1 : 2), -1, false, (autoCloseEnabled ? MF_CHECKED : MF_UNCHECKED));
+			return menu;
+		}
+		case COL_POSITION:
+		{
+			bool hasAnyValidContext = false;
+			for (int i = 0; int* selectedContext = (int*)m_list->EnumSelected(&i);)
 			{
-				bool hasAnyValidContext = false;
-				for (int i = 0; int* selectedContext = (int*)m_list->EnumSelected(&i);)
+				if (!m_currentToolbar.GetContextAction(*selectedContext).isBuiltin())
 				{
-					if (!m_currentToolbar.GetContextAction(*selectedContext).isBuiltin())
-					{
-						hasAnyValidContext = true;
-						break;
-					}
-				}
-				if(hasAnyValidContext)
-					AddToMenu(menu, __LOCALIZE("Set toolbar position offset...", "sws_DLG_181"), 1, -1, false);
-			}
-			break;
-
-			case COL_CONTEXT:
-			case COL_TOOLBAR:
-			{
-				bool hasAnyValidContext = false;
-				const ContextAction *currentAction = nullptr;
-				for (int i = 0; int* selectedContext = (int*)m_list->EnumSelected(&i);)
-				{
-					const ContextAction *selectedAction;
-					if (m_currentToolbar.GetContext(*selectedContext, &selectedAction, nullptr, nullptr, nullptr))
-						hasAnyValidContext = true;
-					else
-						continue;
-
-					if(!currentAction)
-						currentAction = selectedAction;
-					else if(currentAction != selectedAction)
-					{
-						currentAction = nullptr;
-						break;
-					}
-				}
-				if (!hasAnyValidContext)
+					hasAnyValidContext = true;
 					break;
+				}
+			}
+			if (!hasAnyValidContext)
+				break;
 
-				HMENU submenu = menu;
-				ContextAction::Type prevGroup = g_actions[0].type;
-				for (int i = 0, gi = 0; i < __ARRAY_SIZE(g_actions); ++i, ++gi)
+			HMENU menu = CreatePopupMenu();
+			AddToMenu(menu, __LOCALIZE("Set toolbar position offset...", "sws_DLG_181"), 1, -1, false);
+			return menu;
+		}
+		case COL_CONTEXT:
+		case COL_TOOLBAR:
+		{
+			bool hasAnyValidContext = false;
+			const ContextAction *currentAction = nullptr;
+			for (int i = 0; int* selectedContext = (int*)m_list->EnumSelected(&i);)
+			{
+				const ContextAction *selectedAction;
+				if (m_currentToolbar.GetContext(*selectedContext, &selectedAction, nullptr, nullptr, nullptr))
+					hasAnyValidContext = true;
+				else
+					continue;
+
+				if(!currentAction)
+					currentAction = selectedAction;
+				else if(currentAction != selectedAction)
 				{
-					const ContextAction &action = g_actions[i];
-					const bool inheritParent     = action == INHERIT_PARENT,
-					           followItemContext = action == FOLLOW_ITEM_CONTEXT;
-					if (inheritParent || followItemContext)
+					currentAction = nullptr;
+					break;
+				}
+			}
+			if (!hasAnyValidContext)
+				break;
+
+			HMENU menu = CreatePopupMenu(), submenu = menu;
+			ContextAction::Type prevGroup = g_actions[0].type;
+			for (int i = 0, gi = 0; i < __ARRAY_SIZE(g_actions); ++i, ++gi)
+			{
+				const ContextAction &action = g_actions[i];
+				const bool inheritParent     = action == INHERIT_PARENT,
+				           followItemContext = action == FOLLOW_ITEM_CONTEXT;
+				if (inheritParent || followItemContext)
+				{
+					bool show = followItemContext;
+					for (int j = 0; int* selectedContext = (int*)m_list->EnumSelected(&j);)
 					{
-						bool show = followItemContext;
-						for (int j = 0; int* selectedContext = (int*)m_list->EnumSelected(&j);)
+						if (inheritParent ? CanContextInheritParent(*selectedContext) : !CanContextFollowItem(*selectedContext))
 						{
-							if (inheritParent ? CanContextInheritParent(*selectedContext) : !CanContextFollowItem(*selectedContext))
-							{
-								show = inheritParent;
-								break;
-							}
+							show = inheritParent;
+							break;
 						}
-						if (!show)
-							continue;
 					}
-					else if(!action.isBuiltin() && GetToggleCommandState(action.toggleCommand) == -1)
-						continue; // hide new toolbars in older REAPER version
-
-					if (prevGroup != action.type)
-					{
-						AddToMenu(menu, SWS_SEPARATOR, 0);
-						prevGroup = action.type;
-						gi = 0, submenu = menu;
-					}
-
-					if (gi >= 8 && submenu == menu)
-					{
-						submenu = CreatePopupMenu();
-						AddSubMenuOrdered(menu, submenu, __LOCALIZE("More", "sws_DLG_181"));
-					}
-
-					char toolbarName[512];
-					action.getName(toolbarName, sizeof(toolbarName));
-					AddToMenuOrdered(submenu, toolbarName, i + 1, -1, false, &action == currentAction ? MFS_CHECKED : MFS_UNCHECKED); // i + 1 -> because context values can only be > 0
+					if (!show)
+						continue;
 				}
+				else if(!action.isBuiltin() && GetToggleCommandState(action.toggleCommand) == -1)
+					continue; // hide new toolbars in older REAPER version
+
+				if (prevGroup != action.type)
+				{
+					AddToMenu(menu, SWS_SEPARATOR, 0);
+					prevGroup = action.type;
+					gi = 0, submenu = menu;
+				}
+
+				if (gi >= 8 && submenu == menu)
+				{
+					submenu = CreatePopupMenu();
+					AddSubMenuOrdered(menu, submenu, __LOCALIZE("More", "sws_DLG_181"));
+				}
+
+				char toolbarName[512];
+				action.getName(toolbarName, sizeof(toolbarName));
+				AddToMenuOrdered(submenu, toolbarName, i + 1, -1, false, &action == currentAction ? MFS_CHECKED : MFS_UNCHECKED); // i + 1 -> because context values can only be > 0
 			}
-			break;
+			return menu;
 		}
 	}
-	return menu;
+
+	return nullptr;
 }
 
 void BR_ContextualToolbarsWnd::ContextMenuReturnId (int id)

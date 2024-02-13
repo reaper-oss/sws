@@ -193,7 +193,11 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 			for (int i = 0; i < iNum; i++)
 			{
 				if (bZoomed[i] && i + iFirst <= lastTrackId) // don't check envelope lanes height for the last track if includeEnvelopes == true
-					iLanesHeight += CountTrackEnvelopePanels(CSurf_TrackFromID(i + iFirst, false)) * GetEnvHeightFromTrackHeight(iEachHeight);
+				{
+					MediaTrack *track = CSurf_TrackFromID(i + iFirst, false);
+					iLanesHeight += CountTrackEnvelopePanels(track) * GetEnvHeightFromTrackHeight(iEachHeight);
+					iLanesHeight += GetTrackSpacerSize(track, false, &iEachHeight);
+				}
 			}
 			if (iEachHeight * iZoomed + iLanesHeight <= iTotalHeight)
 				break;
@@ -230,10 +234,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 					iEachHeight += leftOverHeight;
 				MediaTrack* tr = CSurf_TrackFromID(i + iFirst, false);
 				if (!obeyHeightLock || !GetMediaTrackInfo_Value(tr, "B_HEIGHTLOCK"))
-				{
 					GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", &iEachHeight);
-					iEachHeight += GetTrackSpacerSize(tr);
-				}
 			}
 		}
 		TrackList_AdjustWindows(false);

@@ -2119,9 +2119,9 @@ int GetTrackHeightFromVZoomIndex (MediaTrack* track, int vZoom)
 				// Calculate track height (method stolen from Zoom.cpp - Thanks Tim!)
 				int normalizedZoom = (vZoom < 30) ? (vZoom - 4) : (30 + 3*(vZoom - 30) - 4);
 				height = minHeight + ((maxHeight-minHeight)*normalizedZoom) / 56;
-				height += GetTrackSpacerSize(track);
 			}
 		}
+		height += GetTrackSpacerSize(track, false, &height);
 	}
 	return height;
 }
@@ -2274,7 +2274,7 @@ static int GetTrackFixedLanesFlags (MediaTrack* track)
 }
 
 // Same logic as REAPER v7.11
-static int LimitTrackSpacerSize (MediaTrack* track, const int maxgap, const bool isMCP)
+static int LimitTrackSpacerSize (MediaTrack* track, const int maxgap, const bool isMCP, const int* heightOverride)
 {
 	if (isMCP)
 		return maxgap;
@@ -2287,7 +2287,7 @@ static int LimitTrackSpacerSize (MediaTrack* track, const int maxgap, const bool
 	else
 		divisor = 1;
 
-	const int height = static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPH"));
+	const int height = heightOverride ? *heightOverride : static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPH"));
 	return std::min(height / divisor, maxgap);
 }
 
@@ -2305,7 +2305,7 @@ bool HasTrackSpacerBefore (MediaTrack* track, const bool isMCP)
 	return false;
 }
 
-int GetTrackSpacerSize (MediaTrack* track, const bool isMCP)
+int GetTrackSpacerSize (MediaTrack* track, const bool isMCP, const int* heightOverride)
 {
 	static const ConfigVar<int> trackgapmax("trackgapmax");
 
@@ -2314,7 +2314,7 @@ int GetTrackSpacerSize (MediaTrack* track, const bool isMCP)
 		if (!track)
 			return *trackgapmax;
 		else if (HasTrackSpacerBefore(track, isMCP))
-			return LimitTrackSpacerSize(track, *trackgapmax, isMCP);
+			return LimitTrackSpacerSize(track, *trackgapmax, isMCP, heightOverride);
 	}
 
 	return 0;

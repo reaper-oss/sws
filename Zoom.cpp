@@ -145,6 +145,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 			}
 		}
 
+		TrackList_AdjustWindows(true); // required in v6.76+ to recompute zoom before action 40112
 		Main_OnCommand(40112, 0); // Zoom out vert to minimize envelope lanes too (since vZoom is now 0) (calls refresh)
 		if (iMinimizedTracks <= 1) // ignore master track since there can be no items on it
 			return;

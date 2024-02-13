@@ -215,6 +215,57 @@ const char *CF_GetCommandText(const int section, const int command)
   return kbd_getTextFromCmd(command, SectionFromUniqueID(section));
 }
 
+bool CF_SendActionShortcut(void *window, const int section, const int key, const int *mods)
+{
+  enum { Ctrl = 4, Shift = 8, Alt = 16, Super = 32 }; // same bits as gfx.mouse_cap
+
+  HWND hwnd { static_cast<HWND>(window) };
+  if(!IsWindow(hwnd))
+    return false;
+
+  LPARAM lParam { FVIRTKEY };
+#ifdef _WIN32
+  BYTE originalState[0x100];
+#endif
+
+  if(mods) {
+#ifdef _WIN32
+    BYTE simulatedState[sizeof(originalState)];
+    GetKeyboardState(originalState);
+    memcpy(simulatedState, originalState, sizeof(originalState));
+    simulatedState[VK_CONTROL]  = *mods & Ctrl  ? 0x80 : 0;
+    simulatedState[VK_SHIFT]    = *mods & Shift ? 0x80 : 0;
+    simulatedState[VK_MENU]     = *mods & Alt   ? 0x80 : 0;
+    simulatedState[VK_LWIN]     = *mods & Super ? 0x80 : 0;
+    SetKeyboardState(simulatedState);
+#else
+    if(*mods & Ctrl)  lParam |= FCONTROL;
+    if(*mods & Shift) lParam |= FSHIFT;
+    if(*mods & Alt)   lParam |= FALT;
+    if(*mods & Super) lParam |= FLWIN;
+#endif
+  }
+#ifndef _WIN32
+  else {
+    if(GetAsyncKeyState(VK_CONTROL) & 0x8000) lParam |= FCONTROL;
+    if(GetAsyncKeyState(VK_SHIFT)   & 0x8000) lParam |= FSHIFT;
+    if(GetAsyncKeyState(VK_MENU)    & 0x8000) lParam |= FALT;
+    if(GetAsyncKeyState(VK_LWIN)    & 0x8000) lParam |= FLWIN;
+  }
+#endif
+
+  // extended keys are wParam | 0x8000
+  MSG msg { hwnd, WM_KEYDOWN, static_cast<WPARAM>(key), lParam };
+  const int rv { kbd_translateAccelerator(hwnd, &msg, SectionFromUniqueID(section)) };
+
+#ifdef _WIN32
+  if(mods)
+    SetKeyboardState(originalState);
+#endif
+
+  return rv;
+}
+
 static void CF_RefreshTrackFXChainTitle(MediaTrack *track)
 {
   // The FX chain is normally updated at the next global timer tick.

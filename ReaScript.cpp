@@ -358,6 +358,10 @@ APIdef g_apidefs[] =
 
 	{ APIFUNC(CF_EnumerateActions), "int", "int,int,char*,int", "section,index,nameOut,nameOut_sz", "Deprecated, see kbd_enumerateActions (v6.71+). Wrapper for the unexposed kbd_enumerateActions API function.\nMain=0, Main (alt recording)=100, MIDI Editor=32060, MIDI Event List Editor=32061, MIDI Inline Editor=32062, Media Explorer=32063", },
 	{ APIFUNC(CF_GetCommandText), "const char*", "int,int", "section,command", "Deprecated, see kbd_getTextFromCmd (v6.71+). Wrapper for the unexposed kbd_getTextFromCmd API function. See <a href='#CF_EnumerateActions'>CF_EnumerateActions</a> for common section IDs.", },
+	{ APIFUNC(CF_SendActionShortcut), "bool", "void*,int,int,int*", "hwnd,section,key,modifiersInOptional", R"(Run in the specified window the action command ID associated with the shortcut key in the given section. See <a href='#CF_EnumerateActions'>CF_EnumerateActions</a> for common section IDs.
+
+	Keys are Windows <a href="https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes">virtual key codes</a>. &0x8000 for an extended key (eg. Numpad Enter = VK_RETURN & 0x8000).
+	Modifier values: nil = read from keyboard, 0 = no modifier, &4 = Control (Cmd on macOS), &8 = Shift, &16 = Alt, &32 = Super)", },
 
 	{ APIFUNC(CF_GetMediaSourceBitDepth), "int", "PCM_source*", "src", "Returns the bit depth if available (0 otherwise).", },
 	{ APIFUNC(CF_GetMediaSourceBitRate), "double", "PCM_source*", "src", "Returns the bit rate for WAVE (wav, aif) and streaming/variable formats (mp3, ogg, opus). REAPER v6.19 or later is required for non-WAVE formats.", },

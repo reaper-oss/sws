@@ -179,6 +179,8 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 				}
 			}
 		}
+		if (iZoomed < 1)
+			return; // all selected tracks are locked, nothing to do
 		// Pixels we have to work with will all the sel tracks and their envelopes
 		iTotalHeight -= iNotZoomedSize;
 		int iEachHeight = iTotalHeight / iZoomed;

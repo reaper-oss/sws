@@ -48,7 +48,7 @@ void AdjustSelectedEnvelopeOrTrackHeight(COMMAND_T* ct, int val, int valhw, int 
 		PreventUIRefresh(1);
 
 		VerticalZoomCenter scrollCenter = static_cast<VerticalZoomCenter>((int)ct->user > 2 ? (int)ct->user - 3 : (int)ct->user);
-		int height = AdjustRelative(relmode, (valhw == -1) ? BOUNDED(val, 0, 127) : (int)BOUNDED(16384.0 - (valhw | val << 7), 0.0, 16383.0));
+		int height = AdjustRelative(relmode, valhw < 0 ? BOUNDED(val, 0, 127) : (int)BOUNDED(16384.0 - (valhw | val << 7), 0.0, 16383.0));
 		if (TrackEnvelope* env = GetSelectedEnvelope(NULL))
 		{
 			BR_Envelope brEnv(env);
@@ -95,7 +95,7 @@ void AdjustEnvelopeOrTrackHeightUnderMouse(COMMAND_T* ct, int val, int valhw, in
 	{
 		PreventUIRefresh(1);
 
-		int height = AdjustRelative(relmode, (valhw == -1) ? BOUNDED(val, 0, 127) : (int)BOUNDED(16384.0 - (valhw | val << 7), 0.0, 16383.0));
+		int height = AdjustRelative(relmode, valhw < 0 ? BOUNDED(val, 0, 127) : (int)BOUNDED(16384.0 - (valhw | val << 7), 0.0, 16383.0));
 
 		TrackEnvelope* env = NULL;
 		MediaTrack* tr = NULL;

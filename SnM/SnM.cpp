@@ -1074,8 +1074,8 @@ void MidiOscActionJob::Init(ScheduledJob* _replacedJob)
 		else
 			m_absval = m_valhw||m_val ? BOUNDED(16384.0-(m_valhw|m_val<<7), 0.0, 16383.0) : 0.0; // see top remark!
 	}
-	// midi
-	else if (m_valhw==-1 && m_val>=0 && m_val<128)
+	// midi/mousewheel
+	else if (m_val>=0 && m_val<128)
 	{
 		// absolute mode
 		if (!m_relmode) m_absval = m_val;

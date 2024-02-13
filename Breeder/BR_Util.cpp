@@ -2276,7 +2276,7 @@ static int GetTrackFixedLanesFlags (MediaTrack* track)
 // Same logic as REAPER v7.11
 static int LimitTrackSpacerSize (MediaTrack* track, const int maxgap, const bool isMCP)
 {
-	if (!track || isMCP)
+	if (isMCP)
 		return maxgap;
 
 	int divisor;
@@ -2291,12 +2291,31 @@ static int LimitTrackSpacerSize (MediaTrack* track, const int maxgap, const bool
 	return std::min(height / divisor, maxgap);
 }
 
+bool HasTrackSpacerBefore (MediaTrack* track, const bool isMCP)
+{
+	// faster than CSurf_TrackToID
+	int i { static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER")) - 1 };
+
+	do
+	{
+		if (GetMediaTrackInfo_Value(track, "I_SPACER"))
+			return true;
+	} while((track = GetTrack(nullptr, --i)) && !IsTrackVisible(track, isMCP));
+
+	return false;
+}
+
 int GetTrackSpacerSize (MediaTrack* track, const bool isMCP)
 {
 	static const ConfigVar<int> trackgapmax("trackgapmax");
 
-	if (trackgapmax && (!track || GetMediaTrackInfo_Value(track, "I_SPACER")))
-		return LimitTrackSpacerSize(track, *trackgapmax, isMCP);
+	if (trackgapmax)
+	{
+		if (!track)
+			return *trackgapmax;
+		else if (HasTrackSpacerBefore(track, isMCP))
+			return LimitTrackSpacerSize(track, *trackgapmax, isMCP);
+	}
 
 	return 0;
 }

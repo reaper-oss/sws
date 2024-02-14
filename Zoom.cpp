@@ -170,9 +170,12 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 				{
 					int trackHeight = 0;
 					if (obeyHeightLock && locked)
+					{
 						trackHeight = static_cast<int>(GetMediaTrackInfo_Value(tr, "I_HEIGHTOVERRIDE"));
+						trackHeight += GetTrackSpacerSize(tr);
+					}
 					else
-						trackHeight = GetTrackHeightFromVZoomIndex(tr, 0);
+						trackHeight = GetTrackHeightWithSpacer(tr);
 
 					trackHeight += CountTrackEnvelopePanels(tr) * GetEnvHeightFromTrackHeight(trackHeight);
 					iNotZoomedSize += trackHeight;
@@ -192,7 +195,11 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 			for (int i = 0; i < iNum; i++)
 			{
 				if (bZoomed[i] && i + iFirst <= lastTrackId) // don't check envelope lanes height for the last track if includeEnvelopes == true
-					iLanesHeight += CountTrackEnvelopePanels(CSurf_TrackFromID(i + iFirst, false)) * GetEnvHeightFromTrackHeight(iEachHeight);
+				{
+					MediaTrack *track = CSurf_TrackFromID(i + iFirst, false);
+					iLanesHeight += CountTrackEnvelopePanels(track) * GetEnvHeightFromTrackHeight(iEachHeight);
+					iLanesHeight += GetTrackSpacerSize(track, false, &iEachHeight);
+				}
 			}
 			if (iEachHeight * iZoomed + iLanesHeight <= iTotalHeight)
 				break;
@@ -226,7 +233,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 			if (bZoomed[i])
 			{
 				if (i + 1 == iNum)
-					iEachHeight +=leftOverHeight;
+					iEachHeight += leftOverHeight;
 				MediaTrack* tr = CSurf_TrackFromID(i + iFirst, false);
 				if (!obeyHeightLock || !GetMediaTrackInfo_Value(tr, "B_HEIGHTLOCK"))
 					GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", &iEachHeight);
@@ -271,7 +278,10 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers, bo
 				{
 					const bool locked = GetMediaTrackInfo_Value(tr, "B_HEIGHTLOCK");
 					if (obeyHeightLock && locked)
+					{
 						trackHeight = static_cast<int>(GetMediaTrackInfo_Value(tr, "I_HEIGHTOVERRIDE"));
+						trackHeight += GetTrackSpacerSize(tr);
+					}
 					else
 						trackHeight = GetTrackHeightFromVZoomIndex(tr, iZoom);
 

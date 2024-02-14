@@ -233,8 +233,7 @@ void GetVisibleTCPTracks(WDL_PtrList<MediaTrack>* _trList)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		TCPY = static_cast<int>(GetMediaTrackInfo_Value(tr, "I_TCPY"));
-		TCPH = static_cast<int>(GetMediaTrackInfo_Value(tr, "I_TCPH"));
-		GetTrackGap(TCPH, &topGap, &bottomGap);
+		TCPH = GetTrackHeight(tr, nullptr, &topGap, &bottomGap);
 		if ((TCPY + TCPH - bottomGap > 0) && (TCPY + topGap < arrangeHeight))
 			_trList->Add(tr);
 	}

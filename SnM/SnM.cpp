@@ -1115,7 +1115,7 @@ int MidiOscActionJob::AdjustRelative(int _adjmode, int _reladj)
 WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
 int g_SNM_Beta=0, g_SNM_LearnPitchAndNormOSC=0;
 int g_SNM_MediaFlags=0, g_SNM_ToolbarRefreshFreq=SNM_DEF_TOOLBAR_RFRSH_FREQ;
-bool g_SNM_ToolbarRefresh = false;
+bool g_SNM_ToolbarRefresh = false, g_SNM_ExtSubmenu = true;
 
 
 void IniFileInit()
@@ -1144,6 +1144,7 @@ void IniFileInit()
 #endif
 	g_SNM_LearnPitchAndNormOSC = GetPrivateProfileInt("General", "LearnPitchAndNormOSC", 0, g_SNM_IniFn.Get());
 	g_SNM_Beta = GetPrivateProfileInt("General", "Beta", 0, g_SNM_IniFn.Get());
+	g_SNM_ExtSubmenu = GetPrivateProfileInt("General", "ExtensionsSubmenu", g_SNM_ExtSubmenu, g_SNM_IniFn.Get());
 }
 
 void IniFileExit()
@@ -1172,6 +1173,7 @@ void IniFileExit()
 #endif
 		<< "LearnPitchAndNormOSC=" << g_SNM_LearnPitchAndNormOSC << '\0'
 		<< "Beta=" << g_SNM_Beta << '\0'
+		<< "ExtensionsSubmenu=" << g_SNM_ExtSubmenu << '\0'
 	;
 
 	SaveIniSection("General", iniSection.str(), g_SNM_IniFn.Get());

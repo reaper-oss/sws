@@ -2257,12 +2257,15 @@ int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRange
 
 enum TrackFixedLanesFlags
 {
-	// DeleteEmptyAtBottom = 1<<0,
-	ShowBigLanes        = 1<<3,
+	ShowBigLanes = 1<<3,
 };
 
-static int GetTrackFixedLanesFlags (MediaTrack* track)
+static char GetTrackFixedLanesFlags (MediaTrack* track)
 {
+	if (void *settings = GetSetMediaTrackInfo(track, "C_LANESETTINGS", nullptr))
+		return *static_cast<char *>(settings); // v7.12+
+
+	// slow code path for older versions [t=288774]
 	WDL_FastString line;
 	SNM_ChunkParserPatcher parser { track };
 	if (1 > parser.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "FIXEDLANES", -1, -1, &line, nullptr, "SEL"))

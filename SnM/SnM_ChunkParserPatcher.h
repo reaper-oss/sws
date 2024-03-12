@@ -722,14 +722,17 @@ int ParsePatchCore(
 		curLine[curLineLen >= SNM_MAX_CHUNK_LINE_LENGTH ? SNM_MAX_CHUNK_LINE_LENGTH-1 : curLineLen] = '\0';
 		linePos = (int)(pLine-cData);
 
-		// zap this line?
-		if (lp.parse(curLine) || !lp.getnumtokens())
+		if (*curLine == '|' && (_mode == SNM_GET_SUBCHUNK_OR_LINE || _mode == SNM_GET_SUBCHUNK_OR_LINE_EOL))
+			keyword = curLine; // prevent video processor <CODE lines with unbalanced quotes from failing lp.parse
+		else if (lp.parse(curLine) || !lp.getnumtokens()) // zap this line?
 			continue;
+		else
+		{
+			keyword = lp.gettoken_str(0);
 
-		// zap this line?
-		keyword = lp.gettoken_str(0);
-		if (!*keyword)
-			continue;
+			if (!*keyword) // zap this line?
+				continue;
+		}
 
 		// sub chunk?
 		if (*keyword == '<')

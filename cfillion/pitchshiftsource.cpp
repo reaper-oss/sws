@@ -177,20 +177,23 @@ void PitchShiftSource_Audio::getShiftedSamples(const Block &block)
     m_ps->Reset(); // to give immediate feedback with very slow play rates
   }
 
+  bool isEOF = false;
   do {
-    const int remaining { block.tx->length - block.tx->samples_out };
-    ReaSample *sample { block.tx->samples + (block.tx->samples_out * block.tx->nch) };
-    block.tx->samples_out += m_ps->GetSamples(remaining, sample);
-    if(block.tx->samples_out >= block.tx->length)
-      break; // output block is full
-
     // feed the pitch shifter until it has enough data to fill the output block
     sourceBlock.samples = m_ps->GetBuffer(sourceBlock.length);
     sourceBlock.time_s = m_readTime;
     m_src->GetSamples(&sourceBlock);
     m_ps->BufferDone(sourceBlock.samples_out);
     m_readTime += sourceBlock.samples_out * block.sampleTime;
-  } while(sourceBlock.samples_out == sourceBlock.length); // until EOF
+
+    isEOF = sourceBlock.samples_out < sourceBlock.length;
+    if(isEOF)
+      m_ps->FlushSamples();
+
+    const int remaining { block.tx->length - block.tx->samples_out };
+    ReaSample *sample { block.tx->samples + (block.tx->samples_out * block.tx->nch) };
+    block.tx->samples_out += m_ps->GetSamples(remaining, sample);
+  } while(block.tx->samples_out < block.tx->length && !isEOF);
 }
 
 static unsigned char clamp7b(const int v)

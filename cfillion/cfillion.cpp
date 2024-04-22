@@ -32,12 +32,19 @@
 #include "Breeder/BR_Util.h"
 #include "Color/Color.h"
 #include "preview.hpp"
+#include "SnM/SnM_Chunk.h"
 #include "SnM/SnM_FX.h"
 #include "SnM/SnM_Window.h"
 #include "version.h"
 
 #include <WDL/localize/localize.h>
 #include <WDL/projectcontext.h>
+
+#ifdef __APPLE__
+#  include <CoreFoundation/CFString.h>
+#elif !defined(_WIN32)
+#  include <glib.h>
+#endif
 
 #ifdef _WIN32
   constexpr unsigned int CLIPBOARD_FORMAT { CF_UNICODETEXT };
@@ -208,6 +215,57 @@ const char *CF_GetCommandText(const int section, const int command)
   return kbd_getTextFromCmd(command, SectionFromUniqueID(section));
 }
 
+bool CF_SendActionShortcut(void *window, const int section, const int key, const int *mods)
+{
+  enum { Ctrl = 4, Shift = 8, Alt = 16, Super = 32 }; // same bits as gfx.mouse_cap
+
+  HWND hwnd { static_cast<HWND>(window) };
+  if(!IsWindow(hwnd))
+    return false;
+
+  LPARAM lParam { FVIRTKEY };
+#ifdef _WIN32
+  BYTE originalState[0x100];
+#endif
+
+  if(mods) {
+#ifdef _WIN32
+    BYTE simulatedState[sizeof(originalState)];
+    GetKeyboardState(originalState);
+    memcpy(simulatedState, originalState, sizeof(originalState));
+    simulatedState[VK_CONTROL]  = *mods & Ctrl  ? 0x80 : 0;
+    simulatedState[VK_SHIFT]    = *mods & Shift ? 0x80 : 0;
+    simulatedState[VK_MENU]     = *mods & Alt   ? 0x80 : 0;
+    simulatedState[VK_LWIN]     = *mods & Super ? 0x80 : 0;
+    SetKeyboardState(simulatedState);
+#else
+    if(*mods & Ctrl)  lParam |= FCONTROL;
+    if(*mods & Shift) lParam |= FSHIFT;
+    if(*mods & Alt)   lParam |= FALT;
+    if(*mods & Super) lParam |= FLWIN;
+#endif
+  }
+#ifndef _WIN32
+  else {
+    if(GetAsyncKeyState(VK_CONTROL) & 0x8000) lParam |= FCONTROL;
+    if(GetAsyncKeyState(VK_SHIFT)   & 0x8000) lParam |= FSHIFT;
+    if(GetAsyncKeyState(VK_MENU)    & 0x8000) lParam |= FALT;
+    if(GetAsyncKeyState(VK_LWIN)    & 0x8000) lParam |= FLWIN;
+  }
+#endif
+
+  // extended keys are wParam | 0x8000
+  MSG msg { hwnd, WM_KEYDOWN, static_cast<WPARAM>(key), lParam };
+  const int rv { kbd_translateAccelerator(hwnd, &msg, SectionFromUniqueID(section)) };
+
+#ifdef _WIN32
+  if(mods)
+    SetKeyboardState(originalState);
+#endif
+
+  return rv;
+}
+
 static void CF_RefreshTrackFXChainTitle(MediaTrack *track)
 {
   // The FX chain is normally updated at the next global timer tick.
@@ -338,6 +396,33 @@ bool CF_SelectTrackFX(MediaTrack *track, const int index)
   return SelectTrackFX(track, index);
 }
 
+bool CF_SelectTakeFX(MediaItem_Take *take, const int index)
+{
+  if(!take || index < 0 || index >= TakeFX_GetCount(take))
+    return false;
+
+  if(TakeFX_GetChainVisible(take) != -1) {
+    TakeFX_Show(take, index, 1);
+    return true;
+  }
+
+  MediaItem *item { GetMediaItemTake_Item(take) };
+  const int takeId { GetTakeId(take, item) };
+  int takeChunkPos, takeChunkLen;
+  WDL_FastString takeChunk;
+  SNM_TakeParserPatcher itemPatcher { item, CountTakes(item) };
+  if(!itemPatcher.GetTakeChunk(takeId, &takeChunk, &takeChunkPos, &takeChunkLen))
+    return false;
+
+  char lastsel[12];
+  snprintf(lastsel, sizeof(lastsel), "%d", index);
+  SNM_ChunkParserPatcher takePatcher { &takeChunk, false };
+  if(takePatcher.ParsePatch(SNM_SET_CHUNK_CHAR, 1, "TAKEFX", "LASTSEL", 0, 1, lastsel) < 1)
+    return false;
+
+  return itemPatcher.ReplaceTake(takeChunkPos, takeChunkLen, takePatcher.GetChunk());
+}
+
 int CF_GetMediaSourceBitDepth(PCM_source *source)
 {
   // parameter validation is already done on the REAPER side, so we're sure
@@ -437,7 +522,7 @@ bool CF_ExportMediaSource(PCM_source *source, const char *file)
 // cannot return CreateFromType("SECTION"): if not added to the project,
 // the ReaScript argument validator won't recognize the new section as valid
 bool CF_PCM_Source_SetSectionInfo(PCM_source *section, PCM_source *source,
-  const double offset, double length, const bool reverse)
+  const double offset, double length, const bool reverse, const double *fade)
 {
   if(!section || section == source || strcmp(section->GetType(), "SECTION"))
     return false;
@@ -460,6 +545,7 @@ bool CF_PCM_Source_SetSectionInfo(PCM_source *section, PCM_source *source,
   ProjectStateContext *ctx { ProjectCreateMemCtx(&buffer) };
   ctx->AddLine("LENGTH %f", length);
   ctx->AddLine("STARTPOS %f", offset);
+  ctx->AddLine("OVERLAP %f", fade ? *fade : 0);
   ctx->AddLine("MODE %d", mode);
   ctx->AddLine("<SOURCE %s", source->GetType());
   source->SaveState(ctx);
@@ -479,6 +565,7 @@ BOOL CF_GetScrollInfo(HWND hwnd, const int bar, LPSCROLLINFO si)
       MediaTrack *track { CSurf_TrackFromID(i, false) };
       if(TcpVis(track)) {
         si->nPos = -static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPY"));
+        si->nPos += GetTrackSpacerSize(track);
         si->fMask &= ~SIF_POS;
         break;
       }
@@ -486,6 +573,74 @@ BOOL CF_GetScrollInfo(HWND hwnd, const int bar, LPSCROLLINFO si)
   }
 
   return CoolSB_GetScrollInfo(hwnd, bar, si);
+}
+
+void CF_NormalizeUTF8(const char *input, const unsigned int mode,
+  char *output, int outputSize)
+{
+#ifdef __APPLE__
+  constexpr CFStringNormalizationForm forms[] {
+    kCFStringNormalizationFormD,  // 0b00
+    kCFStringNormalizationFormC,  // 0b01
+    kCFStringNormalizationFormKD, // 0b10
+    kCFStringNormalizationFormKC, // 0b11
+  };
+
+  CFMutableStringRef normalized { CFStringCreateMutable(kCFAllocatorDefault, 0) };
+  CFStringAppendCString(normalized, input, kCFStringEncodingUTF8);
+  CFStringNormalize(normalized, forms[mode & 0b11]);
+
+  constexpr char fallback { '?' };
+  CFIndex normalizedSize;
+  const CFRange range { CFRangeMake(0, CFStringGetLength(normalized)) };
+  CFStringGetBytes(normalized, range, kCFStringEncodingUTF8, fallback, false,
+    nullptr, 0, &normalizedSize);
+  if(realloc_cmd_ptr(&output, &outputSize, normalizedSize)) {
+    CFStringGetBytes(normalized, range, kCFStringEncodingUTF8, fallback, false,
+      reinterpret_cast<UInt8 *>(output), outputSize, nullptr);
+  }
+
+  CFRelease(normalized);
+#elif defined(_WIN32)
+  constexpr NORM_FORM forms[] {
+    NormalizationD,  // 0b00
+    NormalizationC,  // 0b01
+    NormalizationKD, // 0b10
+    NormalizationKC, // 0b11
+  };
+  const NORM_FORM form { forms[mode & 0b11] };
+
+  const std::wstring &utf16 { win32::widen(input) };
+  const int normalizedChars
+    { NormalizeString(form, utf16.c_str(), utf16.size(), nullptr, 0) };
+  std::vector<wchar_t> normalized(normalizedChars);
+  NormalizeString(form, utf16.c_str(), utf16.size(),
+    normalized.data(), normalized.size());
+
+  const int normalizedSize { WideCharToMultiByte(CP_UTF8, 0,
+    normalized.data(), normalized.size(), nullptr, 0, nullptr, nullptr) };
+  if(realloc_cmd_ptr(&output, &outputSize, normalizedSize)) {
+    WideCharToMultiByte(CP_UTF8, 0, normalized.data(), normalized.size(),
+      output, outputSize, nullptr, nullptr);
+  }
+#else
+  constexpr GNormalizeMode forms[] {
+    G_NORMALIZE_NFD,  // 0b00
+    G_NORMALIZE_NFC,  // 0b01
+    G_NORMALIZE_NFKD, // 0b10
+    G_NORMALIZE_NFKC, // 0b11
+  };
+
+  gchar *normalized { g_utf8_normalize(input, -1, forms[mode & 0b11]) };
+  if(!normalized)
+    normalized = const_cast<gchar *>(input);
+
+  if(realloc_cmd_ptr(&output, &outputSize, strlen(normalized)))
+    memcpy(output, normalized, outputSize);
+
+  if(normalized != input)
+    g_free(normalized);
+#endif
 }
 
 static const APIParam<CF_Preview> PREVIEW_PARAMS[] {
@@ -506,7 +661,7 @@ static const APIParam<CF_Preview> PREVIEW_PARAMS[] {
 
 CF_Preview *CF_CreatePreview(PCM_source *source)
 {
-  if(!source || source->GetSampleRate() < 1.0) // only accept sources with audio
+  if(!source)
     return nullptr;
 
   return new CF_Preview { source };
@@ -546,6 +701,11 @@ bool CF_Preview_SetValue(CF_Preview *preview, const char *name, double newValue)
   return false;
 }
 
+MediaTrack *CF_Preview_GetOutputTrack(CF_Preview *preview)
+{
+  return CF_Preview::isValid(preview) ? preview->getOutputTrack() : nullptr;
+}
+
 // the ReaProject argument is there only to satisfy REAPER's argument validator
 bool CF_Preview_SetOutputTrack(CF_Preview *preview, ReaProject *, MediaTrack *track)
 {
@@ -558,10 +718,7 @@ bool CF_Preview_SetOutputTrack(CF_Preview *preview, ReaProject *, MediaTrack *tr
 
 bool CF_Preview_Play(CF_Preview *preview)
 {
-  if(!CF_Preview::isValid(preview))
-    return false;
-
-  return preview->play();
+  return CF_Preview::isValid(preview) ? preview->play() : false;
 }
 
 bool CF_Preview_Stop(CF_Preview *preview)
@@ -569,6 +726,8 @@ bool CF_Preview_Stop(CF_Preview *preview)
   if(!CF_Preview::isValid(preview))
     return false;
 
+  // The internal API returns false if the stop request triggers a fade-out or
+  // async stop. Return true to users to indicate the request has been received.
   preview->stop();
   return true;
 }

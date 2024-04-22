@@ -1,3 +1,110 @@
+!v2.14.0.1 pre-release build (February 14, 2024)
+
+This version of SWS may be installed using either the traditional installers (.exe, .dmg, .tar.xz) or https://reapack.com/|ReaPack| (v1.2.4.4 or newer) via the default ReaTeam Extensions repository.
+
+Actions:
++Add support for REAPER v6.76+ high-precision mousewheel, fixing on affected systems:
+ - SWS/wol: Adjust envelope or track height under mouse cursor
+ - SWS/wol: Adjust selected envelope height
+ - SWS/wol: Adjust selected envelope or last touched track height
++Repair "SWS: Vertical zoom to selected tracks, minimize others" in REAPER v6.76+ and fix a crash if all selected tracks are height locked
+
+Contextual toolbars:
++Fix empty menus being displayed over inapplicable rows in the list on Linux
++Fix selection in the toolbar list on Windows (post https://forum.cockos.com/showthread.php?p=2757815|2757815|)
+
+Miscellaneous:
++Move the Extensions menu items into a SWS/S&M submenu (previous behavior may be restored via [General]/ExtensionsSubmenu=0 in S&M.ini)
+
+REAPER v7 track spacers:
++Add support in "SWS/wol: Adjust envelope or track height under mouse cursor" and "SWS/wol: Adjust selected envelope or last touched track height"
++Factor in track height and fixed lanes count when computing the size of track spacers in the TCP
++Fix prediction of track spacer sizes in the vertical zoom actions
++Take into account track spacers on hidden tracks activating on the next visible one (post https://forum.cockos.com/showthread.php?p=2757773|2757773|)
+
+ReaScript API:
++Add CF_SendActionShortcut
++Remove bogus range check in SNM_SetDoubleConfigVar{,Ex} when writing to 32-bit variables
+
+!v2.14 pre-release build (February 8, 2024)
+
+This version of SWS may be installed using either the traditional installers (.exe, .dmg, .tar.xz) or https://reapack.com/|ReaPack| (v1.2.4.4 or newer) via the default ReaTeam Extensions repository.
+
+Actions:
++Add awareness of REAPER v7 media item lane to "SWS/AW: Fill gaps between selected items (advanced)" (issue 1773)
++Fix "SWS: Minimize selected tracks(s)" setting folders to 1px and not obeying track lock (issue 1752)
++Fix "Xenakios/SWS: Rename takes (and source) files" crashing in projects with LTC items
++Fix "Xenakios/SWS: Choose new source file for selected takes" not updating take name (issue 1758)
++Make 'SWS/NF: Cycle through track automation modes" work on the master track (post https://forum.cockos.com/showthread.php?p=2640967|2640967|)
+
+Auto color/icon/layout:
++Apply layout context menu selection to all selected rules at once
++Fix switching directly from "(hide)" to another layout not un-hiding the track
++Implement selection from available theme layouts via the context menu
++Store colors in a platform-agnostic format to avoid blue/red swap when importing settings across Windows ↔ Linux/macOS (issue 1811)
+ - Also applied to gradient settings and .SWSColor files (issue 1400)
+ - Existing settings are automatically converted when restarting REAPER/saving projects/re-exporting .SWSColor on the original OS they were created on
+
+Contextual toolbars:
++Add a checkbox next to the current toolbar in the context menu
++Add Main toolbars 17-32 and MIDI toolbars 9-16 in REAPER v7 (issue 1784)
++Disable the context menu and double-click action over inapplicable rows
++Sort the toolbars by number instead of alphabetically in the context menu if a language pack is loaded
+
+Cycle actions:
++Allow quotation marks in cycle action names (issue 1797)
+
+Hit detection:
++Add awareness of REAPER v7 track spacers (issue 1761)
++Don't detect envelope segment when mouse cursor is outside of automation items bounds and underlying envelope is bypassed (issue 1727, issue 1488)
++Optimize and improve resilience of item detection for future REAPER changes
+
+Live configs:
++Fix the monitor window opening for invalid config #0 when restoring screensets at startup (issue 1831)
+
+Miscellaneous:
++Change the default location of groove files to $resource_path/Data/Grooves
++Disable the built-in update checker when SWS has been installed using ReaPack
++Fix display of some emoji sequences using ZWJ in text fields on Windows (issue 1725)
++Fix overlapped text in the about dialog
++Update TagLib to version https://github.com/taglib/taglib/releases/tag/v1.13.1|1.13.1|
+
+Notes:
++Optimize track notes lookup (issue 1614)
+
+ReaScript API:
++Add an optional 'fade' parameter to CF_PCM_Source_SetSectionInfo (issue 1806)
++Add CF_NormalizeUTF8 for NFD/NFC/NFKD/NFKC conversion (thread https://forum.cockos.com/showthread.php?t=225815|225815|)
++Add CF_SelectTakeFX (issue 1746)
++Add JB_{Get,Set}SWSExtraProjectNotes (issue 1731)
++Add NF_GetThemeDefaultTCPHeights to expose default TCP heights of the current theme (thread https://forum.cockos.com/showthread.php?t=235862|235862|, thread https://forum.cockos.com/showthread.php?t=286647|286647|)
++Add SNM_{Get,Set}{Double,Int,Long}ConfigVarEx taking a ReaProject* parameter (thread https://forum.cockos.com/showthread.php?t=279322|279322|)
++CF_Preview API:
+ - Add CF_Preview_GetOutputTrack
+ - Add support for previewing MIDI sources through tracks
+ - Compute peaks even when outputting through a track and for channels above 2
+ - Decrease the minimum allowed preview playrate to 0.01 and cap to 100
+ - Fix polling CF_Preview_GetPeak faster than the buffer size
+ - Fix previews not stopping if position and fade out length are both 0
+ - Fix previews sometimes being incorrectly destroyed at the loop point (issue 1809)
+ - Implement panning from mono sources to stereo hardware outputs (issue 1818)
+ - Improve accuracy of fade out length
++Fix SNM_MoveOrRemoveTrackFX not updating stored selection and visibility when moving the current FX in the chain on Windows (issue 1791)
+
+Region playlist:
++Allow nested markers and improve reliability (issue 758, issue 914, issue 1512, issue 1575)
++Fix detection of regions past the last item and region #0 escaping nesting detection
++Save empty playlists as-is in the project (issue 1822)
++Stop the "SYNC LOSS" text from flashing after playlist ended
+
+Windows installer:
++Prompt for a REAPER resource path (location of reaper.ini) instead of installation path (reaper.exe) (post https://forum.cockos.com/showthread.php?p=2756461|2756461|)
++Run with normal user privileges (remove privilege escalation prompt)
+
+!v2.13.2.1 featured build (February 8, 2024)
+
+No user-facing changes. This brands 2.13.2 as "stable".
+
 !v2.13.2 pre-release build (January 16, 2023)
 
 Actions:
@@ -28,8 +135,8 @@ MIDI Editor:
 Misc:
 +Fix left post-fx dual pan envelopes being detected as pre-fx (issue 1641)
 +Limit toolbars auto refresh to when a watched action's toggle state changes (post https://forum.cockos.com/showthread.php?p=2629385|2629385|)
-+Support REAPER 6.73+devXXXX floating-point vertical zooming (issue 1717)
-+Update TagLib to version 1.13
++Support REAPER 6.76 floating-point vertical zooming (issue 1717)
++Update TagLib to version https://github.com/taglib/taglib/releases/tag/v1.13|v1.13|
 
 Notes:
 +Enable text editing shortcuts in the text field on macOS and Windows (issue 1721)

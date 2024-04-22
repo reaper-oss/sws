@@ -178,7 +178,7 @@ void SetArrangeScroll(int offsetY, int height, VerticalZoomCenter center)
 void SetArrangeScrollTo(MediaTrack* track, VerticalZoomCenter center)
 {
 	int offsetY;
-	int height = GetTrackHeight(track, &offsetY);
+	int height = GetTrackHeightWithSpacer(track, &offsetY);
 	SetArrangeScroll(offsetY, height, center);
 }
 

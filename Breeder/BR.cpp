@@ -1251,7 +1251,7 @@ int BR_Init ()
 	LoudnessInitExit(true);
 	ProjectTrackSelInitExit(true);
 	ProjStateInitExit(true);
-	VersionCheckInitExit(true);
+	// VersionCheckInitExit(true); called from PackageInit in sws_about.cpp
 
 	// Load various global variables
 	COMMAND_T ct = {};

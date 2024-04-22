@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 
+#include "../SnM/SnM.h" // SNM_MAX_PATH
 #include "../SnM/SnM_Dlg.h"
 #include "Parameters.h"
 #include "../Breeder/BR_Util.h"
@@ -426,6 +427,10 @@ void DoChooseNewSourceFileForSelTakes(COMMAND_T* ct)
 		char* cFileName = BrowseForFiles(__LOCALIZE("Choose new source file","sws_mbox"), NULL, NULL, false, plugin_getFilterList());
 		if (cFileName)
 		{
+			WDL_FastString oldSourceFileName;
+			WDL_FastString newSourceFileName(cFileName);
+			const char *newSourceFilePart = newSourceFileName.get_filepart();
+
 			Main_OnCommand(40440,0); // Selected Media Offline
 			for (i=0;i<NumActiveTakes;i++)
 			{
@@ -433,6 +438,8 @@ void DoChooseNewSourceFileForSelTakes(COMMAND_T* ct)
 				ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
 				if (ThePCMSource)
 				{
+					oldSourceFileName.Set(ThePCMSource->GetFileName());
+
 					if (strcmp(ThePCMSource->GetType(), "SECTION") != 0)
 					{
 						PCM_source *NewPCMSource = PCM_Source_CreateFromFile(cFileName);
@@ -447,6 +454,8 @@ void DoChooseNewSourceFileForSelTakes(COMMAND_T* ct)
 						PCM_source *TheOtherPCM=ThePCMSource->GetSource();
 						if (TheOtherPCM!=0)
 						{
+							oldSourceFileName.Set(TheOtherPCM->GetFileName());
+
 							PCM_source *NewPCMSource=PCM_Source_CreateFromFile(cFileName);
 							if (NewPCMSource)
 							{
@@ -454,6 +463,16 @@ void DoChooseNewSourceFileForSelTakes(COMMAND_T* ct)
 								delete TheOtherPCM;
 							}
 						}
+					}
+
+					if (oldSourceFileName.Get())
+					{
+						char oldTakeName[SNM_MAX_PATH];
+						GetSetMediaItemTakeInfo_String(CurTake, "P_NAME", oldTakeName, false);
+
+						// only update take name if no custom take name has been set
+						if (!strcmp(oldSourceFileName.get_filepart(), oldTakeName))
+							GetSetMediaItemTakeInfo_String(CurTake, "P_NAME", (char*)newSourceFilePart, true);
 					}
 				}
 			}

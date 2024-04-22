@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "SnM/SnM_FX.h"
 #include "SnM/SnM_Misc.h"
+#include "SnM/SnM_Notes.h"
 #include "SnM/SnM_Resources.h"
 #include "SnM/SnM_Routing.h"
 #include "SnM/SnM_Track.h"
@@ -147,13 +148,20 @@ APIdef g_apidefs[] =
 	{ APIFUNC(SNM_RemoveReceive), "bool", "MediaTrack*,int", "tr,rcvidx", "[S&M] Deprecated, see RemoveTrackSend (v5.15pre1+). Removes a receive. Returns false if nothing updated.", },
 	{ APIFUNC(SNM_RemoveReceivesFrom), "bool", "MediaTrack*,MediaTrack*", "tr,srctr", "[S&M] Removes all receives from srctr. Returns false if nothing updated.", },
 	{ APIFUNC(SNM_GetIntConfigVar), "int", "const char*,int", "varname,errvalue", "[S&M] Returns an integer preference (look in project prefs first, then in general prefs). Returns errvalue if failed (e.g. varname not found).", },
+	{ APIFUNC(SNM_GetIntConfigVarEx), "int", "ReaProject*,const char*,int", "proj,varname,errvalue", "[S&M] See SNM_GetIntConfigVar.", },
 	{ APIFUNC(SNM_SetIntConfigVar), "bool", "const char*,int", "varname,newvalue", "[S&M] Sets an integer preference (look in project prefs first, then in general prefs). Returns false if failed (e.g. varname not found or newvalue out of range).", },
+	{ APIFUNC(SNM_SetIntConfigVarEx), "bool", "ReaProject*,const char*,int", "proj,varname,newvalue", "[S&M] See SNM_SetIntConfigVar.", },
 	{ APIFUNC(SNM_GetLongConfigVar), "bool", "const char*,int*,int*", "varname,highOut,lowOut", "[S&M] Reads a 64-bit integer preference split in two 32-bit integers (look in project prefs first, then in general prefs). Returns false if failed (e.g. varname not found).", },
+	{ APIFUNC(SNM_GetLongConfigVarEx), "bool", "ReaProject*,const char*,int*,int*", "proj,varname,highOut,lowOut", "[S&M] See SNM_GetLongConfigVar.", },
 	{ APIFUNC(SNM_SetLongConfigVar), "bool", "const char*,int,int", "varname,newHighValue,newLowValue", "[S&M] Sets a 64-bit integer preference from two 32-bit integers (look in project prefs first, then in general prefs). Returns false if failed (e.g. varname not found).", },
+	{ APIFUNC(SNM_SetLongConfigVarEx), "bool", "ReaProject*,const char*,int,int", "proj,varname,newHighValue,newLowValue", "[S&M] SNM_SetLongConfigVar.", },
 	{ APIFUNC(SNM_GetDoubleConfigVar), "double", "const char*,double", "varname,errvalue", "[S&M] Returns a floating-point preference (look in project prefs first, then in general prefs). Returns errvalue if failed (e.g. varname not found).", },
+	{ APIFUNC(SNM_GetDoubleConfigVarEx), "double", "ReaProject*,const char*,double", "proj,varname,errvalue", "[S&M] See SNM_GetDoubleConfigVar.", },
+
 	{ APIFUNC(SNM_SetDoubleConfigVar), "bool", "const char*,double", "varname,newvalue", "[S&M] Sets a floating-point preference (look in project prefs first, then in general prefs). Returns false if failed (e.g. varname not found or newvalue out of range).", },
+	{ APIFUNC(SNM_SetDoubleConfigVarEx), "bool", "ReaProject*,const char*,double", "proj,varname,newvalue", "[S&M] See SNM_SetDoubleConfigVar.", },
 	{ APIFUNC(SNM_SetStringConfigVar), "bool", "const char*,const char*", "varname,newvalue", "[S&M] Sets a string preference (general prefs only). Returns false if failed (e.g. varname not found or value too long). See get_config_var_string.", },
-	{ APIFUNC(SNM_MoveOrRemoveTrackFX), "bool", "MediaTrack*,int,int", "tr,fxId,what", "[S&M] Deprecated, see TakeFX_/TrackFX_ CopyToTrack/Take, TrackFX/TakeFX _Delete (v5.95pre2+). Move or removes a track FX. Returns true if tr has been updated.\nfxId: fx index in chain or -1 for the selected fx. what: 0 to remove, -1 to move fx up in chain, 1 to move fx down in chain.", },
+	{ APIFUNC(SNM_MoveOrRemoveTrackFX), "bool", "MediaTrack*,int,int", "tr,fxId,what", "[S&M] Deprecated, see TrackFX_{CopyToTrack,Delete} (v5.95+). Move or removes a track FX. Returns true if tr has been updated.\nfxId: fx index in chain or -1 for the selected fx. what: 0 to remove, -1 to move fx up in chain, 1 to move fx down in chain.", },
 	{ APIFUNC(SNM_GetProjectMarkerName), "bool", "ReaProject*,int,bool,WDL_FastString*", "proj,num,isrgn,name", "[S&M] Gets a marker/region name. Returns true if marker/region found.", },
 	{ APIFUNC(SNM_SetProjectMarker), "bool", "ReaProject*,int,bool,double,double,const char*,int", "proj,num,isrgn,pos,rgnend,name,color", "[S&M] Deprecated, see SetProjectMarker4 -- Same function as SetProjectMarker3() except it can set empty names \"\".", },
 	{ APIFUNC(SNM_SelectResourceBookmark), "int", "const char*", "name", "[S&M] Select a bookmark of the Resources window. Returns the related bookmark id (or -1 if failed).", },
@@ -324,6 +332,8 @@ APIdef g_apidefs[] =
 	// Base64
 	{ APIFUNC(NF_Base64_Decode), "bool","const char*,char*,int", "base64Str,decodedStrOutNeedBig,decodedStrOutNeedBig_sz", "Returns true on success.", },
 	{ APIFUNC(NF_Base64_Encode), "void","const char*,int,bool,char*,int", "str,str_sz,usePadding,encodedStrOutNeedBig,encodedStrOutNeedBig_sz", "Input string may contain null bytes in REAPER 6.44 or newer. Note: Doesn't allow padding in the middle (e.g. concatenated encoded strings), doesn't allow newlines.", },
+
+	{ APIFUNC(NF_GetThemeDefaultTCPHeights), "void","int*,int*,int*,int*", "supercollapsedOut,collapsedOut,smallOut,recarmOut", "", },
 	// /*** nofish stuff ***
 
 	{ APIFUNC(SN_FocusMIDIEditor), "void", "", "", "Focuses the active/open MIDI editor.", },
@@ -340,6 +350,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_GetFocusedFXChain), "FxChain*", "", "", "Return a handle to the currently focused FX chain window.", },
 	{ APIFUNC(CF_EnumSelectedFX), "int", "FxChain*,int", "hwnd,index", "Return the index of the next selected effect in the given FX chain. Start index should be -1. Returns -1 if there are no more selected effects.", },
 	{ APIFUNC(CF_SelectTrackFX), "bool", "MediaTrack*,int", "track,index", "Set which track effect is active in the track's FX chain. The FX chain window does not have to be open.", },
+	{ APIFUNC(CF_SelectTakeFX), "bool", "MediaItem_Take*,int", "take,index", "Set which take effect is active in the take's FX chain. The FX chain window does not have to be open.", },
 
 	{ APIFUNC(CF_GetSWSVersion), "void", "char*,int", "versionOut,versionOut_sz", "Return the current SWS version number.", },
 	{ APIFUNC(CF_GetCustomColor), "int", "int", "index", "Get one of 16 SWS custom colors (0xBBGGRR on Windows, 0xRRGGBB everyhwere else). Index is zero-based.", },
@@ -347,6 +358,10 @@ APIdef g_apidefs[] =
 
 	{ APIFUNC(CF_EnumerateActions), "int", "int,int,char*,int", "section,index,nameOut,nameOut_sz", "Deprecated, see kbd_enumerateActions (v6.71+). Wrapper for the unexposed kbd_enumerateActions API function.\nMain=0, Main (alt recording)=100, MIDI Editor=32060, MIDI Event List Editor=32061, MIDI Inline Editor=32062, Media Explorer=32063", },
 	{ APIFUNC(CF_GetCommandText), "const char*", "int,int", "section,command", "Deprecated, see kbd_getTextFromCmd (v6.71+). Wrapper for the unexposed kbd_getTextFromCmd API function. See <a href='#CF_EnumerateActions'>CF_EnumerateActions</a> for common section IDs.", },
+	{ APIFUNC(CF_SendActionShortcut), "bool", "void*,int,int,int*", "hwnd,section,key,modifiersInOptional", R"(Run in the specified window the action command ID associated with the shortcut key in the given section. See <a href='#CF_EnumerateActions'>CF_EnumerateActions</a> for common section IDs.
+
+	Keys are Windows <a href="https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes">virtual key codes</a>. &0x8000 for an extended key (eg. Numpad Enter = VK_RETURN & 0x8000).
+	Modifier values: nil = read from keyboard, 0 = no modifier, &4 = Control (Cmd on macOS), &8 = Shift, &16 = Alt, &32 = Super)", },
 
 	{ APIFUNC(CF_GetMediaSourceBitDepth), "int", "PCM_source*", "src", "Returns the bit depth if available (0 otherwise).", },
 	{ APIFUNC(CF_GetMediaSourceBitRate), "double", "PCM_source*", "src", "Returns the bit rate for WAVE (wav, aif) and streaming/variable formats (mp3, ogg, opus). REAPER v6.19 or later is required for non-WAVE formats.", },
@@ -356,7 +371,17 @@ APIdef g_apidefs[] =
 	{ APIFUNC(CF_GetMediaSourceRPP), "bool", "PCM_source*,char*,int", "src,fnOut,fnOut_sz", "Get the project associated with this source (BWF, subproject...).", },
 	{ APIFUNC(CF_EnumMediaSourceCues), "int", "PCM_source*,int,double*,double*,bool*,char*,int,bool*", "src,index,timeOut,endTimeOut,isRegionOut,nameOut,nameOut_sz,isChapterOut", "Enumerate the source's media cues. Returns the next index or 0 when finished.", },
 	{ APIFUNC(CF_ExportMediaSource), "bool", "PCM_source*,const char*", "src,fn", "Export the source to the given file (MIDI only).", },
-	{ APIFUNC(CF_PCM_Source_SetSectionInfo), "bool", "PCM_source*,PCM_source*,double,double,bool", "section,source,offset,length,reverse", "Give a section source created using PCM_Source_CreateFromType(\"SECTION\"). Offset and length are ignored if 0. Negative length to subtract from the total length of the source." },
+	{ APIFUNC(CF_PCM_Source_SetSectionInfo), "bool", "PCM_source*,PCM_source*,double,double,bool,double*", "section,source,offset,length,reverse,fadeInOptional", "Give a section source created using PCM_Source_CreateFromType(\"SECTION\"). Offset and length are ignored if 0. Negative length to subtract from the total length of the source." },
+	{ APIFUNC(CF_NormalizeUTF8), "void", "const char*,int,char*,int", "input,mode,normalizedOutNeedBig,normalizedOutNeedBig_sz",
+	R"(Apply <a href="https://unicode.org/reports/tr15/">Unicode normalization</a> to the provided UTF-8 string.
+
+Mode values:
+- Bit 0 (composition mode):
+  * 0 = decomposition only
+  * 1 = decomposition + canonical composition
+- Bit 1 (decomposition mode):
+  * 0 = canonical decomposition
+  * 1 = compatibility decomposition)", },
 
 	{ APIFUNC(CF_CreatePreview), "CF_Preview*", "PCM_source*", "source", R"(Create a new preview object. Does not take ownership of the source (don't forget to destroy it unless it came from a take!). See CF_Preview_Play and the others CF_Preview_* functions.
 
@@ -373,17 +398,21 @@ D_LENGTH       (read only) length of the source * playback rate
 D_MEASUREALIGN >0 = wait until the next bar before starting playback (note: this causes playback to silently continue when project is paused and previewing through a track)
 D_PAN          playback pan
 D_PITCH        pitch adjustment in semitones
-D_PLAYRATE     playback rate
+D_PLAYRATE     playback rate (0.01..100)
 D_POSITION     current playback position
 D_VOLUME       playback volume
 I_OUTCHAN      first hardware output channel (&1024=mono, reads -1 when playing through a track, see CF_Preview_SetOutputTrack)
 I_PITCHMODE    highest 16 bits=pitch shift mode (see EnumPitchShiftModes), lower 16 bits=pitch shift submode (see EnumPitchShiftSubModes))", },
-	{ APIFUNC(CF_Preview_GetPeak), "bool", "CF_Preview*,int,double*", "preview,channel,peakvolOut", "Read peak volume for channel 0 or 1. Only available when outputting to a hardware output (not through a track).", },
+	{ APIFUNC(CF_Preview_GetPeak), "bool", "CF_Preview*,int,double*", "preview,channel,peakvolOut", "Return the maximum sample value played since the last read. Refresh speed depends on buffer size.", },
 	{ APIFUNC(CF_Preview_SetValue), "bool", "CF_Preview*,const char*,double", "preview,name,newValue", "See CF_Preview_GetValue.", },
+	{ APIFUNC(CF_Preview_GetOutputTrack), "MediaTrack*", "CF_Preview*", "preview", "", },
 	{ APIFUNC(CF_Preview_SetOutputTrack), "bool", "CF_Preview*,ReaProject*,MediaTrack*", "preview,project,track", "", },
 	{ APIFUNC(CF_Preview_Play), "bool", "CF_Preview*", "preview", "Start playback of the configured preview object.", },
 	{ APIFUNC(CF_Preview_Stop), "bool", "CF_Preview*", "preview", "Stop and destroy a preview object.", },
 	{ APIFUNC(CF_Preview_StopAll), "void", "", "", "Stop and destroy all currently active preview objects.", },
+
+	{ APIFUNC(JB_GetSWSExtraProjectNotes), "const char*", "ReaProject*", "project", "", },
+	{ APIFUNC(JB_SetSWSExtraProjectNotes), "void", "ReaProject*,const char*", "project,str", "", },
 
 	{ NULL, } // denote end of table
 };

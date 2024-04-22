@@ -76,7 +76,8 @@ bool RecordInputCheck()
 	for (int i = 1; !bDupe && i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (*(int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL) && *(int*)GetSetMediaTrackInfo(tr, "I_RECMODE", NULL) != 2)
+		int iRecMode = *(int*)GetSetMediaTrackInfo(tr, "I_RECMODE", NULL);
+		if (*(int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL) && (iRecMode == 0 || iRecMode >= 7))
 		{
 			int iInput = *(int*)GetSetMediaTrackInfo(tr, "I_RECINPUT", NULL);
 			// Ignore < 0 inputs

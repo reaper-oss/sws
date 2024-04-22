@@ -49,7 +49,7 @@ template<class T> class SNM_WindowManager
 {
 public:
 	SNM_WindowManager(const char* _id) : m_id(_id), m_wnd(NULL) {}
-	~SNM_WindowManager() { Delete(); }
+	virtual ~SNM_WindowManager() { Delete(); }
 	T* Get() { return reinterpret_cast<T *>(m_wnd); }
 
 	T* Init()
@@ -63,14 +63,15 @@ public:
 		return GetWithLazyInit();
 	}
 
-	T* Create() { return Create(nullptr); }
+	virtual T* Create(bool* isNew = nullptr) { return DoCreate(isNew); }
 
+protected:
 	// creates the wnd *if needed*
 	template<class... Args>
-	T* Create(bool* _isNew, Args&&... args)
+	T* DoCreate(bool* isNew, Args&&... args)
 	{
-		if (_isNew)
-			*_isNew = !m_wnd;
+		if (isNew)
+			*isNew = !m_wnd;
 
 		if (!m_wnd)
 		{
@@ -89,6 +90,7 @@ public:
 		return Get();
 	}
 
+public:
 	void Delete()
 	{
 		if (!m_wnd)
@@ -170,14 +172,10 @@ public:
 		SNM_WindowManager<T>::m_id.SetFormatted(64, _wndId, _idx+1);
 	}
 
-	~SNM_DynWindowManager() {
-		SNM_WindowManager<T>::Delete();
-	}
-
 	// creates the wnd *if needed*
-	T* Create(bool* _isNew = NULL)
+	T* Create(bool* _isNew = NULL) override
 	{
-		return SNM_WindowManager<T>::Create(_isNew, m_idx);
+		return SNM_WindowManager<T>::DoCreate(_isNew, m_idx);
 	}
 
 private:
@@ -220,7 +218,7 @@ public:
 		for (int i=m_mgrs.GetSize()-1; i>=0; i--) 
 		{
 			if (SNM_DynWindowManager<T>* mgr = m_mgrs.Enumerate(i, NULL, NULL))
-				mgr->Delete();
+				delete mgr;
 			m_mgrs.DeleteByIndex(i);
 		}
 	}

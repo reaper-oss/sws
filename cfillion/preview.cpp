@@ -33,19 +33,29 @@ private:
   preview_register_t &m_reg;
 };
 
-static void stopWatch()
+void CF_Preview::stopWatch()
 {
   for(int i { g_previews.GetSize() - 1 }; i >= 0; --i) {
     CF_Preview *preview { g_previews.Get(i) };
-    if(preview->isDangling())
+    if(preview->isDangling() && preview->stop(false))
       delete preview;
+    else
+      preview->asyncTick();
   }
 }
 
-bool CF_Preview::isValid(CF_Preview *ptr)
+bool CF_Preview::isValid(CF_Preview *preview)
 {
-  const int index { g_previews.Find(ptr) };
-  return index >= 0 && g_previews.Get(index)->m_state != FadeOut;
+  if(g_previews.Find(preview) < 0)
+    return false;
+
+  switch(preview->m_state) {
+  case FadeOut:
+  case AsyncStop:
+    return false;
+  default:
+    return true;
+  }
 }
 
 void CF_Preview::stopAll()
@@ -54,10 +64,15 @@ void CF_Preview::stopAll()
     g_previews.Get(i)->stop();
 }
 
+CF_Preview::PreviewInst::PreviewInst(PitchShiftSource *src)
+  : preview_register_t { {}, src, 0, 0.0, false, 1.0 }, project { nullptr }
+{
+}
+
 CF_Preview::CF_Preview(PCM_source *source)
   : m_state { Idle }, m_measureAlign { 0.0 },
-    m_project { nullptr }, m_src { source },
-    m_reg { {}, &m_src, 0, 0.0, false, 1.0 }
+    m_src { PitchShiftSource::create(source) },
+    m_reg { m_src }, m_async { nullptr }
 {
 #ifdef _WIN32
   InitializeCriticalSection(&m_reg.cs);
@@ -78,34 +93,51 @@ CF_Preview::~CF_Preview()
   if(g_previews.GetSize() == 0)
     plugin_register("-timer", reinterpret_cast<void *>(&stopWatch));
 
-  stop(false);
+  stop(false, false);
 
 #ifdef _WIN32
   DeleteCriticalSection(&m_reg.cs);
 #else
   pthread_mutex_destroy(&m_reg.mutex);
 #endif
+
+  delete m_src;
 }
 
 bool CF_Preview::isDangling()
 {
-  return
-    m_state == Idle || m_src.isPastEnd(getPosition()) ||
-    (m_project && (!ValidatePtr(m_project, "ReaProject*") ||
-                   !ValidatePtr2(m_project, m_reg.preview_track, "MediaTrack*")))
-  ;
+  switch(m_state) {
+  case Idle:
+    return true;
+  case AsyncStop:
+  case AsyncRestart:
+    return false;
+  default:
+    break;
+  }
+
+  // checking state to not miss destroying previews after fade-outs
+  if((!m_reg.loop || m_state != Playing) && m_src->isPastEnd(getPosition()))
+    return true;
+  else if(!m_reg.project)
+    return false;
+
+  return !ValidatePtr(m_reg.project, "ReaProject*") ||
+        !ValidatePtr2(m_reg.project, m_reg.preview_track, "MediaTrack*");
 }
 
 bool CF_Preview::play(const bool obeyMeasureAlign)
 {
+  if(m_state == AsyncStop)
+    m_state = AsyncRestart;
   if(m_state != Idle)
     return true;
 
   constexpr int flags { Buffered | Varispeed };
   const double measureAlign { obeyMeasureAlign ? m_measureAlign : 0.0 };
 
-  if(m_project ? !!PlayTrackPreview2Ex(m_project, &m_reg, flags, measureAlign)
-               : !!PlayPreviewEx(&m_reg, flags, measureAlign)) {
+  if(m_reg.project ? !!PlayTrackPreview2Ex(m_reg.project, &m_reg, flags, measureAlign)
+                   : !!PlayPreviewEx(&m_reg, flags, measureAlign)) {
     m_state = Playing;
     return true;
   }
@@ -113,20 +145,57 @@ bool CF_Preview::play(const bool obeyMeasureAlign)
   return false;
 }
 
-void CF_Preview::stop(const bool startFadeOut)
+bool CF_Preview::stop(const bool allowFadeOut, const bool allowAsync)
 {
-  if(startFadeOut) {
-    m_src.setFadeOutEnd(getPosition() + getFadeOutLen());
+  if(m_state == Idle)
+    return true;
+  if(allowFadeOut && m_src->startFadeOut()) {
     m_state = FadeOut;
-    return;
+    return false;
+  }
+  else if(allowAsync && !m_src->requestStop()) {
+    if(m_state != AsyncRestart) {
+      m_state = AsyncStop;
+
+      // make REAPER call the source's GetSamples to service the stop request
+      LockPreviewMutex lock { m_reg };
+      if(m_src->isPastEnd(m_reg.curpos))
+        m_reg.curpos = 0;
+    }
+    return false;
   }
 
-  if(m_project)
-    StopTrackPreview2(m_project, &m_reg);
+  if(m_reg.project)
+    StopTrackPreview2(m_reg.project, &m_reg);
   else
     StopPreview(&m_reg);
 
   m_state = Idle;
+  return true;
+}
+
+void CF_Preview::asyncTick()
+{
+  const bool restart { m_state == AsyncRestart };
+  if(m_state == AsyncStop || restart)
+    stop(false); // sets state to Idle when ready to restart
+  if(m_state == Idle && restart) {
+    m_reg.project       = m_async.project;
+    m_reg.m_out_chan    = m_async.m_out_chan;
+    m_reg.preview_track = m_async.preview_track;
+    play(false);
+  }
+}
+
+CF_Preview::PreviewInst &CF_Preview::writableInst()
+{
+  switch(m_state) {
+  case AsyncStop:
+  case AsyncRestart:
+    return m_async;
+  default:
+    return m_reg;
+  }
 }
 
 double CF_Preview::getPosition()
@@ -141,33 +210,21 @@ void CF_Preview::setPosition(const double newpos)
   m_reg.curpos = newpos;
 }
 
-bool CF_Preview::getPeak(const int channel, double *out)
-{
-  if(channel < 0 || channel >= 2)
-    return false;
-
-  LockPreviewMutex lock { m_reg };
-  *out = m_reg.peakvol[channel];
-  m_reg.peakvol[channel] = 0;
-  return true;
-}
-
 void CF_Preview::setOutput(const int channel)
 {
   if(channel < 0)
     return;
 
-  const bool restart { m_state > Idle && m_project };
-  if(restart) {
-    StopTrackPreview2(m_project, &m_reg);
-    m_state = Idle;
-  }
+  const bool restart { m_state > Idle && m_reg.project };
+  if(restart)
+    stop(false);
 
   {
-    LockPreviewMutex lock { m_reg };
-    m_project = nullptr;
-    m_reg.m_out_chan = channel;
-    m_reg.preview_track = nullptr;
+    PreviewInst &inst { writableInst() };
+    LockPreviewMutex lock { inst };
+    inst.project = nullptr;
+    inst.m_out_chan = channel;
+    inst.preview_track = nullptr;
   }
 
   if(restart)
@@ -176,17 +233,18 @@ void CF_Preview::setOutput(const int channel)
 
 void CF_Preview::setOutput(MediaTrack *track)
 {
-  if(track == m_reg.preview_track)
+  if(track == m_reg.preview_track && m_state != AsyncRestart)
     return;
 
   const bool restart { m_state > Idle };
   if(restart)
     stop(false);
 
-  m_project = static_cast<ReaProject *>
+  PreviewInst &inst { writableInst() };
+  inst.project = static_cast<ReaProject *>
     (GetSetMediaTrackInfo(track, "P_PROJECT", nullptr));
-  m_reg.m_out_chan = -1;
-  m_reg.preview_track = track;
+  inst.m_out_chan = -1;
+  inst.preview_track = track;
 
   if(restart)
     play(false);

@@ -16,6 +16,7 @@ for:
         $2 = "[arch=armhf,arm64]";
         $3 = "http://ports.ubuntu.com/ubuntu-ports/"
       } 1' /etc/apt/sources.list | sudo tee /etc/apt/sources.list.d/ports.list > /dev/null
+      sudo sed -i 's/apt.postgresql.org/apt-archive.postgresql.org/' /etc/apt/sources.list
 
       install-deps() {
         local arch="$1"; shift
@@ -56,15 +57,16 @@ for:
       - cmake --build .
       - cpack
     deploy_script: |-
-      if [ "$APPVEYOR_REPO_BRANCH" = "master" ] && [ -n "$DEPLOY_KEY" ]; then
+      if [ "$APPVEYOR_REPO_TAG" = "true" ] && [ -n "$DEPLOY_KEY" ]; then
         echo "$DEPLOY_KEY" | base64 -d > deploy_key && chmod 600 deploy_key &&
         scp -i deploy_key -o StrictHostKeyChecking=NO -q sws*.tar.xz \
           swsci@sws-extension.org:/var/www/standingwaterstudios.com/download/pre-release
       fi
     artifacts:
       - path: build/sws*.tar.xz
+      - path: build/reaper_sws*.so
 
-  - matrix: { only: [ appveyor_build_worker_image: macos, appveyor_build_worker_image: macos-mojave ] }
+  - matrix: { only: [ appveyor_build_worker_image: macos-catalina, appveyor_build_worker_image: macos-mojave ] }
     install:
       - |-
         case $ARCH in
@@ -89,13 +91,14 @@ for:
       - cmake --build .
       - cpack
     deploy_script: |-
-      if [ "$APPVEYOR_REPO_BRANCH" = "master" ] && [ -n "$DEPLOY_KEY" ]; then
+      if [ "$APPVEYOR_REPO_TAG" = "true" ] && [ -n "$DEPLOY_KEY" ]; then
         echo "$DEPLOY_KEY" | base64 -D > deploy_key && chmod 600 deploy_key &&
         scp -i deploy_key -o StrictHostKeyChecking=NO -q sws*.dmg \
           swsci@sws-extension.org:/var/www/standingwaterstudios.com/download/pre-release
       fi
     artifacts:
       - path: build/sws*.dmg
+      - path: build/reaper_sws*.dylib
 
   - matrix: { only: [ appveyor_build_worker_image: &windows Visual Studio 2022 ] }
     install:
@@ -117,7 +120,7 @@ for:
       - '"C:\Program Files\CMake\bin\cpack"'
     deploy_script:
       - ps: |-
-          if($env:APPVEYOR_REPO_BRANCH -eq "master" -And $env:DEPLOY_KEY -ne $null) {
+          if($env:APPVEYOR_REPO_TAG -eq "true" -And $env:DEPLOY_KEY -ne $null) {
             $bytes = [System.Convert]::FromBase64String($env:DEPLOY_KEY)
             [System.IO.File]::WriteAllBytes("$($PWD)\deploy_key", $bytes)
             icacls deploy_key /c /t /Inheritance:d > $null
@@ -129,6 +132,8 @@ for:
           }
     artifacts:
       - path: build\sws*.exe
+      - path: build\sws_python*.py
+      - path: build\reaper_sws*.dll
       - path: build\reaper_sws*.pdb
       - path: build\BuildUtils\SWS_Template.ReaperLangPack
       - path: build\BuildUtils\whatsnew.html
@@ -148,7 +153,7 @@ environment:
       appveyor_build_worker_image: macos-mojave
       ARCH: i386
     - job_name: macOS ARM 64-bit
-      appveyor_build_worker_image: macos
+      appveyor_build_worker_image: macos-catalina
       ARCH: arm64
     - job_name: Linux x86 64-bit
       appveyor_build_worker_image: *linux

@@ -30,6 +30,7 @@
 
 #include "stdafx.h"
 
+#include <SnM/SnM.h> // g_SNM_ExtSubmenu;
 #include <WDL/localize/localize.h>
 
 void AddToMenuOrdered(HMENU hMenu, const char* text, int id, int iInsertAfter, bool bPos, UINT uiSate)
@@ -104,7 +105,7 @@ void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter, bool bPo
 	}
 }
 
-void AddSubMenuOld(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter, UINT uiSate)
+void AddSubMenuOrdered(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter, UINT uiSate)
 {
 	int iPos = GetMenuItemCount(hMenu);
 	if (iInsertAfter < 0)
@@ -138,7 +139,7 @@ void AddSubMenuOld(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfte
 void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter, UINT uiSate)
 {
 	if(!IsLocalized() || iInsertAfter != -1) {
-		AddSubMenuOld(hMenu, subMenu, text, iInsertAfter, uiSate);
+		AddSubMenuOrdered(hMenu, subMenu, text, iInsertAfter, uiSate);
 		return;
 	}
 
@@ -239,12 +240,21 @@ int SWSGetMenuPosFromID(HMENU hMenu, UINT id)
 // *************************** MENU CREATION ***************************
 
 // Important: both __LOCALIZE() parameters MUST remain literal strings (see sws_build_sample_langpack tool)
-void SWSCreateExtensionsMenu(HMENU hMenu)
+void SWSCreateExtensionsMenu(HMENU hExtensionsMenu)
 {
-	if (GetMenuItemCount(hMenu))
-		AddToMenu(hMenu, SWS_SEPARATOR, 0);
+	HMENU hMenu;
+	if (g_SNM_ExtSubmenu)
+	{
+		hMenu = CreatePopupMenu();
+		AddSubMenuOrdered(hExtensionsMenu, hMenu, __LOCALIZE("&SWS/S&&M", "sws_ext_menu"));
+	}
+	else
+	{
+		hMenu = hExtensionsMenu;
+		if (GetMenuItemCount(hMenu))
+			AddToMenu(hMenu, SWS_SEPARATOR, 0);
+	}
 
-	AddToMenu(hMenu, __LOCALIZE("About SWS Extension", "sws_ext_menu"), NamedCommandLookup("_SWS_ABOUT"));
 	AddToMenu(hMenu, __LOCALIZE("Auto Color/Icon/Layout", "sws_ext_menu"), NamedCommandLookup("_SWSAUTOCOLOR_OPEN"));
 
 	HMENU hAutoRenderSubMenu = CreatePopupMenu();
@@ -331,6 +341,7 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	HMENU hOptionsSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hOptionsSubMenu, __LOCALIZE("SWS Options", "sws_ext_menu"));
+	AddToMenu(hMenu, __LOCALIZE("About SWS Extension", "sws_ext_menu"), NamedCommandLookup("_SWS_ABOUT"));
 
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto track coloring", "sws_ext_menu"), NamedCommandLookup("_SWSAUTOCOLOR_ENABLE"));
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto marker coloring", "sws_ext_menu"), NamedCommandLookup("_S&MAUTOCOLOR_MKR_ENABLE"));

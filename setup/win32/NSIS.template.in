@@ -8,13 +8,15 @@
 AllowSkipFiles off
 Name "@CPACK_NSIS_PACKAGE_NAME@"
 OutFile "@CPACK_TOPLEVEL_DIRECTORY@\@CPACK_OUTPUT_FILE_NAME@"
-RequestExecutionLevel highest
+RequestExecutionLevel user
 SetCompressor @CPACK_NSIS_COMPRESSOR@
 
 !insertmacro MUI_PAGE_LICENSE "@CPACK_RESOURCE_FILE_LICENSE@"
-!define MUI_DIRECTORYPAGE_TEXT_TOP "Please select a valid REAPER installation folder."
-!define MUI_DIRECTORYPAGE_TEXT_DESTINATION "REAPER Installation Folder"
-!define MUI_PAGE_CUSTOMFUNCTION_LEAVE SetOutputDir
+!define MUI_DIRECTORYPAGE_TEXT_TOP "Please select the REAPER resource path \
+  where to install SWS (Options > Show REAPER resource path in explorer/finder)."
+!define MUI_DIRECTORYPAGE_TEXT_DESTINATION \
+  "Destination Folder (contains reaper.ini)"
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE CheckResourcePath
 !insertmacro MUI_PAGE_DIRECTORY
 !define MUI_COMPONENTSPAGE_SMALLDESC
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE CheckNotRunning
@@ -53,6 +55,7 @@ Section "Python ReaScript support" sws_python
 SectionEnd
 
 Section "Grooves" grooves
+  Rename "$OUTDIR\Grooves" "$OUTDIR\Data\Grooves"
   !insertmacro ComponentFiles grooves
 SectionEnd
 
@@ -64,50 +67,30 @@ SectionEnd
     "Allow Python ReaScripts to use SWS functions. Installed in $OUTDIR\Scripts"
 
   !insertmacro MUI_DESCRIPTION_TEXT ${grooves} \
-    "Grooves are used with the groove tool. Installed in $OUTDIR."
+    "Grooves are used with the groove tool. Installed in $OUTDIR\Data."
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 Function .onInit
   StrCmp $INSTDIR "" 0 +2
-    Call GuessInstallDir
-
-  SetOutPath "" ; enables "Output folder" lines in the log
+    StrCpy $INSTDIR "$APPDATA\REAPER"
 
   IfSilent 0 NotSilent
-    IfFileExists $INSTDIR\reaper.exe ValidInstDir
-      MessageBox MB_OK "Cannot find a valid install of REAPER in $INSTDIR. Aborting."
-      Abort
-    ValidInstDir:
-      Call SetOutputDir
-      Call CheckNotRunning
+    Call CheckResourcePath
+    Call CheckNotRunning
   NotSilent:
     IntOp $0 ${SF_SELECTED} | ${SF_RO}
     SectionSetFlags ${sws} $0
 FunctionEnd
 
-Function .onVerifyInstDir
-  IfFileExists $INSTDIR\reaper.exe ValidInstDir
-    Abort ; if $INSTDIR is not a reaper install directory
-  ValidInstDir:
-FunctionEnd
-
-Function GuessInstallDir
-  SetRegView @CPACK_NSIS_CPUBITS@
-  ReadRegStr $0 HKLM Software\REAPER ""
-
-  StrCmp $0 "" 0 FoundREAPER
-    StrCpy $INSTDIR "$PROGRAMFILES@CPACK_NSIS_CPUBITS@\REAPER\"
-    Goto +2
-  FoundREAPER:
-    StrCpy $INSTDIR $0
-FunctionEnd
-
-Function SetOutputDir
-  IfFileExists $INSTDIR\reaper.ini PortableInstall
-    StrCpy $OUTDIR $APPDATA\REAPER
-    Return
-  PortableInstall:
-    StrCpy $OUTDIR $INSTDIR
+Function CheckResourcePath
+  IfFileExists $INSTDIR\reaper.ini UseDirectory
+    MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
+      "The selected resource path does not contain a reaper.ini file. \
+      Do you wish to continue and install SWS inside anyway?" \
+      IDOK UseDirectory
+    Abort
+  UseDirectory:
+    SetOutPath "$INSTDIR"
 FunctionEnd
 
 Function CheckNotRunning
@@ -115,6 +98,7 @@ Function CheckNotRunning
   Pop $R0
 
   StrCmp $R0 "0" 0 +3
-    MessageBox MB_OK "Please close all instances of REAPER before continuing the installation."
+    MessageBox MB_OK|MB_ICONSTOP \
+      "Please close all instances of REAPER before continuing the installation."
     Abort
 FunctionEnd

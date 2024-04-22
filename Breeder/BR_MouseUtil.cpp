@@ -56,7 +56,7 @@ const int MIDI_WND_UNKNOWN      = 3;
 /******************************************************************************
 * Helper functions                                                            *
 ******************************************************************************/
-static MediaTrack* GetTrackAreaFromY (int y, int* offset)
+static MediaTrack* GetTrackAreaFromY (int y, int* offset, int* spacerSize)
 {
 	/* Check if Y is in some TCP track or it's envelopes, *
 	*  returned offset is always for returned track       */
@@ -66,10 +66,15 @@ static MediaTrack* GetTrackAreaFromY (int y, int* offset)
 
 	int trackEnd = 0;
 	int trackOffset = 0;
+	int trackSpacerSize = 0;
 	for (int i = 0; i <= GetNumTracks(); ++i)
 	{
 		MediaTrack* currentTrack = CSurf_TrackFromID(i, false);
 		int height = *(int*)GetSetMediaTrackInfo(currentTrack, "I_WNDH", NULL);
+
+		trackSpacerSize = GetTrackSpacerSize(currentTrack);
+		height += trackSpacerSize;
+
 		if (currentTrack == master && TcpVis(master))
 			height += GetMasterTcpGap();
 		trackEnd += height;
@@ -80,143 +85,31 @@ static MediaTrack* GetTrackAreaFromY (int y, int* offset)
 			break;
 		}
 		trackOffset += height;
+		trackSpacerSize = 0;
 	}
 
 	WritePtr(offset, (track) ? (trackOffset) : (0));
+	WritePtr(spacerSize, trackSpacerSize);
 	return track;
 }
 
-static MediaTrack* GetTrackFromY (int y, int* trackHeight, int* offset)
+static MediaTrack* GetTrackFromY (int y, int* trackHeight, int* offset, int* spacerSize)
 {
 	int trackOffset = 0;
 	int trackH = 0;
-	MediaTrack* track = GetTrackAreaFromY(y, &trackOffset);
+	int spacer = 0;
+	MediaTrack* track = GetTrackAreaFromY(y, &trackOffset, &spacer);
 	if (track)
 	{
-		trackH = GetTrackHeight(track, NULL);
+		trackH = GetTrackHeightWithSpacer(track);
 		if (y < trackOffset || y >= trackOffset + trackH)
 			track = NULL;
 	}
 
-	WritePtr(trackHeight, (track) ? (trackH)      : (0));
-	WritePtr(offset,      (track) ? (trackOffset) : (0));
+	WritePtr(trackHeight,  track ? trackH             : 0);
+	WritePtr(offset,       track ? trackOffset        : 0);
+	WritePtr(spacerSize,   (track && spacer) ? spacer : 0);
 	return track;
-}
-
-static MediaItem_Take* GetTakeFromItemY (MediaItem* item, int itemY, MediaTrack* track, int trackHeight, int* takeId)
-{
-	/* Does not check if Y is within the item, caller should handle that */
-
-	if (!CountTakes(item))
-		return NULL;
-
-	MediaItem_Take* take = NULL;
-	WritePtr(takeId, -1);
-
-	const int takeLanes = ConfigVar<int>("projtakelane").value_or(0);
-
-	// Take lanes displayed
-	if (GetBit(takeLanes, 0))
-	{
-		int itemH = GetItemHeight(item, NULL, trackHeight, 0);
-		int effTakeCount;
-		GetEffectiveTakeId(NULL, item, 0, &effTakeCount);
-		int takeH = itemH / effTakeCount; // average take height
-
-		if (takeH < GetMinTakeHeight(track, effTakeCount, trackHeight, itemH))
-			take = GetActiveTake(item);
-		else
-		{
-			int takeCount = CountTakes(item);
-			int effTakeId = 0;
-
-			// No hidden empty takes
-			if (effTakeCount == takeCount)
-			{
-				int id = itemY / takeH;
-				if (id > takeCount-1) // last take might be taller
-					id = takeCount-1;
-
-				take = GetTake(item, id);
-				WritePtr(takeId, id);
-
-				effTakeId = id;
-			}
-			// Empty takes hidden
-			else
-			{
-				int visibleTakes = 0;
-				for (int i = 0; i < takeCount; ++i)
-				{
-					if (MediaItem_Take* currentTake = GetTake(item, i))
-					{
-						int yStart = visibleTakes * takeH;
-						int yEnd = yStart + ((i == takeCount-1) ? (takeH*2) : (takeH)); // last take might be taller
-						if (itemY > yStart && itemY <= yEnd)
-						{
-							take = currentTake;
-							WritePtr(takeId, i);
-
-							break;
-						}
-						++visibleTakes;
-					}
-				}
-				effTakeId = visibleTakes;
-			}
-
-			// If last take, check it's not cropped
-			if (effTakeId == effTakeCount - 1 && IsLastTakeTooTall(itemH, takeH, effTakeCount, NULL))
-				if (itemY > takeH * effTakeCount) // take cropped - check Y is not outside it
-				{
-					WritePtr(takeId, -1);
-					take = NULL;
-				}
-		}
-	}
-	// Take lanes not displayed
-	else
-	{
-		take = GetActiveTake(item);
-		WritePtr(takeId, (int)GetMediaItemInfo_Value(item, "I_CURTAKE"));
-	}
-
-	return take;
-}
-
-static MediaItem* GetItemFromY (int y, double position, MediaItem_Take** take, int* takeId)
-{
-	int trackH, offset;
-	MediaTrack* track = GetTrackFromY(y, &trackH, &offset);
-	MediaItem* item = NULL;
-	int itemYStart = 0;
-
-	double iStartLast = GetMediaItemInfo_Value(GetTrackMediaItem(track, 0), "D_POSITION");
-	int count = CountTrackMediaItems(track);
-	for (int i = 0; i < count ; ++i)
-	{
-		MediaItem* currentItem = GetTrackMediaItem(track, i);
-		double iStart = GetMediaItemInfo_Value(currentItem, "D_POSITION");
-		double iEnd = GetMediaItemInfo_Value(currentItem, "D_LENGTH") + iStart;
-
-		if (position >= iStart && position <= iEnd)
-		{
-			if (iStart >= iStartLast)
-			{
-				int yStart = offset;                                                     // due to FIMP/overlapping items in lanes, check every
-				int yEnd = GetItemHeight(currentItem, &yStart, trackH, yStart) + yStart; // item - last one closest to cursor and whose height
-				if (y > yStart && y < yEnd)                                              // overlaps with cursor Y position is the correct one
-				{
-					item = currentItem;
-					itemYStart = yStart;
-				}
-			}
-			iStartLast = iStart;
-		}
-	}
-
-	WritePtr(take, GetTakeFromItemY(item, y-itemYStart, track, trackH, takeId));
-	return item;
 }
 
 static bool IsPointInArrange (const POINT& p, bool checkPointVisibilty = true, HWND* wndFromPoint = NULL)
@@ -357,11 +250,8 @@ MediaItem* ItemAtMouseCursor (double* position, MediaItem_Take** takeAtMouse /*=
 	POINT p; GetCursorPos(&p);
 	if (IsPointInArrange(p))
 	{
-		int y = TranslatePointToArrangeScrollY(p);
-		double pos = PositionAtArrangePoint(p);
-
-		WritePtr(position, pos);
-		return GetItemFromY(y, pos, takeAtMouse, NULL);
+		WritePtr(position, PositionAtArrangePoint(p));
+		return GetItemFromPoint(p.x, p.y, true, takeAtMouse);
 	}
 	WritePtr(position, -1.0);
 	return NULL;
@@ -372,12 +262,9 @@ MediaItem_Take* TakeAtMouseCursor (double* position)
 	POINT p; GetCursorPos(&p);
 	if (IsPointInArrange(p))
 	{
+		WritePtr(position, PositionAtArrangePoint(p));
 		MediaItem_Take* take = NULL;
-		int y = TranslatePointToArrangeScrollY(p);
-		double pos = PositionAtArrangePoint(p);
-
-		WritePtr(position, pos);
-		GetItemFromY(y, pos, &take, NULL);
+		GetItemFromPoint(p.x, p.y, true, &take);
 		return take;
 	}
 	WritePtr(position, -1.0);
@@ -393,15 +280,15 @@ MediaTrack* TrackAtMouseCursor (int* context, double* position)
 	double cursorPosition = -1;
 
 	// Check TCP/MCP
-	int tcp;
-	track = HwndToTrack(hwnd, &tcp, p);
+	int hwndContext;
+	track = HwndToTrack(hwnd, &hwndContext, p);
 	if (track)
-		trackContext = (tcp == 1) ? (0) : (1);
+		trackContext = (hwndContext & HwndToTrack_TCP) ? (0) : (1);
 
 	// Nothing in TCP/MCP, check arrange
 	if (!track && hwnd == GetArrangeWnd() && IsPointInArrange(p, false))
 	{
-		track = GetTrackFromY(TranslatePointToArrangeScrollY(p), NULL, NULL);
+		track = GetTrackFromY(TranslatePointToArrangeScrollY(p), NULL, NULL, NULL);
 		if (track)
 			trackContext = 2;
 		cursorPosition = PositionAtArrangePoint(p);
@@ -685,12 +572,14 @@ void BR_MouseInfo::GetContext (const POINT& p)
 		// MCP and TCP
 		if (!found && ((m_mode & BR_MouseInfo::MODE_ALL) || (m_mode & BR_MouseInfo::MODE_MCP_TCP)))
 		{
-			int context;
-			if ((mouseInfo.track = HwndToTrack(hwnd, &context, p)))
+			int hwndContext;
+			if ((mouseInfo.track = HwndToTrack(hwnd, &hwndContext, p)))
 			{
-				mouseInfo.window = (context == 1) ? "tcp" : "mcp";
+				mouseInfo.window = (hwndContext & HwndToTrack_TCP) ? "tcp" : "mcp";
 				mouseInfo.segment = "track";
 				found = true;
+				if (hwndContext & HwndToTrack_Spacer)
+					mouseInfo.details = "spacer";
 			}
 			else if ((mouseInfo.envelope = HwndToEnvelope(hwnd, p)))
 			{
@@ -698,9 +587,9 @@ void BR_MouseInfo::GetContext (const POINT& p)
 				mouseInfo.segment = "envelope";
 				found = true;
 			}
-			else if (context != 0)
+			else if (hwndContext != 0)
 			{
-				mouseInfo.window = (context == 1) ? "tcp" : "mcp";
+				mouseInfo.window = (hwndContext & HwndToTrack_TCP) ? "tcp" : "mcp";
 				mouseInfo.segment = "empty";
 				found = true;
 			}
@@ -713,8 +602,8 @@ void BR_MouseInfo::GetContext (const POINT& p)
 			{
 				int mouseY = TranslatePointToArrangeScrollY(p);
 				list<TrackEnvelope*> laneEnvs;
-				int height, offset;
-				this->GetTrackOrEnvelopeFromY(mouseY, &mouseInfo.envelope, &mouseInfo.track, ((m_mode & BR_MouseInfo::MODE_ALL) || (m_mode & BR_MouseInfo::MODE_ARRANGE)) ? &laneEnvs : NULL, &height, &offset);
+				int height, offset, spacerSize;
+				this->GetTrackOrEnvelopeFromY(mouseY, &mouseInfo.envelope, &mouseInfo.track, ((m_mode & BR_MouseInfo::MODE_ALL) || (m_mode & BR_MouseInfo::MODE_ARRANGE)) ? &laneEnvs : NULL, &height, &offset, &spacerSize);
 
 				if ((m_mode & BR_MouseInfo::MODE_ALL) || (m_mode & BR_MouseInfo::MODE_ARRANGE))
 				{
@@ -731,6 +620,18 @@ void BR_MouseInfo::GetContext (const POINT& p)
 						{
 							BR_Envelope envelope(mouseInfo.envelope);
 							trackEnvHit = this->IsMouseOverEnvelopeLine(envelope, height-2*ENV_GAP, offset+ENV_GAP, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envPointId);
+
+							// if env is hit, check if underlying envelope outside of automation items is bypassed, #1727
+							if (trackEnvHit)
+							{
+								int bypassUnderlEnvProjDefault = *ConfigVar<int>("pooledenvattach") & 4;
+								int AIoptions = envelope.GetAIoptions(); // -1 == use project default
+								if ((bypassUnderlEnvProjDefault && AIoptions == -1) || (AIoptions & 4))
+								{
+									if (!this->IsMouseOverAI(envelope, height - 2 * ENV_GAP, offset + ENV_GAP, mouseY, mousePos))
+										trackEnvHit = 0;
+								}
+							}
 						}
 
 						if      (trackEnvHit == 1) mouseInfo.details = "env_point";
@@ -742,7 +643,7 @@ void BR_MouseInfo::GetContext (const POINT& p)
 					else if (mouseInfo.track)
 					{
 						mouseInfo.segment = "track";
-						mouseInfo.item = GetItemFromY(mouseY, mousePos, &mouseInfo.take, &mouseInfo.takeId);
+						mouseInfo.item = GetItemFromPoint(p.x, p.y, true, &mouseInfo.take);
 
 						int trackEnvHit      = 0;
 						int takeEnvHit       = 0;
@@ -778,9 +679,21 @@ void BR_MouseInfo::GetContext (const POINT& p)
 						{
 							if      (trackEnvHit == 1) mouseInfo.details = "env_point";
 							else if (trackEnvHit == 2) mouseInfo.details = "env_segment";
+
+							// if env is hit, check if underlying envelope outside of automation items is bypassed, #1488
+							int bypassUnderlEnvProjDefault = *ConfigVar<int>("pooledenvattach") & 4;
+							BR_Envelope envelope(mouseInfo.envelope);
+							int AIoptions = envelope.GetAIoptions(); // -1 == use project default
+							if ((bypassUnderlEnvProjDefault && AIoptions == -1) || (AIoptions & 4))
+							{
+								if (!this->IsMouseOverAI(envelope, height - 2 * ENV_GAP, offset + ENV_GAP, mouseY, mousePos))
+								{
+									mouseInfo.details = "empty";
+								}
+							}
 						}
 						// Item and things inside it
-						else if (mouseInfo.item)
+						if (!trackEnvHit && mouseInfo.item)
 						{
 							// Take envelope takes priority
 							if (takeEnvHit != 0)
@@ -811,6 +724,10 @@ void BR_MouseInfo::GetContext (const POINT& p)
 								}
 							}
 						}
+						else if (spacerSize && mouseY >= offset && mouseY < offset + spacerSize)
+						{
+							mouseInfo.details = "spacer";
+						}
 						// No items, no envelopes, no nothing
 						else
 						{
@@ -825,7 +742,7 @@ void BR_MouseInfo::GetContext (const POINT& p)
 				else
 				{
 					mouseInfo.envelope = NULL; // in case GetTrackOrEnvelopeFromY() found something
-					GetItemFromY(mouseY, mousePos, &mouseInfo.take, nullptr);
+					GetItemFromPoint(p.x, p.y, true, &mouseInfo.take);
 					if (mouseInfo.track && IsOpenInInlineEditor(mouseInfo.take))
 					{
 						int takeOffset;
@@ -1311,6 +1228,24 @@ int BR_MouseInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEn
 	return mouseHit;
 }
 
+bool BR_MouseInfo::IsMouseOverAI(BR_Envelope & envelope, int drawableEnvHeight, int yOffset, int mouseY, double mousePos)
+{
+	// Check if mouse is in drawable part of envelope lane where line resides
+	if (mouseY >= yOffset && mouseY < yOffset + drawableEnvHeight)
+	{
+		TrackEnvelope* trEnv = envelope.GetPointer();
+		int AIcount = CountAutomationItems(trEnv);
+		for (int i = 0; i < AIcount; i++) {
+			double AIpos = GetSetAutomationItemInfo(trEnv, i, "D_POSITION", 0, false);
+			double AIlength = GetSetAutomationItemInfo(trEnv, i, "D_LENGTH", 0, false);
+
+			if (mousePos >= AIpos && mousePos < AIpos + AIlength)
+				return true;
+		}
+	}
+	return false;
+}
+
 int BR_MouseInfo::IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight, int trackOffset, list<TrackEnvelope*>& laneEnvs, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope, int* pointUnderMouse)
 {
 	/* laneEnv list should hold all track envelopes that have their own lane so *
@@ -1530,7 +1465,7 @@ bool BR_MouseInfo::SortEnvHeightsById (const pair<int,int>& left, const pair<int
 	return left.second < right.second;
 }
 
-void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, MediaTrack** _track, list<TrackEnvelope*>* envelopes, int* height, int* offset)
+void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, MediaTrack** _track, list<TrackEnvelope*>* envelopes, int* height, int* offset, int* spacerSize)
 {
 	/* If Y is at track get track pointer and all envelopes that have  *
 	*  control panels in TCP. If Y is at envelope get the envelope and *
@@ -1541,11 +1476,12 @@ void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, Me
 
 	int elementOffset = 0;
 	int elementHeight = 0;
-	MediaTrack* track = GetTrackAreaFromY(y, &elementOffset);
+	int spacer = 0;
+	MediaTrack* track = GetTrackAreaFromY(y, &elementOffset, &spacer);
 	TrackEnvelope* envelope = NULL;
 	if (track)
 	{
-		elementHeight = GetTrackHeight(track, NULL);
+		elementHeight = GetTrackHeightWithSpacer(track);
 		vector<pair<int,int>> envHeights;
 		bool yInTrack = (y < elementOffset + elementHeight) ? true : false;
 
@@ -1555,7 +1491,7 @@ void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, Me
 			TrackEnvelope *env = GetTrackEnvelope(track, i);
 
 			if (GetEnvelopeInfo_Value(env,"I_TCPH") < 1.0) continue;
-			if (GetEnvelopeInfo_Value(env,"I_TCPY") < elementHeight) continue; // does not have an envcp
+			if (GetEnvelopeInfo_Value(env,"I_TCPY") < (elementHeight - spacer)) continue; // does not have an envcp
 
 			if (yInTrack)
 			{
@@ -1588,8 +1524,9 @@ void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, Me
 		}
 	}
 
-	WritePtr(_envelope, envelope);
-	WritePtr(_track,    track);
-	WritePtr(height,    elementHeight);
-	WritePtr(offset,    elementOffset);
+	WritePtr(_envelope,  envelope);
+	WritePtr(_track,     track);
+	WritePtr(height,     elementHeight);
+	WritePtr(offset,     elementOffset);
+	WritePtr(spacerSize, spacer);
 }

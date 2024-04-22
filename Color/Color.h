@@ -26,9 +26,8 @@
 ******************************************************************************/
 #pragma once
 
-extern COLORREF g_custColors[16];
-extern COLORREF g_crGradStart;
-extern COLORREF g_crGradEnd;
+extern COLORREF g_custColors[16]; // in native format (RGB or BGR), shared with REAPER
+extern COLORREF g_crGradStart, g_crGradEnd; // in portable format (RGB)
 
 void UpdateCustomColors();
 void PersistColors();
@@ -37,3 +36,11 @@ COLORREF CalcGradient(COLORREF crStart, COLORREF crEnd, double dPos);
 int ColorInit();
 void ColorExit();
 void ShowColorDialog(COMMAND_T* = NULL);
+
+int SWS_ColorToNative(int xrgb);
+// int SWS_ColorFromNative(int bgr_or_rgb);
+#define SWS_ColorFromNative SWS_ColorToNative
+
+// convert to/from RGB with optional enable bit, or negative value
+int ImportColor(int stored);
+int ExportColor(int rgb_or_neg);

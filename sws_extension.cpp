@@ -475,6 +475,11 @@ static void importExtensionAPI()
 
 	// import functions exposed by third-party extensions
 	osara_isShortcutHelpEnabled = (decltype(osara_isShortcutHelpEnabled))plugin_getapi("osara_isShortcutHelpEnabled");
+
+	ReaPack_GetOwner  = (decltype(ReaPack_GetOwner)) plugin_getapi("ReaPack_GetOwner");
+	ReaPack_FreeEntry = (decltype(ReaPack_FreeEntry))plugin_getapi("ReaPack_FreeEntry");
+
+	PackageInit();
 }
 
 // Fake control surface to get a low priority periodic time slice from Reaper
@@ -742,7 +747,6 @@ error:
 /* unused
 		IMPAPI(Audio_RegHardwareHook);
 */
-		IMPAPI(ColorToNative)
 		IMPAPI(CoolSB_GetScrollInfo);
 		IMPAPI(CoolSB_SetScrollInfo);
 		IMPAPI(CountActionShortcuts);
@@ -842,6 +846,7 @@ error:
 		IMPAPI(GetIconThemeStruct);
 		IMPAPI(GetInputChannelName);
 		IMPAPI(GetItemEditingTime2);
+		IMPAPI(GetItemFromPoint); // v5.975+
 		IMPAPI(GetLastColorThemeFile); // v5.02+
 		IMPAPI(GetLastMarkerAndCurRegion); // v4.60+
 		IMPAPI(GetLastTouchedFX);
@@ -938,6 +943,7 @@ error:
 		IMPAPI(GetUserInputs);
 		IMPAPI(get_config_var);
 		IMPAPI(get_ini_file);
+		IMPAPI(GoToRegion);
 		IMPAPI(GR_SelectColor);
 		IMPAPI(GSC_mainwnd);
 		IMPAPI(guidToString);
@@ -1112,6 +1118,7 @@ error:
 		IMPAPI(TakeFX_SetOpen);
 		IMPAPI(TakeFX_Show);
 		IMPAPI(TakeIsMIDI);
+		IMPAPI(ThemeLayout_GetLayout); // v5.974+
 		IMPAPI(time_precise);
 		IMPAPI(TimeMap_GetDividedBpmAtTime);
 		IMPAPI(TimeMap_GetTimeSigAtTime);
@@ -1126,6 +1133,8 @@ error:
 		IMPAPI(TimeMap2_timeToBeats);
 		IMPAPI(TimeMap2_timeToQN);
 		IMPAPI(TimeMap_curFrameRate);
+		IMPAPI(TrackFX_CopyToTrack); // v5.95+
+		IMPAPI(TrackFX_Delete);      // v5.95+
 		IMPAPI(TrackFX_FormatParamValue);
 		IMPAPI(TrackFX_GetByName);
 		IMPAPI(TrackFX_GetChainVisible);

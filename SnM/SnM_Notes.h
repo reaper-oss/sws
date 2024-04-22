@@ -55,6 +55,8 @@ enum {
 
 class SNM_TrackNotes {
 public:
+	static SNM_TrackNotes *find(MediaTrack *);
+
 	SNM_TrackNotes(ReaProject* project, const GUID* guid, const char* notes)
 		: m_project{project}, m_guid{*guid}, m_notes{notes}
 	{
@@ -190,10 +192,6 @@ void SetActionHelpFilename(COMMAND_T*);
 bool GetStringFromNotesChunk(WDL_FastString* _notes, char* _buf, int _bufMaxSize);
 bool GetNotesChunkFromString(const char* _buf, WDL_FastString* _notes, const char* _startLine = NULL);
 
-
-extern SWSProjConfig<WDL_PtrList_DOD<SNM_TrackNotes> > g_SNM_TrackNotes;
-
-
 void NotesSetTrackTitle();
 void NotesSetTrackListChange();
 
@@ -208,11 +206,14 @@ int IsNotesLocked(COMMAND_T*);
 void WriteGlobalNotesToFile();
 
 // ReaScript export
-const char* NFDoGetSWSTrackNotes(MediaTrack* track);
-void NFDoSetSWSTrackNotes(MediaTrack* track, const char* buf);
+const char* NF_GetSWSTrackNotes(MediaTrack*);
+void NF_SetSWSTrackNotes(MediaTrack*, const char* buf);
 
 const char* NFDoGetSWSMarkerRegionSub(int mkrRgnIdx);
 bool NFDoSetSWSMarkerRegionSub(const char* mkrRgnSubIn, int mkrRgnIdx);
 void NF_DoUpdateSWSMarkerRegionSubWindow();
+
+const char* JB_GetSWSExtraProjectNotes(ReaProject* project);
+void JB_SetSWSExtraProjectNotes(ReaProject* project, const char* buf);
 
 #endif

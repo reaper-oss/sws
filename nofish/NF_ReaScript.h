@@ -45,8 +45,6 @@ bool            NF_AnalyzeTakeLoudness(MediaItem_Take* take, bool analyzeTruePea
 bool            NF_AnalyzeTakeLoudness2(MediaItem_Take* take, bool analyzeTruePeak, double* lufsOut, double* rangeOut, double* truePeakOut, double* truePeakPosOut, double* shorTermMaxOut, double* momentaryMaxOut, double* shortTermMaxPosOut, double* momentaryMaxPosOut);
 
 // #755
-const char*    NF_GetSWSTrackNotes(MediaTrack* track);
-void           NF_SetSWSTrackNotes(MediaTrack* track, const char* buf);
 const char*    NF_GetSWSMarkerRegionSub(int mkrRgnIdx);
 bool           NF_SetSWSMarkerRegionSub(const char* mkrRgnSub, int mkrRgnIdx);
 void           NF_UpdateSWSMarkerRegionSubWindow();
@@ -74,3 +72,5 @@ void           NF_ScrollHorizontallyByPercentage(int amount);
 // Base64
 bool          NF_Base64_Decode(const char* base64_str, char* decodedStrOut, int decodedStrOut_sz);
 void          NF_Base64_Encode(const char* str, int str_sz, bool usePadding, char* encodedStrOut, int encodedStrOut_sz);
+
+void          NF_GetThemeDefaultTCPHeights(int* supercollapsedOut, int* smallOut, int* mediumOut, int* fullOut);

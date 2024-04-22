@@ -222,9 +222,10 @@ bool IsItemLocked (MediaItem* item);
 /******************************************************************************
 * Height                                                                      *
 ******************************************************************************/
-int GetTrackHeightFromVZoomIndex (MediaTrack* track, int vZoom); // also takes track compacting into account
+int GetTrackHeightFromVZoomIndex (MediaTrack* track, int vZoom); // also takes track compacting and spacer into account
 int GetEnvHeightFromTrackHeight (int trackHeight);               // what is envelope height in case its height override is 0 ?
 int GetMasterTcpGap ();
+int GetTrackHeightWithSpacer (MediaTrack* track, int* offsetY = NULL, int* topGap = NULL, int* bottomGap = NULL);
 int GetTrackHeight (MediaTrack* track, int* offsetY, int* topGap = NULL, int* bottomGap = NULL);
 int GetItemHeight (MediaItem* item, int* offsetY);
 int GetTakeHeight (MediaItem_Take* take, int* offsetY);
@@ -232,6 +233,7 @@ int GetTakeHeight (MediaItem* item, int id, int* offsetY);
 int GetTakeEnvHeight (MediaItem_Take* take, int* offsetY);
 int GetTakeEnvHeight (MediaItem* item, int id, int* offsetY);
 int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRangeOnly, MediaTrack* parent = NULL);
+int GetTrackSpacerSize (MediaTrack* track, bool isMcp = false, const int* heightOverride = NULL);
 
 /******************************************************************************
 * Arrange                                                                     *
@@ -262,7 +264,14 @@ HWND GetTcpTrackWnd (MediaTrack* track, bool &isContainer);
 HWND GetNotesView (HWND midiEditor);
 HWND GetPianoView (HWND midiEditor);
 HWND GetTrackView (HWND midiEditor);
-MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext, POINT ptScreen);  // context: 0->unknown, 1->TCP, 2->MCP (works even if hwnd is not a track but something else in mcp/tcp). 
+
+enum HwndToTrackContext {
+    HwndToTrack_TCP    = 1<<0,
+    HwndToTrack_MCP    = 1<<1,
+    HwndToTrack_Spacer = 1<<2,
+};
+
+MediaTrack* HwndToTrack (HWND hwnd, int* hwndContext, POINT ptScreen); // context: bitfield, see above. 0->unknown, 1->TCP, 2->MCP (works even if hwnd is not a track but something else in mcp/tcp). If the point is over a track spacer, the value is (| HwndToTrack_Spacer).
 TrackEnvelope* HwndToEnvelope (HWND hwnd, POINT ptScreen);
 void CenterDialog (HWND hwnd, HWND target, HWND zOrder);
 void GetMonitorRectFromPoint (const POINT& p, bool workingAreaOnly, RECT* monitorRect);

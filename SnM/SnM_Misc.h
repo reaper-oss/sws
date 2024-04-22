@@ -43,12 +43,18 @@ bool SNM_GetSetSourceState2(MediaItem_Take* _tk, WDL_FastString* _state, bool _s
 bool SNM_GetSetObjectState(void* _obj, WDL_FastString* _state, bool _setnewvalue, bool _minstate);
 bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos, double _rgnend, const char* _name, int _color);
 bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_FastString* _name);
-int SNM_GetIntConfigVar(const char* _varName, int _errVal);
-bool SNM_SetIntConfigVar(const char* _varName, int _newVal);
-double SNM_GetDoubleConfigVar(const char* _varName, double _errVal);
-bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal);
-bool SNM_GetLongConfigVar(const char* _varName, int *_highOut, int *_lowOut);
-bool SNM_SetLongConfigVar(const char* _varName, int _newHighVal, int _newLowVal);
+int SNM_GetIntConfigVarEx(ReaProject*, const char* varName, int errVal);
+inline int SNM_GetIntConfigVar(const char* varName, int errVal) { return SNM_GetIntConfigVarEx(nullptr, varName, errVal); }
+bool SNM_SetIntConfigVarEx(ReaProject*, const char* varName, int newVal);
+inline bool SNM_SetIntConfigVar(const char* varName, int newVal) { return SNM_SetIntConfigVarEx(nullptr, varName, newVal); }
+double SNM_GetDoubleConfigVarEx(ReaProject*, const char* varName, double errVal);
+inline double SNM_GetDoubleConfigVar(const char* varName, double errVal) { return SNM_GetDoubleConfigVarEx(nullptr, varName, errVal); }
+bool SNM_SetDoubleConfigVarEx(ReaProject*, const char* varName, double newVal);
+inline bool SNM_SetDoubleConfigVar(const char* varName, double newVal) { return SNM_SetDoubleConfigVarEx(nullptr, varName, newVal); }
+bool SNM_GetLongConfigVarEx(ReaProject*, const char* varName, int* highOut, int* lowOut);
+inline bool SNM_GetLongConfigVar(const char* varName, int* highOut, int* lowOut) { return SNM_GetLongConfigVarEx(nullptr, varName, highOut, lowOut); }
+bool SNM_SetLongConfigVarEx(ReaProject*, const char* varName, int newHighVal, int newLowVal);
+inline bool SNM_SetLongConfigVar(const char* varName, int newHighVal, int newLowVal) { return SNM_SetLongConfigVarEx(nullptr, varName, newHighVal, newLowVal); }
 bool SNM_SetStringConfigVar(const char* _varName, const char *_newVal);
 const char* ULT_GetMediaItemNote(MediaItem* _item);
 void ULT_SetMediaItemNote(MediaItem* _item, const char* _str);

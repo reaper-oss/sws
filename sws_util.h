@@ -108,16 +108,18 @@ public:
 	virtual ~SWSProjConfig() { Empty(); }
 	PTRTYPE* Get()
 	{
-		ReaProject* pProj = (ReaProject*)GetCurrentProjectInLoadSave();
-		if (!pProj) // If not in a project load/save context, above returns NULL
-			pProj = EnumProjects(-1, NULL, 0);
+		return Get(GetCurrentProjectInLoadSave());
+	}
+	PTRTYPE* Get(ReaProject* pProj)
+	{
+		if (!pProj)
+			pProj = EnumProjects(-1, NULL, 0); // this is necessary
 		int i = m_projects.Find(pProj);
 		if (i >= 0)
 			return m_data.Get(i);
 		m_projects.Add(pProj);
 		return m_data.Add(new PTRTYPE);
 	}
-	PTRTYPE* Get(int iProj) { return m_data.Get(iProj); }
 	int GetNumProj() { return m_data.GetSize(); }
 	void Empty()
 	{
@@ -232,6 +234,7 @@ int GetFolderDepth(MediaTrack* tr, int* iType, MediaTrack** nextTr);
 int GetTrackVis(MediaTrack* tr); // &1 == mcp, &2 == tcp
 void SetTrackVis(MediaTrack* tr, int vis); // &1 == mcp, &2 == tcp
 int AboutBoxInit(); // Not worth its own .h
+void PackageInit();
 HWND GetTrackWnd();
 HWND GetRulerWnd();
 const GUID* TrackToGuid(ReaProject*, MediaTrack*);

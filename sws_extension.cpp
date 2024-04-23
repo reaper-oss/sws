@@ -140,7 +140,10 @@ bool hookCommandProc2(KbdSectionInfo* sec, int cmdId, int val, int valhw, int re
 	// Ignore commands that don't have anything to do with us from this point forward
 	if (COMMAND_T* cmd = SWSGetCommandByID(cmdId))
 	{
-		if (cmd->uniqueSectionId==sec->uniqueID && cmd->cmdId==cmdId)
+		int secId = sec->uniqueID;
+		if(secId == 100 || (secId >= 1 && secId <= 16)) // for REAPER 7.03+, alt-recording & alt-{1,16}
+			secId = 0;
+		if (cmd->uniqueSectionId==secId && cmd->cmdId==cmdId)
 		{
 			// job for hookCommandProc?
 			// note: we could perform cmd->doCommand() here, but we'd loose the "flag" param value

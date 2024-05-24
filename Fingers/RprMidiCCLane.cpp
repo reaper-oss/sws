@@ -117,9 +117,11 @@ RprNode *RprMidiCCLane::RprMidiLane::toReaper()
 RprMidiCCLanePtr RprMidiCCLane::createFromMidiEditor(bool readOnly)
 {
     HWND midiEditor = MIDIEditor_GetActive();
-    if(midiEditor == NULL)
+    if(!midiEditor)
         throw RprLibException(__LOCALIZE("No active MIDI editor","sws_mbox"), true);
     RprTake take(MIDIEditor_GetTake(midiEditor));
+    if(!take)
+        throw RprLibException(__LOCALIZE("No take in active MIDI editor","sws_mbox"), true);
     RprMidiCCLanePtr laneViewPtr(new RprMidiCCLane(take, readOnly));
     return laneViewPtr;
 }

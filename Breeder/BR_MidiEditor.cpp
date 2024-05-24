@@ -845,7 +845,7 @@ void ME_CCToEnvPoints (COMMAND_T* ct, int val, int valhw, int relmode, HWND hwnd
 		return;
 	}
 
-	MediaItem_Take* take = MIDIEditor_GetTake(MIDIEditor_GetActive());
+	MediaItem_Take* take = midiEditor.GetActiveTake();
 	BR_Envelope envelope(GetSelectedEnvelope(NULL));
 	if ((int)ct->user < 0)
 		envelope.DeleteAllPoints();

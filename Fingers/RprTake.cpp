@@ -85,9 +85,3 @@ const char *RprTake::getName()
 {
     return (const char *)GetSetMediaItemTakeInfo(mTake, "P_NAME", NULL);
 }
-
-RprTake RprTake::createFromMidiEditor()
-{
-    RprTake take(MIDIEditor_GetTake(MIDIEditor_GetActive()));
-    return take;
-}

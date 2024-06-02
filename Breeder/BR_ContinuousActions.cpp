@@ -288,7 +288,7 @@ static LRESULT CALLBACK GenericWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 		}
 	}
 
-	return wndProc(hwnd, uMsg, wParam, lParam);
+	return CallWindowProc(wndProc, hwnd, uMsg, wParam, lParam);
 }
 
 static int TranslateAccel (MSG* msg, accelerator_register_t* ctx)

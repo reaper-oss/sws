@@ -1107,7 +1107,7 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		else if (uMsg == WM_PAINT)
 		{
 			// If there's a paint request then let std wnd handle, then get the data
-			g_ReaperTrackWndProc(hwnd, uMsg, wParam, lParam);
+			CallWindowProc(g_ReaperTrackWndProc, hwnd, uMsg, wParam, lParam);
 			delete bmStd;
 			PAINTSTRUCT ps;
 			HDC dc = BeginPaint(hwnd, &ps);
@@ -1295,7 +1295,7 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 	}
 
-	return g_ReaperTrackWndProc(hwnd, uMsg, wParam, lParam);
+	return CallWindowProc(g_ReaperTrackWndProc, hwnd, uMsg, wParam, lParam);
 }
 
 enum { UPPER = 1, LOWER = 2 }; // Part of time display where drag started
@@ -1397,7 +1397,7 @@ LRESULT CALLBACK DragZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				break;
 		}
 	}
-	return g_ReaperRulerWndProc(hwnd, uMsg, wParam, lParam);
+	return CallWindowProc(g_ReaperRulerWndProc, hwnd, uMsg, wParam, lParam);
 }
 
 void EnableDragZoom(COMMAND_T* _ct)

@@ -1461,7 +1461,7 @@ LRESULT CALLBACK BR_ContextualToolbar::ToolbarWndCallback (HWND hwnd, UINT uMsg,
 			m_callbackToolbars.Delete(id, true);
 		}
 
-		return wndProc(hwnd, uMsg, wParam, lParam);
+		return CallWindowProc(wndProc, hwnd, uMsg, wParam, lParam);
 	}
 }
 

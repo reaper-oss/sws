@@ -54,10 +54,12 @@ public:
 		m_bLayouted[0]=m_bLayouted[1]=false;
 	}
 
-	MediaTrack* m_pTr;
-	bool m_bColored, m_bIconed, m_bLayouted[2];
-	int m_col;
-	WDL_FastString m_icon, m_layout[2];
+	bool operator<(const SWS_RuleTrack &o) const { return m_pTr < o.m_pTr; }
+
+	MediaTrack* m_pTr; // constant sort key
+	mutable bool m_bColored, m_bIconed, m_bLayouted[2];
+	mutable int m_col;
+	mutable WDL_FastString m_icon, m_layout[2];
 };
 
 class SWS_AutoColorView : public SWS_ListView

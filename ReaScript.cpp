@@ -37,6 +37,7 @@
 #include "snooks/SN_ReaScript.h"
 #include "cfillion/cfillion.hpp"
 #include "nofish/NF_ReaScript.h"
+#include "acendan/AC_ReaScript.h"
 #include "Misc/Analysis.h"
 
 
@@ -413,6 +414,8 @@ I_PITCHMODE    highest 16 bits=pitch shift mode (see EnumPitchShiftModes), lower
 
 	{ APIFUNC(JB_GetSWSExtraProjectNotes), "const char*", "ReaProject*", "project", "", },
 	{ APIFUNC(JB_SetSWSExtraProjectNotes), "void", "ReaProject*,const char*", "project,str", "", },
+
+	{ APIFUNC(AC_GetMediaFileCoverImage), "bool", "const char*,char*,int", "path,temppathOut,temppathOut_sz", "Returns a temp path with the given file's embedded cover image, if found. Supports WAV, MP3, FLAC, MP4, ASF, APE, MPC", },
 
 	{ NULL, } // denote end of table
 };

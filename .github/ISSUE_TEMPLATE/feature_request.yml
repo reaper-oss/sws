@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest an idea for this project
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this issue! :hugs:
+
+        Please note:
+        * Make sure the feature isn't already in [latest SWS version](https://www.sws-extension.org/).
+        * Make sure the feature request isn't already listed in the [current issues](https://github.com/reaper-oss/sws/issues?page=16&q=is%3Aissue) (you can use the search bar for searching).
+        * Request only one new feature per issue.
+
+  - type: textarea
+    id: what-feature-is-requested
+    attributes:
+      label: What feature do you want?
+      description: |
+        Explain how you want the SWS extension look or behavior to change to suit your needs.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why-is-the-feature-requested
+    attributes:
+      label: Why do you want this feature?
+      description: |
+        Describe any problem or limitation you come across while using SWS extension which would be solved by this feature.
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-information
+    attributes:
+      label: Additional information

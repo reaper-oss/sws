@@ -104,6 +104,8 @@ void PitchShiftSource::GetSamples(PCM_source_transfer_t *tx)
     const double effectiveLength = m_fadeOutEnd ? m_fadeOutEnd : sourceLength();
     block.fadeOutStart = effectiveLength - m_fadeOutLen;
     block.isSeek = m_writeTime != tx->time_s;
+    if(block.isSeek && tx->time_s == 0.0 && !(m_flags & (ManualSeek | Looping)))
+      m_flags |= WrappedAround;
     writeSamples(block);
   }
 
@@ -113,7 +115,8 @@ void PitchShiftSource::GetSamples(PCM_source_transfer_t *tx)
     if(peak.read)
       peak = {};
   }
-  writePeaks(tx);
+  if(!(m_flags & WrappedAround))
+    writePeaks(tx);
 
   if(block.isSeek)
     m_writeTime = tx->time_s;
@@ -123,6 +126,8 @@ void PitchShiftSource::GetSamples(PCM_source_transfer_t *tx)
   if(m_flags & StopRequest)
     m_flags |= StopServiced;
   m_flags &= ~(AllNotesOff | StopRequest);
+  if(block.isSeek) // wait until a seek is received to avoid a race condition
+    m_flags &= ~ManualSeek;
 }
 
 double PitchShiftSource::computeGain(const Block &block,
@@ -379,4 +384,13 @@ bool PitchShiftSource_MIDI::requestStop()
   }
   m_flags |= StopRequest;
   return false;
+}
+
+void PitchShiftSource::seekOrLoop(const bool looping)
+{
+  WDL_MutexLockExclusive lock { &m_mutex };
+  m_flags &= ~(Looping | WrappedAround);
+  m_flags |= ManualSeek;
+  if(looping)
+    m_flags |= Looping;
 }

@@ -208,6 +208,7 @@ void CF_Preview::setPosition(const double newpos)
 {
   LockPreviewMutex lock { m_reg };
   m_reg.curpos = newpos;
+  m_src->seekOrLoop(m_reg.loop);
 }
 
 void CF_Preview::setOutput(const int channel)
@@ -254,4 +255,5 @@ void CF_Preview::setLoop(const bool loop)
 {
   LockPreviewMutex lock { m_reg };
   m_reg.loop = loop;
+  m_src->seekOrLoop(m_reg.loop);
 }

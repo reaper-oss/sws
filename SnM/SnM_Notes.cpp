@@ -1704,6 +1704,9 @@ const char* NF_GetSWSTrackNotes(MediaTrack* track)
 
 void NF_SetSWSTrackNotes(MediaTrack* track, const char* buf)
 {
+	if (!track)
+		return;
+
 	MarkProjectDirty(NULL);
 
 	if (SNM_TrackNotes* notes = SNM_TrackNotes::find(track))

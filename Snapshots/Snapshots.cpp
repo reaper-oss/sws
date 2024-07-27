@@ -1286,16 +1286,11 @@ int SnapshotsInit()
 
 void RegisterSnapshotSlot(const int slot) // slot is a 1-based index
 {
-	static int lastRegistered = 0;
 	static const DYN_COMMAND_T *cmd = FindDynamicAction(GetSnapshot);
+	static int lastRegistered = cmd->count;
 
-	if (slot <= lastRegistered)
-		return;
-
-	if (slot > cmd->count) // only register new slots above the configured amount
-		cmd->Register(slot - 1);
-
-	lastRegistered = slot;
+	while (lastRegistered < slot)
+		cmd->Register(lastRegistered++);
 }
 
 void SnapshotsExit()

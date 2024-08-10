@@ -1351,7 +1351,7 @@ void ContextAction::getName(char *buffer, size_t bufferSize) const
 	snprintf(section,     sizeof(section),     "%s %d", isMIDI ? "Floating MIDI toolbar" : "Floating toolbar", toolbarNum);
 	snprintf(defaultName, sizeof(defaultName), "%s %d", isMIDI ? "MIDI"                  : "Toolbar",          toolbarNum);
 
-	GetPrivateProfileString(section, "title", __localizeFunc(defaultName, "MENU_349", 0), buffer, bufferSize, GetReaperMenuIni());
+	GetPrivateProfileString(section, "title", __localizeFunc(defaultName, "menus", LOCALIZE_FLAG_NOCACHE), buffer, bufferSize, GetReaperMenuIni());
 }
 
 HWND BR_ContextualToolbar::GetFloatingToolbarHwnd (const ContextAction &action, bool* inDocker)

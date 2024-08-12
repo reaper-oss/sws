@@ -621,16 +621,16 @@ void CF_NormalizeUTF8(const char *input, const unsigned int mode,
   const NORM_FORM form { forms[mode & 0b11] };
 
   const std::wstring &utf16 { win32::widen(input) };
-  const int normalizedChars
+  int normalizedChars
     { _NormalizeString(form, utf16.c_str(), utf16.size(), nullptr, 0) };
   std::vector<wchar_t> normalized(normalizedChars);
-  _NormalizeString(form, utf16.c_str(), utf16.size(),
+  normalizedChars = _NormalizeString(form, utf16.c_str(), utf16.size(),
     normalized.data(), normalized.size());
 
   const int normalizedSize { WideCharToMultiByte(CP_UTF8, 0,
-    normalized.data(), normalized.size(), nullptr, 0, nullptr, nullptr) };
+    normalized.data(), normalizedChars, nullptr, 0, nullptr, nullptr) };
   if(realloc_cmd_ptr(&output, &outputSize, normalizedSize)) {
-    WideCharToMultiByte(CP_UTF8, 0, normalized.data(), normalized.size(),
+    WideCharToMultiByte(CP_UTF8, 0, normalized.data(), normalizedChars,
       output, outputSize, nullptr, nullptr);
   }
 #else

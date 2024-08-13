@@ -75,6 +75,7 @@ public:
   bool   startFadeOut();
   bool   readPeak(size_t, double *);
   virtual bool requestStop() { return true; }
+  void seekOrLoop(bool looping);
 
 protected:
   struct Block {
@@ -91,6 +92,9 @@ protected:
     AllNotesOff   = 1<<1,
     StopRequest   = 1<<2,
     StopServiced  = 1<<3,
+    WrappedAround = 1<<4,
+    ManualSeek    = 1<<5,
+    Looping       = 1<<6,
   };
 
   // must lock m_mutex before using these

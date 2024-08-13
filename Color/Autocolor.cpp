@@ -34,6 +34,7 @@
 #include "../SnM/SnM_Marker.h"
 #include "../SnM/SnM_Util.h"
 
+#include <../cfillion/flat_set.hpp>
 #include <WDL/localize/localize.h>
 #include <WDL/projectcontext.h>
 
@@ -81,7 +82,7 @@ static const char *cHideLayout = "(hide)"; // #1008, additional '(hide)' layout,
 // Globals
 SWS_AutoColorWnd* g_pACWnd = NULL;
 static WDL_PtrList<SWS_RuleItem> g_pACItems;
-static SWSProjConfig<WDL_PtrList<SWS_RuleTrack> > g_pACTracks;
+static SWSProjConfig<FlatSet<SWS_RuleTrack>> g_pACTracks;
 static bool g_bACEnabled = false;
 static bool g_bACREnabled = false;
 static bool g_bACMEnabled = false;
@@ -718,7 +719,7 @@ void OpenAutoColor(COMMAND_T*)
 	g_pACWnd->Show(true, true);
 }
 
-void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bool bDoLayout, bool bForce)
+void ApplyColorRuleToTrack(FlatSet<SWS_RuleTrack> *activeRules, SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bool bDoLayout, bool bForce)
 {
 	if(rule->m_type == AC_TRACK)
 	{
@@ -735,26 +736,18 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 
 		// Check all tracks for matching strings/properties
 		MediaTrack* temp = NULL;
-		for (int i = 0; i <= GetNumTracks(); i++)
+		const int numTracks = GetNumTracks();
+		activeRules->reserve(numTracks);
+		for (int i = 0; i <= numTracks; i++)
 		{
-			MediaTrack* tr = CSurf_TrackFromID(i, false);
+			MediaTrack* tr = i ? GetTrack(nullptr, i - 1) : GetMasterTrack(nullptr);
 			bool bColor = bDoColors;
 			bool bIcon  = bDoIcons;
 			bool bLayout[2] = { bDoLayout, bDoLayout };
 
-			bool bFound = false;
-			SWS_RuleTrack* pACTrack = NULL;
-			for (int j = 0; j < g_pACTracks.Get()->GetSize(); j++)
-			{
-				pACTrack = g_pACTracks.Get()->Get(j);
-				if (pACTrack->m_pTr == tr)
-				{
-					bFound = true;
-					break;
-				}
-			}
+			auto pACTrack = activeRules->find(tr);
 
-			if (bFound)
+			if (pACTrack != activeRules->end())
 			{
 				// If already modified by a different rule, or ignoring the color/icon/layout ignore this track
 				if (pACTrack->m_bColored || rule->m_color == -AC_IGNORE-1)
@@ -768,7 +761,7 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 						bLayout[k] = false;
 			}
 			else
-				pACTrack = g_pACTracks.Get()->Add(new SWS_RuleTrack(tr));
+				pACTrack = activeRules->insert(tr).first;
 
 			// Do the track rule matching
 			if (bColor || bIcon || bLayout[0] || bLayout[1])
@@ -983,12 +976,9 @@ void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bo
 			int newCol = g_crGradStart | 0x1000000;
 			if (i && gradientTracks.GetSize() > 1)
 				newCol = CalcGradient(g_crGradStart, g_crGradEnd, (double)i / (gradientTracks.GetSize()-1)) | 0x1000000;
-			for (int j = 0; j < g_pACTracks.Get()->GetSize(); j++)
-				if (g_pACTracks.Get()->Get(j)->m_pTr == gradientTracks.Get(i))
-				{
-					g_pACTracks.Get()->Get(j)->m_col = newCol;
-					break;
-				}
+			auto match = activeRules->find(gradientTracks.Get(i));
+			if (match != activeRules->end())
+				match->m_col = newCol;
 			SetMediaTrackInfo_Value(gradientTracks.Get(i), "I_CUSTOMCOLOR", SWS_ColorToNative(newCol));
 		}
 
@@ -1004,42 +994,41 @@ void AutoColorTrack(bool bForce)
 		return;
 	bRecurse = true;
 
+	auto *activeRules = g_pACTracks.Get();
+
 	// If forcing, start over with the saved track list
 	if (bForce)
-		g_pACTracks.Get()->Empty(true);
-	else
-		// Remove non-existant tracks from the autocolortracklist
-		for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
-			if (CSurf_TrackToID(g_pACTracks.Get()->Get(i)->m_pTr, false) < 0)
-			{
-				g_pACTracks.Get()->Delete(i, true);
-				i--;
-			}
+		activeRules->clear();
 
-	// Clear the "colored" bit and "iconed" bit
-	for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
+	// Clear the applied bits and cleanup entries belonging to deleted tracks
+	for (auto it = activeRules->begin(); it != activeRules->end();)
 	{
-		SWS_RuleTrack* r=g_pACTracks.Get()->Get(i);
-		r->m_bColored = false;
-		r->m_bIconed = false;
-		r->m_bLayouted[0] = false;
-		r->m_bLayouted[1] = false;
+		if (!ValidatePtr(it->m_pTr, "MediaTrack*"))
+		{
+			it = activeRules->erase(it);
+			continue;
+		}
+
+		it->m_bColored = false;
+		it->m_bIconed  = false;
+		it->m_bLayouted[0] = false;
+		it->m_bLayouted[1] = false;
+		++it;
 	}
 
 	// Apply the rules
-	bool bDoColors = g_bACEnabled || bForce;
-	bool bDoIcons  = g_bAIEnabled || bForce;
-	bool bDoLayouts  = g_bALEnabled || bForce;
+	bool bDoColors  = g_bACEnabled || bForce;
+	bool bDoIcons   = g_bAIEnabled || bForce;
+	bool bDoLayouts = g_bALEnabled || bForce;
 
 	PreventUIRefresh(1);
 
 	for (int i = 0; i < g_pACItems.GetSize(); i++)
-		ApplyColorRuleToTrack(g_pACItems.Get(i), bDoColors, bDoIcons, bDoLayouts, bForce);
+		ApplyColorRuleToTrack(activeRules, g_pACItems.Get(i), bDoColors, bDoIcons, bDoLayouts, bForce);
 
 	// Remove colors/icons if necessary
-	for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
+	for (auto pACTrack = activeRules->begin(); pACTrack != activeRules->end(); ++pACTrack)
 	{
-		SWS_RuleTrack* pACTrack = g_pACTracks.Get()->Get(i);
 		if (bDoColors && !pACTrack->m_bColored && pACTrack->m_col)
 		{
 			int iCurColor = *(int*)GetSetMediaTrackInfo(pACTrack->m_pTr, "I_CUSTOMCOLOR", NULL);
@@ -1217,7 +1206,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 				MediaTrack* tr = GuidToTrack(&g);
 				if (tr)
 				{
-					SWS_RuleTrack* rt = g_pACTracks.Get()->Add(new SWS_RuleTrack(tr));
+					auto rt = g_pACTracks.Get()->insert(tr).first;
 					rt->m_col = ImportColor(lp.gettoken_int(1));
 					rt->m_icon.Set(lp.gettoken_str(2));
 					rt->m_layout[0].Set(lp.gettoken_str(3));
@@ -1234,37 +1223,40 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
-	// first delete unused tracks
-	for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
-		if (CSurf_TrackToID(g_pACTracks.Get()->Get(i)->m_pTr, false) < 0)
-		{
-			g_pACTracks.Get()->Delete(i, true);
-			i--;
-		}
+	auto *activeRules = g_pACTracks.Get();
+	activeRules->erase_if([](const SWS_RuleTrack &rt) { return !ValidatePtr(rt.m_pTr, "MediaTrack*"); });
+	if (activeRules->empty())
+		return;
 
-	if (g_pACTracks.Get()->GetSize())
+	// serialize in track project order instead of track address order
+	std::vector<const SWS_RuleTrack *> sortedRules;
+	sortedRules.reserve(activeRules->size());
+	std::transform(activeRules->begin(), activeRules->end(),
+		std::back_inserter(sortedRules), [](const SWS_RuleTrack &rt) { return &rt; }); // std::addressof is C++11
+	std::sort(sortedRules.begin(), sortedRules.end(), [](const SWS_RuleTrack *a, const SWS_RuleTrack *b) {
+		return GetMediaTrackInfo_Value(a->m_pTr, "IP_TRACKNUMBER") < GetMediaTrackInfo_Value(b->m_pTr, "IP_TRACKNUMBER");
+	});
+
+	ctx->AddLine("<SWSAUTOCOLOR");
+	for (const SWS_RuleTrack *rt : sortedRules)
 	{
-		ctx->AddLine("<SWSAUTOCOLOR");
+
 		char str[256];
-		for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
-		{
-			if (SWS_RuleTrack* rt = g_pACTracks.Get()->Get(i))
-			{
-				GUID g = GUID_NULL;
-				if (CSurf_TrackToID(rt->m_pTr, false))
-					g = *(GUID*)GetSetMediaTrackInfo(rt->m_pTr, "GUID", NULL);
-				guidToString(&g, str);
-				ctx->AddLine("%s %d \"%s\" \"%s\" \"%s\"", str, ExportColor(rt->m_col), rt->m_icon.Get(), rt->m_layout[0].Get(), rt->m_layout[1].Get());
-			}
-		}
-		ctx->AddLine(">");
+		GUID g = GUID_NULL;
+		if (CSurf_TrackToID(rt->m_pTr, false))
+			g = *(GUID*)GetSetMediaTrackInfo(rt->m_pTr, "GUID", NULL);
+		guidToString(&g, str);
+		ctx->AddLine("%s %d \"%s\" \"%s\" \"%s\"", str, ExportColor(rt->m_col), rt->m_icon.Get(), rt->m_layout[0].Get(), rt->m_layout[1].Get());
+
+		++rt;
 	}
+	ctx->AddLine(">");
 }
 
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
 {
 	g_pACTracks.Cleanup();
-	g_pACTracks.Get()->Empty(true);
+	g_pACTracks.Get()->clear();
 }
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };

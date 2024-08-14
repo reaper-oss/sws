@@ -56,7 +56,7 @@ for:
       - cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN
       - cmake --build .
       - cpack
-    deploy_script: |-
+    before_deploy: |-
       if [ "$APPVEYOR_REPO_TAG" = "true" ] && [ -n "$DEPLOY_KEY" ]; then
         echo "$DEPLOY_KEY" | base64 -d > deploy_key && chmod 600 deploy_key &&
         scp -i deploy_key -o StrictHostKeyChecking=NO -q sws*.tar.xz \
@@ -90,7 +90,7 @@ for:
         -DCMAKE_OSX_ARCHITECTURES=$ARCH -DCMAKE_OSX_DEPLOYMENT_TARGET=$DEPLOY_TARGET
       - cmake --build .
       - cpack
-    deploy_script: |-
+    before_deploy: |-
       if [ "$APPVEYOR_REPO_TAG" = "true" ] && [ -n "$DEPLOY_KEY" ]; then
         echo "$DEPLOY_KEY" | base64 -D > deploy_key && chmod 600 deploy_key &&
         scp -i deploy_key -o StrictHostKeyChecking=NO -q sws*.dmg \
@@ -118,7 +118,7 @@ for:
       - cmake .. -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
       - cmake --build . --target all langpack whatsnew
       - '"C:\Program Files\CMake\bin\cpack"'
-    deploy_script:
+    before_deploy:
       - ps: |-
           if($env:APPVEYOR_REPO_TAG -eq "true" -And $env:DEPLOY_KEY -ne $null) {
             $bytes = [System.Convert]::FromBase64String($env:DEPLOY_KEY)
@@ -188,3 +188,14 @@ notifications:
       {{/artifacts}}
       </details>
       {{/jobs}}{{/passed}}
+
+deploy:
+  provider: GitHub
+  draft: true
+  description: ''
+  force_update: true
+  auth_token:
+    secure: dKuYK8SyWSI/e/akb6EXvhMgumwjN2696hvjJbIZlXeSJjlWmOy9wUDRKwjWLVA06RBfguJppOBN9zjNB1Ur3h8rMYFAQnJnV2r7UW3/M1sEEl75E1+bmMT1HWAuTwkh
+  artifact: /.*\.(dll|dylib|so)|sws_python(32|64)\.py|SWS_Template\.ReaperLangPack/
+  on:
+    APPVEYOR_REPO_TAG: true

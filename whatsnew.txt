@@ -1,3 +1,31 @@
+!v2.14.0.2 pre-release build (August 14, 2024)
+
+This version of SWS may be installed using either the traditional installers (.exe, .dmg, .tar.xz) or https://reapack.com/|ReaPack| (v1.2.4.4 or newer) via the default ReaTeam Extensions repository.
+
+Actions:
++Fix running cycle actions (and some other SWS actions) from the alt-recording and alt-{1..16} sections in REAPER 7.03+ (issue 1803)
++Fix various FNG MIDI actions crashing when the active per-project MIDI editor is empty (issue 1869)
++Fix video processor code lines containing unbalanced quotes being discarded when copying FX chains (issue 1857)
++Ignore tracks set to a record output mode when checking for duplicate recording inputs (thread https://forum.cockos.com/showthread.php?t=261948|261948|)
+
+Auto color/icon/layout:
++Optimize for situations with hundreds of rules and tracks (thread https://forum.cockos.com/showthread.php?t=278856|278856|)
+
+Contextual toolbars:
++Fix localization of default toolbar names
+
+REAPER v7 track spacers:
++Fix excessive CPU usage when tracks with a visual spacer and storage-heavy effects in non-collapsed fixed lanes mode are present (v7.12+) (thread https://forum.cockos.com/showthread.php?t=288774|288774|)
+
+ReaScript API:
++Fix CF_NormalizeUTF8 returning extraneous null bytes on Windows and make no-op on XP to restore compatibility
++Fix CF_Preview dropping samples near the end of the source when pitch shifting (issue 1854)
++Fix CF_Preview updating peaks after the read cursor has wrapped around when looping is disabled
++Fix NF_SetSWSTrackNotes crashing when given a null track (issue 1881)
+
+Snapshots:
++Fix missing recall actions when loading re-ordered snapshots beyond the configured action amount (issue 1871)
+
 !v2.14.0.1 pre-release build (February 14, 2024)
 
 This version of SWS may be installed using either the traditional installers (.exe, .dmg, .tar.xz) or https://reapack.com/|ReaPack| (v1.2.4.4 or newer) via the default ReaTeam Extensions repository.

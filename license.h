@@ -1,7 +1,8 @@
 #pragma once
 
 #define LICENSE_AUTHORS \
-"Copyrights:"\
+"Copyrights:\r\n"\
+"(c) 2024 Christian Fillion (cfillion)\r\n" \
 "(c) 2019 Tim Payne (SWS)\r\n" \
 "(c) 2016 Jeffos (S&M)\r\n" \
 "(c) 2015 Dominik Martin Drzic (BR), wol\r\n" \

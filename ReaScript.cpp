@@ -381,7 +381,9 @@ Mode values:
   * 1 = decomposition + canonical composition
 - Bit 1 (decomposition mode):
   * 0 = canonical decomposition
-  * 1 = compatibility decomposition)", },
+  * 1 = compatibility decomposition
+
+Warning: this function is no-op on Windows XP (the input string is returned as-is).)", },
 
 	{ APIFUNC(CF_CreatePreview), "CF_Preview*", "PCM_source*", "source", R"(Create a new preview object. Does not take ownership of the source (don't forget to destroy it unless it came from a take!). See CF_Preview_Play and the others CF_Preview_* functions.
 

@@ -42,7 +42,9 @@
 
 #ifdef __APPLE__
 #  include <CoreFoundation/CFString.h>
-#elif !defined(_WIN32)
+#elif defined(_WIN32)
+#  include "Utility/win32-import.h"
+#else
 #  include <glib.h>
 #endif
 
@@ -602,6 +604,14 @@ void CF_NormalizeUTF8(const char *input, const unsigned int mode,
 
   CFRelease(normalized);
 #elif defined(_WIN32)
+  static win32::import<decltype(NormalizeString)> _NormalizeString
+    {"Normaliz.dll", "NormalizeString"}; // not available in XP
+
+  if(!_NormalizeString) {
+    snprintf(output, outputSize, "%s", input);
+    return;
+  }
+
   constexpr NORM_FORM forms[] {
     NormalizationD,  // 0b00
     NormalizationC,  // 0b01
@@ -611,16 +621,16 @@ void CF_NormalizeUTF8(const char *input, const unsigned int mode,
   const NORM_FORM form { forms[mode & 0b11] };
 
   const std::wstring &utf16 { win32::widen(input) };
-  const int normalizedChars
-    { NormalizeString(form, utf16.c_str(), utf16.size(), nullptr, 0) };
+  int normalizedChars
+    { _NormalizeString(form, utf16.c_str(), utf16.size(), nullptr, 0) };
   std::vector<wchar_t> normalized(normalizedChars);
-  NormalizeString(form, utf16.c_str(), utf16.size(),
+  normalizedChars = _NormalizeString(form, utf16.c_str(), utf16.size(),
     normalized.data(), normalized.size());
 
   const int normalizedSize { WideCharToMultiByte(CP_UTF8, 0,
-    normalized.data(), normalized.size(), nullptr, 0, nullptr, nullptr) };
+    normalized.data(), normalizedChars, nullptr, 0, nullptr, nullptr) };
   if(realloc_cmd_ptr(&output, &outputSize, normalizedSize)) {
-    WideCharToMultiByte(CP_UTF8, 0, normalized.data(), normalized.size(),
+    WideCharToMultiByte(CP_UTF8, 0, normalized.data(), normalizedChars,
       output, outputSize, nullptr, nullptr);
   }
 #else

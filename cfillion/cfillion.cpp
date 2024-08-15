@@ -561,6 +561,8 @@ bool CF_PCM_Source_SetSectionInfo(PCM_source *section, PCM_source *source,
 
 BOOL CF_GetScrollInfo(HWND hwnd, const int bar, LPSCROLLINFO si)
 {
+  unsigned int unmask = 0;
+
   if(bar == SB_VERT && hwnd == GetArrangeWnd() && (si->fMask & SIF_POS)) {
     // CoolSB_GetScrollInfo's nPos is unreliable after zooming in on tracks
     for(int i {}; i <= GetNumTracks(); ++i) {
@@ -568,13 +570,16 @@ BOOL CF_GetScrollInfo(HWND hwnd, const int bar, LPSCROLLINFO si)
       if(TcpVis(track)) {
         si->nPos = -static_cast<int>(GetMediaTrackInfo_Value(track, "I_TCPY"));
         si->nPos += GetTrackSpacerSize(track);
-        si->fMask &= ~SIF_POS;
+        unmask |= SIF_POS;
         break;
       }
     }
   }
 
-  return CoolSB_GetScrollInfo(hwnd, bar, si);
+  si->fMask &= ~unmask;
+  const auto rv = CoolSB_GetScrollInfo(hwnd, bar, si);
+  si->fMask |= unmask;
+  return rv;
 }
 
 void CF_NormalizeUTF8(const char *input, const unsigned int mode,

@@ -1204,7 +1204,8 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 				GUID g;
 				stringToGuid(lp.gettoken_str(0), &g);
 				MediaTrack* tr = GuidToTrack(&g);
-				if (tr)
+				// not loading master track cache to always re-apply rules (icon isn't persisted in RPP)
+				if (tr && tr != GetMasterTrack(nullptr))
 				{
 					auto rt = g_pACTracks.Get()->insert(tr).first;
 					rt->m_col = ImportColor(lp.gettoken_int(1));

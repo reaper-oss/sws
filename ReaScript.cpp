@@ -394,8 +394,8 @@ The preview object is automatically destroyed at the end of a defer cycle if at 
 	{ APIFUNC(CF_Preview_GetValue), "bool", "CF_Preview*,const char*,double*", "preview,name,valueOut", R"(Supported attributes:
 B_LOOP         seek to the beginning when reaching the end of the source
 B_PPITCH       preserve pitch when changing playback rate
-D_FADEINLEN    lenght in seconds of playback fade in
-D_FADEOUTLEN   lenght in seconds of playback fade out
+D_FADEINLEN    length in seconds of playback fade in
+D_FADEOUTLEN   length in seconds of playback fade out
 D_LENGTH       (read only) length of the source * playback rate
 D_MEASUREALIGN >0 = wait until the next bar before starting playback (note: this causes playback to silently continue when project is paused and previewing through a track)
 D_PAN          playback pan

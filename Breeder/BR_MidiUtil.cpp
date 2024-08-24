@@ -561,7 +561,7 @@ loopStart    (-1),
 loopEnd      (-1),
 loopedOffset (0)
 {
-	// When restoring position and lenght, the only way to restore it for looped MIDI items is to use MIDI_SetItemExtents which will disable looping
+	// When restoring position and length, the only way to restore it for looped MIDI items is to use MIDI_SetItemExtents which will disable looping
 	// for the whole item. Since we have no idea what will happen before this->Restore() is called take data for active MIDI item right now instead of
 	// in this->Restore() (for example, if client calls SetIgnoreTempo() from BR_Util.h before restoring to disable "ignore project tempo" length of MIDI item source may change)
 	if (looped)

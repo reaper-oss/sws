@@ -169,7 +169,7 @@ static bool DeleteTempo (int id, bool checkEditedPoints, TrackEnvelope* tempoEnv
 	{
 		if (s0 == SQUARE)
 		{
-			double m1 = (TimeMap_timeToQN(t2) - TimeMap_timeToQN(t1)) / 4; // in case of partial marker (calculating as m2 would result in effective musical lenght, but we want the musical length as if partial marker wasn't moved)
+			double m1 = (TimeMap_timeToQN(t2) - TimeMap_timeToQN(t1)) / 4; // in case of partial marker (calculating as m2 would result in effective musical length, but we want the musical length as if partial marker wasn't moved)
 			if (s1 == SQUARE) Nb1 = (240*(m1 + m2)) / (t3-t1);
 			else              Nb1 = (480*(m1 + m2)) / (t3-t1) - b3;
 

@@ -259,7 +259,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(BR_Win32_GetWindow), "void*", "void*,int", "hwnd,cmd", "[BR] Equivalent to win32 API GetWindow().", },
 	{ APIFUNC(BR_Win32_GetWindowLong), "int", "void*,int", "hwnd,index", "[BR] Equivalent to win32 API GetWindowLong().", },
 	{ APIFUNC(BR_Win32_GetWindowRect), "bool", "void*,int*,int*,int*,int*", "hwnd,leftOut,topOut,rightOut,bottomOut", "[BR] Equivalent to win32 API GetWindowRect().", },
-	{ APIFUNC(BR_Win32_GetWindowText), "int", "void*,char*,int", "hwnd,textOut,textOut_sz", "[BR] Equivalent to win32 API GetWindowText().", },
+	{ APIFUNC(BR_Win32_GetWindowText), "int", "void*,char*,int", "hwnd,textOutNeedBig,textOutNeedBig_sz", "[BR] Equivalent to win32 API GetWindowText().", },
 	{ APIFUNC(BR_Win32_HIBYTE), "int", "int", "value", "[BR] Equivalent to win32 API HIBYTE().", },
 	{ APIFUNC(BR_Win32_HIWORD), "int", "int", "value", "[BR] Equivalent to win32 API HIWORD().", },
 	{ APIFUNC(BR_Win32_HwndToString), "void", "void*,char*,int", "hwnd,stringOut,stringOut_sz", "[BR] Convert HWND to string. To convert string back to HWND, see BR_Win32_StringToHwnd.", },

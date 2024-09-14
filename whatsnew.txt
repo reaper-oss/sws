@@ -1,3 +1,11 @@
+!v2.14.0.3 featured build (September 14, 2024)
+
+This version of SWS may be installed using either the traditional installers (.exe, .dmg, .tar.xz) or https://reapack.com/|ReaPack| (v1.2.4.4 or newer) via the default ReaTeam Extensions repository.
+
++Always re-apply master track auto-icon rules when loading projects (post https://forum.cockos.com/showthread.php?p=2802388|2802388|)
++Fix arrange view vertical scrolling in Loudness and some wol actions (issue 1888)
++ReaScript API: Increase BR_Win32_GetWindowText's requested buffer size (issue 1896)
+
 !v2.14.0.2 pre-release build (August 14, 2024)
 
 This version of SWS may be installed using either the traditional installers (.exe, .dmg, .tar.xz) or https://reapack.com/|ReaPack| (v1.2.4.4 or newer) via the default ReaTeam Extensions repository.

@@ -1204,9 +1204,9 @@ void BR_Win32_ScreenToClient(void* hwnd, int xIn, int yIn, int* xOut, int* yOut)
 	WritePtr(yOut, (int)p.y);
 }
 
-int BR_Win32_SendMessage(void* hwnd, int msg, int lParam, int wParam)
+int BR_Win32_SendMessage(void* hwnd, int msg, int wParam, int lParam)
 {
-	return (int)SendMessage((HWND)hwnd, msg, lParam, wParam);
+	return (int)SendMessage((HWND)hwnd, msg, wParam, lParam);
 }
 
 void* BR_Win32_SetFocus(void* hwnd)

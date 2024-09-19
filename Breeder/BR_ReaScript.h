@@ -126,7 +126,7 @@ int             BR_Win32_MAKEWORD (int low, int high);
 int             BR_Win32_MAKEWPARAM (int low, int high);
 void*           BR_Win32_MIDIEditor_GetActive ();
 void            BR_Win32_ScreenToClient (void* hwnd, int xIn, int yIn, int* xOut, int* yOut);
-int             BR_Win32_SendMessage (void* hwnd, int msg, int lParam, int wParam);
+int             BR_Win32_SendMessage (void* hwnd, int msg, int wParam, int lParam);
 void*           BR_Win32_SetFocus (void* hwnd);
 int             BR_Win32_SetForegroundWindow (void* hwnd);
 int             BR_Win32_SetWindowLong (void* hwnd, int index, int newLong);

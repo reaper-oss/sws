@@ -274,7 +274,7 @@ APIdef g_apidefs[] =
 	{ APIFUNC(BR_Win32_MAKEWPARAM), "int", "int,int", "low,high", "[BR] Equivalent to win32 API MAKEWPARAM().", },
 	{ APIFUNC(BR_Win32_MIDIEditor_GetActive), "void*", "", "", "[BR] Alternative to <a href=\"#MIDIEditor_GetActive\">MIDIEditor_GetActive</a>. REAPER seems to have problems with extensions using HWND type for exported functions so all BR_Win32 functions use void* instead of HWND type.", },
 	{ APIFUNC(BR_Win32_ScreenToClient), "void", "void*,int,int,int*,int*", "hwnd,xIn,yIn,xOut,yOut", "[BR] Equivalent to win32 API ClientToScreen().", },
-	{ APIFUNC(BR_Win32_SendMessage), "int", "void*,int,int,int", "hwnd,msg,lParam,wParam", "[BR] Equivalent to win32 API SendMessage().", },
+	{ APIFUNC(BR_Win32_SendMessage), "int", "void*,int,int,int", "hwnd,msg,wParam,lParam", "[BR] Equivalent to win32 API SendMessage().", },
 	{ APIFUNC(BR_Win32_SetFocus), "void*", "void*", "hwnd", "[BR] Equivalent to win32 API SetFocus().", },
 	{ APIFUNC(BR_Win32_SetForegroundWindow), "int", "void*", "hwnd", "[BR] Equivalent to win32 API SetForegroundWindow().", },
 	{ APIFUNC(BR_Win32_SetWindowLong), "int", "void*,int,int", "hwnd,index,newLong", "[BR] Equivalent to win32 API SetWindowLong().", },

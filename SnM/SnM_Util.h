@@ -58,6 +58,7 @@ bool TranscodeFileToFile64(const char* _outFn, const char* _inFn);
 WDL_HeapBuf* TranscodeStr64ToHeapBuf(const char* _str64);
 bool GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz);
 void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _filterList, bool _subdirs);
+bool IsDirNoRecurse(const WDL_DirScan &);
 void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx);
 void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx);
 

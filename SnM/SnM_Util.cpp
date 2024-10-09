@@ -451,6 +451,12 @@ bool GenerateFilename(const char* _dir, const char* _name, const char* _ext, cha
 	return false;
 }
 
+bool IsDirNoRecurse(const WDL_DirScan &ds)
+{
+	enum { IsDir = 1, IsDirSymlink = 2, IsRecurDirSymLink = 4 };
+	return (ds.GetCurrentIsDirectory() & (IsDir | IsDirSymlink)) != 0;
+}
+
 // fills a list of filenames matching extensions defined in _filterList
 // _filterList: file extensions without null separators, ex: "*.ext1 *.ext2" ("*" == all files)
 // note: it is up to the caller to free _files (use WDL_PtrList_DeleteOnDestroy)
@@ -468,7 +474,7 @@ void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char
 			if (!strcmp(curFn, ".") || !strcmp(curFn, "..")) 
 				continue;
 
-			if (ds.GetCurrentIsDirectory())
+			if (IsDirNoRecurse(ds))
 			{
 				if (_subdirs) {
 					ds.GetCurrentFullFN(&fn);

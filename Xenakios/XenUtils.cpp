@@ -85,7 +85,7 @@ int SearchDirectory(vector<string> &refvecFiles, const char* cDir, const char* c
 			WDL_String foundFile;
 			ds.GetCurrentFullFN(&foundFile);
 			lstrcpyn(g_CurrentScanFile, foundFile.Get(), 1024);
-			if (bSubdirs && ds.GetCurrentIsDirectory())
+			if (bSubdirs && IsDirNoRecurse(ds))
 			{
 				found += SearchDirectory(refvecFiles, foundFile.Get(), cExt, true);
 			}

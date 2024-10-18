@@ -624,13 +624,10 @@ void BR_MouseInfo::GetContext (const POINT& p)
 							// if env is hit, check if underlying envelope outside of automation items is bypassed, #1727
 							if (trackEnvHit)
 							{
-								int bypassUnderlEnvProjDefault = *ConfigVar<int>("pooledenvattach") & 4;
-								int AIoptions = envelope.GetAIoptions(); // -1 == use project default
-								if ((bypassUnderlEnvProjDefault && AIoptions == -1) || (AIoptions & 4))
-								{
-									if (!this->IsMouseOverAI(envelope, height - 2 * ENV_GAP, offset + ENV_GAP, mouseY, mousePos))
-										trackEnvHit = 0;
-								}
+								int aiOptions = envelope.GetAIoptions(); // -1 == use project default
+								if (aiOptions < 0) aiOptions = *ConfigVar<int>("pooledenvattach");
+								if (aiOptions & 4 && !this->IsMouseOverAI(envelope, height - 2 * ENV_GAP, offset + ENV_GAP, mouseY, mousePos))
+									trackEnvHit = 0;
 							}
 						}
 
@@ -681,16 +678,11 @@ void BR_MouseInfo::GetContext (const POINT& p)
 							else if (trackEnvHit == 2) mouseInfo.details = "env_segment";
 
 							// if env is hit, check if underlying envelope outside of automation items is bypassed, #1488
-							int bypassUnderlEnvProjDefault = *ConfigVar<int>("pooledenvattach") & 4;
 							BR_Envelope envelope(mouseInfo.envelope);
-							int AIoptions = envelope.GetAIoptions(); // -1 == use project default
-							if ((bypassUnderlEnvProjDefault && AIoptions == -1) || (AIoptions & 4))
-							{
-								if (!this->IsMouseOverAI(envelope, height - 2 * ENV_GAP, offset + ENV_GAP, mouseY, mousePos))
-								{
-									mouseInfo.details = "empty";
-								}
-							}
+							int aiOptions = envelope.GetAIoptions(); // -1 == use project default
+							if (aiOptions < 0) aiOptions = *ConfigVar<int>("pooledenvattach");
+							if (aiOptions & 4 && !this->IsMouseOverAI(envelope, height - 2 * ENV_GAP, offset + ENV_GAP, mouseY, mousePos))
+								mouseInfo.details = "empty";
 						}
 						// Item and things inside it
 						if (!trackEnvHit && mouseInfo.item)

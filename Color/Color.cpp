@@ -751,30 +751,34 @@ int RecRedRulerEnabled(COMMAND_T*)
 
 void ColorTimer()
 {
-	static int iRulerLaneCol[3];
-	static bool bRecording = false;
+	static int rulerLaneCol[3];
+	static int lastState = 0;
 
-	if (!bRecording && g_bRecRedRuler && GetPlayState() & 4)
+	const int enabled = g_bRecRedRuler << 8;
+	const int state = enabled | (GetPlayState() & (2|4));
+
+	if (!(lastState ^ state) || !((lastState | state) & 4))
+		return;
+
+	int iSize;
+	ColorTheme* colors = (ColorTheme*)GetColorThemeStruct(&iSize);
+	if (iSize < __ARRAY_SIZE(rulerLaneCol))
+		return;
+
+	for (int i = 0; i < __ARRAY_SIZE(rulerLaneCol); i++)
 	{
-		int iSize;
-		ColorTheme* colors = (ColorTheme*)GetColorThemeStruct(&iSize);
-		for (int i = 0; i < 3; i++)
+		if (enabled && state & 4)
 		{
-			iRulerLaneCol[i] = colors->ruler_lane_bgcolor[i];
-			colors->ruler_lane_bgcolor[i] = RGB(0xFF, 0, 0);
+			if (!(lastState & enabled))
+				rulerLaneCol[i] = colors->ruler_lane_bgcolor[i];
+			colors->ruler_lane_bgcolor[i] = RGB(0xFF, state & 2 ? 0xFF : 0, 0);
 		}
-		UpdateTimeline();
-		bRecording = true;
+		else
+			colors->ruler_lane_bgcolor[i] = rulerLaneCol[i];
 	}
-	else if (bRecording && (!g_bRecRedRuler || !(GetPlayState() & 4)))
-	{
-		int iSize;
-		ColorTheme* colors = (ColorTheme*)GetColorThemeStruct(&iSize);
-		for (int i = 0; i < 3; i++)
-			colors->ruler_lane_bgcolor[i] = iRulerLaneCol[i];
-		UpdateTimeline();
-		bRecording = false;
-	}
+
+	UpdateTimeline();
+	lastState = state & 0xFF ? state : 0; // clear enabled to update theme colors
 }
 
 void RecRedRuler(COMMAND_T*)

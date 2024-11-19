@@ -780,8 +780,13 @@ void ColorTimer()
 void RecRedRuler(COMMAND_T*)
 {
 	g_bRecRedRuler = !g_bRecRedRuler;
-	if (g_bRecRedRuler) plugin_register("timer", (void*)ColorTimer);
-	else                plugin_register("-timer",(void*)ColorTimer);
+	if (g_bRecRedRuler)
+		plugin_register("timer", (void*)ColorTimer);
+	else
+	{
+		ColorTimer(); // reset ruler colors
+		plugin_register("-timer", (void*)ColorTimer);
+	}
 	WritePrivateProfileString(SWS_INI, RECREDRULER_KEY, g_bRecRedRuler ? "1" : "0", get_ini_file());
 }
 

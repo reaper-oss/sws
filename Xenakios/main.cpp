@@ -107,7 +107,7 @@ void DoSelectFiles(COMMAND_T*)
 	if (cFiles)
 	{
 		g_filenames.clear();
-		char* pStr = cFiles;
+		char* pStr = cFiles + (*cFiles == '\0' ? 1 : 0);
 		while(*pStr)
 		{
 			g_filenames.push_back(pStr);

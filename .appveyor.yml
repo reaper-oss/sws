@@ -17,6 +17,7 @@ for:
         $3 = "http://ports.ubuntu.com/ubuntu-ports/"
       } 1' /etc/apt/sources.list | sudo tee /etc/apt/sources.list.d/ports.list > /dev/null
       sudo sed -i 's/apt.postgresql.org/apt-archive.postgresql.org/' /etc/apt/sources.list
+      sudo rm /etc/apt/sources.list.d/google-chrome.list
 
       install-deps() {
         local arch="$1"; shift

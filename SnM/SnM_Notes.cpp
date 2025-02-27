@@ -269,16 +269,25 @@ void NotesWnd::SetType(int _type)
 }
 
 void NotesWnd::SetText(const char* _str, bool _addRN) {
-	if (_str) {
-		if (_addRN) GetStringWithRN(_str, g_lastText, sizeof(g_lastText));
-		else lstrcpyn(g_lastText, _str, sizeof(g_lastText));
-		m_settingText = true;
-		SetWindowText(m_edit, g_lastText);
-		m_settingText = false;
+	if (!_str)
+		return;
+
+	char rnStr[sizeof(g_lastText)];
+	if (_addRN) {
+		GetStringWithRN(_str, rnStr, sizeof(rnStr));
+		_str = &rnStr[0];
 	}
+
+	if(!strcmp(_str, g_lastText))
+		return;
+
+	lstrcpyn(g_lastText, _str, sizeof(g_lastText));
+	m_settingText = true;
+	SetWindowText(m_edit, g_lastText);
+	m_settingText = false;
 }
 
-void NotesWnd::RefreshGUI() 
+void NotesWnd::RefreshGUI()
 {
 	bool bHide = true;
 	switch(g_notesType)

@@ -56,8 +56,14 @@ unsigned int hidpi::GetDpiForPoint(const POINT &point)
 
 unsigned int hidpi::GetDpiForWindow(HWND window)
 {
+#ifdef _WIN32
   // returns 0 if Per-Monitor v2 DPI awareness is disabled for the thread
   return WDL_WndSizer::calc_dpi(window);
+#elif defined(__APPLE__)
+  return 0;
+#else
+  return SWELL_GetScaling256();
+#endif
 }
 
 bool hidpi::IsDifferentDpi(const unsigned int a, const unsigned int b)

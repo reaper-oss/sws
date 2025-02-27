@@ -1397,14 +1397,19 @@ void PrepareToEndPlaylist ()
 	EnumProjectMarkers2(NULL, markerIdx, nullptr, &g_safeTimeToEndPlaylist, nullptr, nullptr, nullptr);
 }
 
-void SeekRegion (const int _reaperRegionId)
+void SeekRegion (const int _reaperRegionId, const bool scroll = true)
 {
 	const double cursorpos = GetCursorPositionEx(NULL);
 	PreventUIRefresh(1);
+	double arrangeStart, arrangeEnd;
+	if (!scroll)
+		GetSet_ArrangeView2(nullptr, false, 0, 0, &arrangeStart, &arrangeEnd);
 	GoToRegion(NULL, _reaperRegionId, false);
 	if ((GetPlayStateEx(NULL)&1) != 1)
 		OnPlayButton();
 	SetEditCurPos2(NULL, cursorpos, false, false);
+	if (!scroll)
+		GetSet_ArrangeView2(nullptr, true, 0, 0, &arrangeStart, &arrangeEnd);
 	PreventUIRefresh(-1);
 
 #if defined(_SNM_RGNPL_DEBUG1) || defined(_SNM_RGNPL_DEBUG2)
@@ -1419,7 +1424,7 @@ enum class SeekMethod {
 	ConsiderMarkers
 };
 
-bool SeekItem(const int _plId, const int _nextItemId, const int _curItemId, const SeekMethod _method)
+bool SeekItem(const int _plId, const int _nextItemId, const int _curItemId, const SeekMethod _method, const bool scroll = true)
 {
 	if (RegionPlaylist* pl = g_pls.Get()->Get(_plId))
 	{
@@ -1450,7 +1455,7 @@ bool SeekItem(const int _plId, const int _nextItemId, const int _curItemId, cons
 				}
 
 				if (_method == SeekMethod::IgnoreMarkers) {
-					SeekRegion(g_nextRegionId);
+					SeekRegion(g_nextRegionId, scroll);
 				} else {
 					SeekPlay(g_nextRgnPos);
 				}
@@ -1554,8 +1559,8 @@ void PlaylistRun()
 #ifdef _SNM_RGNPL_DEBUG1
 					snprintf(dbg, sizeof(dbg), "SEEK - Current = %d, Next = %d\n", g_playCur, nextId); OutputDebugString(dbg);
 #endif
-					if (!SeekItem(g_playPlaylist, nextId, g_playCur, SeekMethod::IgnoreMarkers))
-						SeekItem(g_playPlaylist, -1, g_playCur, SeekMethod::IgnoreMarkers); // end of playlist..
+					if (!SeekItem(g_playPlaylist, nextId, g_playCur, SeekMethod::IgnoreMarkers, false))
+						SeekItem(g_playPlaylist, -1, g_playCur, SeekMethod::IgnoreMarkers, false); // end of playlist..
 				} else {
 					if (g_rgnLoop>0)
 						g_rgnLoop--;

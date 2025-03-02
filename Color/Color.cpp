@@ -162,6 +162,15 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_COMMAND:
 		{
 			wParam = LOWORD(wParam);
+
+			COLORREF *color;
+			switch(wParam)
+			{
+				case IDC_COLOR1: color = &g_crGradStart; break;
+				case IDC_COLOR2: color = &g_crGradEnd;   break;
+				default:         color = nullptr;        break;
+			}
+
 			switch(wParam)
 			{
 				case IDC_COLOR1:
@@ -176,22 +185,12 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					cc.lpCustColors = g_custColors;
 					cc.Flags = CC_FULLOPEN | CC_RGBINIT;
 
-					if (wParam == IDC_COLOR1)
+					if (color)
 					{
-						cc.rgbResult = SWS_ColorToNative(g_crGradStart);
+						cc.rgbResult = SWS_ColorToNative(*color);
 						if (ChooseColor(&cc))
 						{
-							g_crGradStart = SWS_ColorFromNative(cc.rgbResult) & 0xFFFFFF;
-							PersistColors();
-							RedrawWindow(hwndDlg, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
-						}
-					}
-					else if (wParam == IDC_COLOR2)
-					{
-						cc.rgbResult = g_crGradEnd;
-						if (ChooseColor(&cc))
-						{
-							g_crGradEnd = cc.rgbResult;
+							*color = SWS_ColorFromNative(cc.rgbResult) & 0xFFFFFF;
 							PersistColors();
 							RedrawWindow(hwndDlg, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
 						}
@@ -200,13 +199,11 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						PersistColors();
 #elif !defined(__APPLE__)
 					COLORREF cc = 0;
-					if (wParam == IDC_COLOR1) cc = SWS_ColorToNative(g_crGradStart);
-					if (wParam == IDC_COLOR2) cc = SWS_ColorToNative(g_crGradEnd);
+					if (color) cc = SWS_ColorToNative(*color);
 
 					if (SWELL_ChooseColor(hwndDlg,&cc,16,g_custColors))
 					{
-						if (wParam == IDC_COLOR1) g_crGradStart = SWS_ColorFromNative(cc);
-						if (wParam == IDC_COLOR2) g_crGradEnd = SWS_ColorFromNative(cc);
+						if (color) *color = SWS_ColorFromNative(cc);
 						PersistColors();
 						InvalidateRect(hwndDlg,NULL,FALSE);
 					}

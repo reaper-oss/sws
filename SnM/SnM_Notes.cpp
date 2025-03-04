@@ -1299,7 +1299,9 @@ bool ImportSubRipFile(const char* _fn)
 	if (FILE* f = fopenUTF8(_fn, "rt"))
 	{
 		char buf[1024];
-		while(fgets(buf, sizeof(buf), f) && *buf)
+		if (fgets(buf, 4, f) && strcmp("\xEF\xBB\xBF", buf)) // UTF-8 BOM
+			rewind(f);
+		while (fgets(buf, sizeof(buf), f) && *buf)
 		{
 			if (int num = atoi(buf))
 			{

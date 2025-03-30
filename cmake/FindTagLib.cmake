@@ -25,6 +25,8 @@ else()
   set(WITH_ZLIB      OFF CACHE BOOL "Build TagLib without ZLIB")
 
   set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
+  set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
+  set(CMAKE_POLICY_VERSION_MINIMUM 3.10) # for compatibility with 4.0
   add_subdirectory(${TagLib_SOURCE_DIR} EXCLUDE_FROM_ALL)
 
   mark_as_advanced(

@@ -774,6 +774,9 @@ bool BR_MouseInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& 
 		ScreenToClient(segmentHwnd, &p);
 		RECT r; GetClientRect(segmentHwnd, &r);
 
+		const auto dpi256 = hidpi::GetDpiForWindow(mouseInfo.midiEditor);
+		const LONG ruler_h = MIDI_RULER_H * dpi256 / 256;
+
 		// ignoring extra flags from GetPianoRoll() (eg. custom note order mode=0x10000)
 		mouseInfo.pianoRollMode = midiEditor.GetPianoRoll() & 0xffff;
 
@@ -802,7 +805,7 @@ bool BR_MouseInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& 
 			}
 
 			// Check ruler
-			if (p.y < MIDI_RULER_H)
+			if (p.y < ruler_h)
 			{
 				if      (cursorSegment == MIDI_WND_NOTEVIEW) mouseInfo.segment = "ruler";
 				else if (cursorSegment == MIDI_WND_KEYBOARD) mouseInfo.segment = "unknown";
@@ -867,7 +870,7 @@ bool BR_MouseInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& 
 					else if (cursorSegment == MIDI_WND_NOTEVIEW) mouseInfo.segment = "notes";
 
 					// This is mouse Y position counting from the bottom - make sure it's not outside valid, drawable note range
-					int realMouseY = (MIDI_RULER_H - p.y) - ((midiEditor.GetVPos() - 128) * midiEditor.GetVZoom());
+					int realMouseY = (ruler_h - p.y) - ((midiEditor.GetVPos() - 128) * midiEditor.GetVZoom());
 					if (realMouseY > 0)
 					{
 						bool processKeyboardSeparately = true;

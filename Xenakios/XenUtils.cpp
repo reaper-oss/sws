@@ -110,6 +110,16 @@ int SearchDirectory(vector<string> &refvecFiles, const char* cDir, const char* c
 
 #ifdef _WIN32
 
+// Caller is responsible for freeing the returned string if non-null.
+//
+// Returns "path/to/file\0" if there is a single selection or
+// "directory\0file1\0file2\0" if allowmul and the user selected over one file.
+//
+// See GetBrowseForFilesFNs.
+//
+// Note: the macOS SWELL version of this function returns an empty directory and
+// each filenames are already absolute paths. The Linux version doesn't but also
+// ends the directory with a slash unlike Windows.
 char *BrowseForFiles(const char *text, const char *initialdir, const char *initialfile, bool allowmul, const char *extlist)
 {
 	int rv = 0;
@@ -131,33 +141,7 @@ char *BrowseForFiles(const char *text, const char *initialdir, const char *initi
 	l.Flags = OFN_DONTADDTORECENT | OFN_EXPLORER | (allowmul ? OFN_ALLOWMULTISELECT : 0) | OFN_FILEMUSTEXIST;
 
 	if (GetOpenFileName(&l))
-	{
-		if (temp[strlen(temp)+1]) // Check for more than one file
-		{	// More than one file is returned in the format PATH.FILE1.FILE2..
-			// We want PATH\FILE1.PATH\FILE2.. (period means NULL here)
-			int pathLength = (int)strlen(temp);
-			char* pFile = temp + pathLength + 1;
-			int newLength = 1; // double NULL terminate
-			while (pFile[0])
-			{
-				newLength += pathLength + (int)strlen(pFile) + 2; // 2 extra for \ + NULL
-				pFile += strlen(pFile) + 1;
-			}
-			char* fullFilenames = (char*)malloc(newLength);
-			pFile = temp + pathLength + 1;
-			char* pFull = fullFilenames;
-			while (pFile[0])
-			{
-				sprintf(pFull, "%s\\%s", temp, pFile);
-				pFull += strlen(pFull) + 1;
-				pFile += strlen(pFile) + 1;
-			}
-			pFull[0] = 0;
-			free(temp);
-			return fullFilenames;
-		}
 		return temp;
-	}
 
 	free(temp);
 	return NULL;
@@ -239,6 +223,26 @@ bool BrowseForDirectory(const char *text, const char *initialdir, char *fn, int 
   return false;
 }
 #endif
+
+void GetBrowseForFilesFNs(const char *list, std::vector<string> &out)
+{
+	const size_t dirlen = strlen(list);
+	const char *file = list + dirlen + 1;
+	const bool needsep = dirlen > 0 && list[dirlen - 1] != WDL_DIRCHAR;
+	if (!*file) // single selection
+		out.push_back(list);
+	else do {
+		const size_t filelen = strlen(file);
+		std::string path;
+		path.reserve(dirlen + needsep + filelen);
+		path.append(list, dirlen);
+		if (needsep)
+			path.push_back(WDL_DIRCHAR);
+		path.append(file, filelen);
+		out.push_back(path);
+		file += filelen + 1;
+	} while (*file);
+}
 
 bool FileExists(const char* file) {
 	return FileOrDirExists(file);

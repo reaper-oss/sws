@@ -353,4 +353,5 @@ bool BrowseForSaveFile(const char *text, const char *initialdir, const char *ini
 char *BrowseForFiles(const char *text, const char *initialdir, const char *initialfile, bool allowmul, const char *extlist);
 bool BrowseForDirectory(const char *text, const char *initialdir, char *fn, int fnsize);
 #endif
+void GetBrowseForFilesFNs(const char *retval, std::vector<std::string> &out);
 bool FileExists(const char* file);

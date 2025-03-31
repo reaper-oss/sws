@@ -52,6 +52,7 @@ public:
 // Line starting with + : Make into bullet
 // URLs are converted into <a href>.  If you suffix a link with |, the following text will be used as the desc text
 // Text "issue %d" is converted into a link into the tracker
+// Text "thread %d" or "post %d" is converted into a link into the forum
 int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const char* _url)
 {
 	FILE* pIn;
@@ -216,6 +217,19 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML, const c
 				{
 					fprintf(pOut, "<a href=\"https://github.com/reaper-oss/sws/issues/%d\">%cssue %d</a>", iIssue, cBuf[iPos], iIssue);
 					iPos += 6;
+					while (isalnum(cBuf[iPos++]));
+					iPos--;
+				}
+			}
+
+			if (strnicmp(&cBuf[iPos], "thread ", 7) == 0 || strnicmp(&cBuf[iPos], "post ", 5) == 0)
+			{
+				const int preLen = static_cast<int>(strchr(&cBuf[iPos], ' ') - &cBuf[iPos] + 1);
+				int iPost = atol(&cBuf[iPos+preLen]);
+				if (iPost != 0)
+				{
+					fprintf(pOut, "<a href=\"https://forum.cockos.com/showthread.php?%c=%d\">%.*s%d</a>", tolower(cBuf[iPos]), iPost, preLen, &cBuf[iPos], iPost);
+					iPos += preLen;
 					while (isalnum(cBuf[iPos++]));
 					iPos--;
 				}

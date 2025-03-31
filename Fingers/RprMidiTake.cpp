@@ -395,9 +395,9 @@ void RprMidiNote::setVelocity(int velocity)
         velocity = 127;
     }
 
-    if (velocity < 0)
+    if (velocity < 1)
     {
-        velocity = 0;
+        velocity = 1;
     }
 
     mNoteOn->setValue2((unsigned char)velocity);

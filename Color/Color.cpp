@@ -748,37 +748,55 @@ int RecRedRulerEnabled(COMMAND_T*)
 
 void ColorTimer()
 {
-	static int iRulerLaneCol[3];
-	static bool bRecording = false;
+	static int rulerLaneColOrig[3], rulerLaneColNew[3];
+	static int lastState = 0;
 
-	if (!bRecording && g_bRecRedRuler && GetPlayState() & 4)
+	const int enabled = g_bRecRedRuler << 8;
+	const int state = enabled | (GetPlayState() & (2|4));
+
+	int iSize;
+	ColorTheme* colors = (ColorTheme*)GetColorThemeStruct(&iSize);
+	if (iSize < __ARRAY_SIZE(rulerLaneColNew))
+		return;
+
+	// detect color theme changes and reset rulerLaneColOrig
+	if (lastState & enabled && memcmp(rulerLaneColNew, colors->ruler_lane_bgcolor, sizeof(rulerLaneColNew)))
+		lastState &= ~enabled;
+
+	if (!(lastState ^ state) || !((lastState | state) & 4))
+		return;
+
+	for (int i = 0; i < __ARRAY_SIZE(rulerLaneColNew); i++)
 	{
-		int iSize;
-		ColorTheme* colors = (ColorTheme*)GetColorThemeStruct(&iSize);
-		for (int i = 0; i < 3; i++)
+		int newColor;
+
+		if (enabled && state & 4)
 		{
-			iRulerLaneCol[i] = colors->ruler_lane_bgcolor[i];
-			colors->ruler_lane_bgcolor[i] = RGB(0xFF, 0, 0);
+			if (!(lastState & enabled))
+				rulerLaneColOrig[i] = colors->ruler_lane_bgcolor[i];
+
+			newColor = RGB(0xFF, state & 2 ? 0xFF : 0, 0);
 		}
-		UpdateTimeline();
-		bRecording = true;
+		else
+			newColor = rulerLaneColOrig[i];
+
+		colors->ruler_lane_bgcolor[i] = rulerLaneColNew[i] = newColor;
 	}
-	else if (bRecording && (!g_bRecRedRuler || !(GetPlayState() & 4)))
-	{
-		int iSize;
-		ColorTheme* colors = (ColorTheme*)GetColorThemeStruct(&iSize);
-		for (int i = 0; i < 3; i++)
-			colors->ruler_lane_bgcolor[i] = iRulerLaneCol[i];
-		UpdateTimeline();
-		bRecording = false;
-	}
+
+	UpdateTimeline();
+	lastState = state;
 }
 
 void RecRedRuler(COMMAND_T*)
 {
 	g_bRecRedRuler = !g_bRecRedRuler;
-	if (g_bRecRedRuler) plugin_register("timer", (void*)ColorTimer);
-	else                plugin_register("-timer",(void*)ColorTimer);
+	if (g_bRecRedRuler)
+		plugin_register("timer", (void*)ColorTimer);
+	else
+	{
+		ColorTimer(); // reset ruler colors
+		plugin_register("-timer", (void*)ColorTimer);
+	}
 	WritePrivateProfileString(SWS_INI, RECREDRULER_KEY, g_bRecRedRuler ? "1" : "0", get_ini_file());
 }
 

@@ -495,7 +495,7 @@ int PerformSingleCommand(int _section, const char* _cmdStr, int _val, int _valhw
 				case SNM_SEC_IDX_ME:
 				case SNM_SEC_IDX_ME_EL:
 					return MIDIEditor_LastFocused_OnCommand(cmdId, _section==SNM_SEC_IDX_ME_EL);
-				case SNM_SEC_IDX_EPXLORER:
+				case SNM_SEC_IDX_EXPLORER:
 					if (HWND h = GetReaHwndByTitle(__localizeFunc("Media Explorer", "explorer", 0))) {
 						SendMessage(h, WM_COMMAND, cmdId, 0);
 						return 1;
@@ -2162,6 +2162,11 @@ void CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case ADD_CYCLACTION_MSG: 
 		{
+			if (g_editedSection == SNM_SEC_IDX_MAIN_ALT)
+			{
+				MessageBox(g_caWndMgr.GetMsgHWND(), __LOCALIZE("The \"Main (alt recording)\" section is deprecated in the Cycle Action editor.\n\nCreate the action in the \"Main\" section and add a shortcut in the Action List's \"Main (alt recording)\" section instead.", "sws_DLG_161"), __LOCALIZE("S&M - Warning","sws_DLG_161"), MB_OK);
+				break;
+			}
 			Cyclaction* a = new Cyclaction(__LOCALIZE("Untitled","sws_DLG_161"));
 			a->m_added = true;
 			g_editedActions[g_editedSection].Add(a);
@@ -2364,7 +2369,10 @@ void CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case CMBID_SECTION:
 			if (HIWORD(wParam)==CBN_SELCHANGE) {
 				AllEditListItemEnd(false);
-				UpdateSection(m_cbSection.GetCurSel());
+				int sec = m_cbSection.GetCurSel();
+				if(sec == SNM_SEC_IDX_MAIN_ALT && g_cas[sec].GetSize() < 1)
+					sec = SNM_SEC_IDX_MAIN;
+				UpdateSection(sec);
 			}
 			break;
 		case BTNID_UNDO:

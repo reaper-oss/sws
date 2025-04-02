@@ -1,4 +1,4 @@
-!v2.14.0.4 pre-release build (April 2, 2024)
+!v2.14.0.4 pre-release build (April 2, 2025)
 
 This version of SWS may be installed using either the traditional installers (.exe, .dmg, .tar.xz) or https://reapack.com/|ReaPack| (v1.2.4.4 or newer) via the default ReaTeam Extensions repository.
 

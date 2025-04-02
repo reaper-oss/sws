@@ -1,3 +1,36 @@
+!v2.14.0.4 pre-release build (April 2, 2024)
+
+This version of SWS may be installed using either the traditional installers (.exe, .dmg, .tar.xz) or https://reapack.com/|ReaPack| (v1.2.4.4 or newer) via the default ReaTeam Extensions repository.
+
+Actions:
++Fix multi-selection in "Xenakios/SWS: Choose files for random insert" on Linux and macOS (post 2839888)
++Fix the red ruler getting stuck when disabling while recording
++Set the red ruler to yellow when recording is paused
+
+Auto color:
++Repair setting the gradient end color on Windows (thread 295534)
+
+Cycle actions:
++Fix running cycle actions from the editor's "Main (alt recording)" section (post 2809773)
++Deprecate the "Main (alt recording)" section in the Cycle Action editor
+
+MIDI editor:
++Account for HiDPI scaling (issue 1916)
++Clamp MIDI note velocity to 1 in Finger actions, API and when applying grooves (thread 298312)
+
+Miscellaneous:
++Protect against recursive symbolic links when scanning directories (post 2813993)
+
+Notes:
++Don't scroll to the top when refreshing and the text is identical (issue 1700)
++Tolerate UTF-8 Byte Order Mark when importing SRT files (issue 695, issue 1928)
+
+ReaScript API:
++Repair BR_GetMouseCursorContext over envelopes lanes set to "Project default behavior outside of automation items" (issue 1908)
+
+Region playlist:
++Fix scrolling to the next region instead of the current one after activating (issue 1919)
+
 !v2.14.0.3 featured build (September 14, 2024)
 
 This version of SWS may be installed using either the traditional installers (.exe, .dmg, .tar.xz) or https://reapack.com/|ReaPack| (v1.2.4.4 or newer) via the default ReaTeam Extensions repository.
@@ -17,13 +50,13 @@ Actions:
 +Ignore tracks set to a record output mode when checking for duplicate recording inputs (thread 261948)
 
 Auto color/icon/layout:
-+Optimize for situations with hundreds of rules and tracks (thread https://forum.cockos.com/showthread.php?t=278856|278856|)
++Optimize for situations with hundreds of rules and tracks (thread 278856)
 
 Contextual toolbars:
 +Fix localization of default toolbar names
 
 REAPER v7 track spacers:
-+Fix excessive CPU usage when tracks with a visual spacer and storage-heavy effects in non-collapsed fixed lanes mode are present (v7.12+) (thread https://forum.cockos.com/showthread.php?t=288774|288774|)
++Fix excessive CPU usage when tracks with a visual spacer and storage-heavy effects in non-collapsed fixed lanes mode are present (v7.12+) (thread 288774)
 
 ReaScript API:
 +Fix CF_NormalizeUTF8 returning extraneous null bytes on Windows and make no-op on XP to restore compatibility

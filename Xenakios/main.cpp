@@ -107,12 +107,7 @@ void DoSelectFiles(COMMAND_T*)
 	if (cFiles)
 	{
 		g_filenames.clear();
-		char* pStr = cFiles;
-		while(*pStr)
-		{
-			g_filenames.push_back(pStr);
-			pStr += strlen(pStr)+1;
-		}
+		GetBrowseForFilesFNs(cFiles, g_filenames);
 		free(cFiles);
 	}
 	g_ShuffledNumbersGenerated=0;

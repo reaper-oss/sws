@@ -774,8 +774,9 @@ bool BR_MouseInfo::GetContextMIDI (POINT p, HWND hwnd, BR_MouseInfo::MouseInfo& 
 		ScreenToClient(segmentHwnd, &p);
 		RECT r; GetClientRect(segmentHwnd, &r);
 
-		const auto dpi256 = hidpi::GetDpiForWindow(mouseInfo.midiEditor);
-		const LONG ruler_h = MIDI_RULER_H * dpi256 / 256;
+		LONG ruler_h = MIDI_RULER_H;
+		if (const auto dpi256 = hidpi::GetDpiForWindow(mouseInfo.midiEditor))
+			ruler_h = (ruler_h * dpi256) / 256;
 
 		// ignoring extra flags from GetPianoRoll() (eg. custom note order mode=0x10000)
 		mouseInfo.pianoRollMode = midiEditor.GetPianoRoll() & 0xffff;

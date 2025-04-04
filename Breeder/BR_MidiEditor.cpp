@@ -582,8 +582,8 @@ void ME_SetAllCCLanesHeight (COMMAND_T* ct, int val, int valhw, int relmode, HWN
 					int height = (int)ct->user + MIDI_LANE_DIVIDER_H; // so pixel height is drawable height
 					height = SetToBounds(height, MIDI_LANE_DIVIDER_H, GetMaxCCLanesFullHeight(editor) / lanesCount);
 
-					const auto dpi256 = hidpi::GetDpiForWindow(editor);
-					height = height * dpi256 / 256;
+					if (const auto dpi256 = hidpi::GetDpiForWindow(editor))
+						height = (height * dpi256) / 256;
 
 					LineParser lp(false);
 					WDL_FastString lineLane;

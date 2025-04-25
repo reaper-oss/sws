@@ -1476,45 +1476,30 @@ void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, Me
 	TrackEnvelope* envelope = NULL;
 	if (track)
 	{
+		const bool yInTrack = y < elementOffset + elementHeight;
+		const int count = CountTrackEnvelopes(track);
 		elementHeight = GetTrackHeightWithSpacer(track);
-		vector<pair<int,int>> envHeights;
-		bool yInTrack = (y < elementOffset + elementHeight) ? true : false;
 
-		int count = CountTrackEnvelopes(track);
 		for (int i = 0; i < count; ++i)
 		{
 			TrackEnvelope *env = GetTrackEnvelope(track, i);
+			const int envH = static_cast<int>(GetEnvelopeInfo_Value(env, "I_TCPH"));
+			if (envH < 1) continue;
 
-			if (GetEnvelopeInfo_Value(env,"I_TCPH") < 1.0) continue;
-			if (GetEnvelopeInfo_Value(env,"I_TCPY") < (elementHeight - spacer)) continue; // does not have an envcp
+			const int envY = static_cast<int>(GetEnvelopeInfo_Value(env, "I_TCPY"));
+			if (envY < elementHeight - spacer) continue; // does not have an envcp
 
 			if (yInTrack)
 			{
 				if (envelopes)
 					envelopes->push_back(env);
 			}
-			else
+			else if (y >= envY && y < envY + envH)
 			{
-				const int envHeight = static_cast<int>(GetEnvelopeInfo_Value(env,"I_TCPH"));
-				const int envId = i;
-				envHeights.push_back(make_pair(envHeight, envId));
-			}
-		}
-
-		if (!yInTrack)
-		{
-			int envelopeStart = elementOffset + elementHeight;
-			for (size_t i = 0; i < envHeights.size(); ++i)
-			{
-				int envelopeEnd = envelopeStart + envHeights[i].first;
-				if (y >= envelopeStart && y < envelopeEnd)
-				{
-					envelope = GetTrackEnvelope(track, envHeights[i].second);
-					elementHeight = envHeights[i].first;
-					elementOffset = envelopeStart;
-					break;
-				}
-				envelopeStart += envHeights[i].first;
+				envelope = env;
+				elementOffset = envY;
+				elementHeight = envH;
+				break;
 			}
 		}
 	}

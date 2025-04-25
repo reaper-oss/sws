@@ -1496,9 +1496,10 @@ void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, Me
 			}
 			else if (y >= envY && y < envY + envH)
 			{
+				// report the height without the AI label gap, but still use the full height for detection under mouse
 				envelope = env;
-				elementOffset = envY;
-				elementHeight = envH;
+				elementOffset = static_cast<int>(GetEnvelopeInfo_Value(env, "I_TCPY_USED"));
+				elementHeight = static_cast<int>(GetEnvelopeInfo_Value(env, "I_TCPH_USED"));
 				break;
 			}
 		}

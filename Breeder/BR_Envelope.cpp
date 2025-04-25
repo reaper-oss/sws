@@ -1660,7 +1660,7 @@ void SelectEnvelopeUnderMouse (COMMAND_T* ct)
 void SelectDeleteEnvPointUnderMouse (COMMAND_T* ct)
 {
 	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE);
-	if (!strcmp(mouseInfo.GetDetails(), "env_point"))
+	if (!strcmp(mouseInfo.GetDetails(), "env_point") && mouseInfo.GetAutomationItem() == -1)
 	{
 		if (mouseInfo.GetEnvelope() && (abs((int)ct->user) == 2 || (abs((int)ct->user) == 1 && mouseInfo.GetEnvelope() == GetSelectedEnvelope(NULL))))
 		{

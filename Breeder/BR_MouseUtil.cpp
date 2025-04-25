@@ -371,6 +371,11 @@ int BR_MouseInfo::GetTakeId ()
 	return m_mouseInfo.takeId;
 }
 
+int BR_MouseInfo::GetAutomationItem ()
+{
+	return m_mouseInfo.envAiId;
+}
+
 int BR_MouseInfo::GetEnvelopePoint ()
 {
 	return m_mouseInfo.envPointId;
@@ -504,6 +509,7 @@ takeEnvelope    (false),
 inlineMidi      (false),
 position        (-1),
 takeId          (-1),
+envAiId         (-1),
 envPointId      (-1),
 stretchMarkerId (-1),
 noteRow         (-1),
@@ -619,16 +625,7 @@ void BR_MouseInfo::GetContext (const POINT& p)
 						if (!(m_mode & BR_MouseInfo::MODE_IGNORE_ENVELOPE_LANE_SEGMENT))
 						{
 							BR_Envelope envelope(mouseInfo.envelope);
-							trackEnvHit = this->IsMouseOverEnvelopeLine(envelope, height-2*ENV_GAP, offset+ENV_GAP, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envPointId);
-
-							// if env is hit, check if underlying envelope outside of automation items is bypassed, #1727
-							if (trackEnvHit)
-							{
-								int aiOptions = envelope.GetAIoptions(); // -1 == use project default
-								if (aiOptions < 0) aiOptions = *ConfigVar<int>("pooledenvattach");
-								if (aiOptions & 4 && !this->IsMouseOverAI(envelope, height - 2 * ENV_GAP, offset + ENV_GAP, mouseY, mousePos))
-									trackEnvHit = 0;
-							}
+							trackEnvHit = this->IsMouseOverEnvelopeLine(envelope, height-2*ENV_GAP, offset+ENV_GAP, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envAiId, &mouseInfo.envPointId);
 						}
 
 						if      (trackEnvHit == 1) mouseInfo.details = "env_point";
@@ -649,7 +646,7 @@ void BR_MouseInfo::GetContext (const POINT& p)
 						{
 							// Check track lane for track envelope
 							MediaItem_Take* activeTake = GetActiveTake(mouseInfo.item);
-							trackEnvHit = (IsLocked(TRACK_ENV)) ? 0 : this->IsMouseOverEnvelopeLineTrackLane(mouseInfo.track, height, offset, laneEnvs, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envelope, &mouseInfo.envPointId);
+							trackEnvHit = IsLocked(TRACK_ENV) ? 0 : this->IsMouseOverEnvelopeLineTrackLane(mouseInfo.track, height, offset, laneEnvs, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, &mouseInfo.envelope, &mouseInfo.envAiId, &mouseInfo.envPointId);
 
 							// Check track lane for take envelope (only if take is active - REAPER doesn't allow editing of envelopes of inactive takes)
 							int takeHeight = -666;
@@ -672,20 +669,10 @@ void BR_MouseInfo::GetContext (const POINT& p)
 						}
 
 						// Track envelope takes priority
-						if (trackEnvHit != 0)
-						{
-							if      (trackEnvHit == 1) mouseInfo.details = "env_point";
-							else if (trackEnvHit == 2) mouseInfo.details = "env_segment";
-
-							// if env is hit, check if underlying envelope outside of automation items is bypassed, #1488
-							BR_Envelope envelope(mouseInfo.envelope);
-							int aiOptions = envelope.GetAIoptions(); // -1 == use project default
-							if (aiOptions < 0) aiOptions = *ConfigVar<int>("pooledenvattach");
-							if (aiOptions & 4 && !this->IsMouseOverAI(envelope, height - 2 * ENV_GAP, offset + ENV_GAP, mouseY, mousePos))
-								mouseInfo.details = "empty";
-						}
+						if      (trackEnvHit == 1) mouseInfo.details = "env_point";
+						else if (trackEnvHit == 2) mouseInfo.details = "env_segment";
 						// Item and things inside it
-						if (!trackEnvHit && mouseInfo.item)
+						else if (mouseInfo.item)
 						{
 							// Take envelope takes priority
 							if (takeEnvHit != 0)
@@ -1150,60 +1137,101 @@ int BR_MouseInfo::IsMouseOverStretchMarker (MediaItem* item, MediaItem_Take* tak
 	return returnId;
 }
 
-int BR_MouseInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight, int yOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, int* pointUnderMouse)
+int BR_MouseInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEnvHeight, int yOffset, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, int* aiUnderMouse, int* pointUnderMouse)
 {
 	/*  Return values: 0 -> no hit, 1 -> over point, 2 - > over segment */
 
 	int mouseHit = 0;
 	int pointId  = -1;
+	int aiId     = -1;
 
 	// Check if mouse is in drawable part of envelope lane where line resides
 	if (mouseY >= yOffset && mouseY < yOffset + drawableEnvHeight)
 	{
-		double mousePosLeft = mousePos - 1/arrangeZoom * ENV_HIT_POINT*2;
-		double mousePosRight = mousePos + 1/arrangeZoom * ENV_HIT_POINT*2;
+		const int tempoHit = envelope.IsTempo() ? ENV_HIT_POINT : 0; // for some reason, tempo points have double up/down hit area
+		const auto hitTestEnvPoint = [&](double pointPos, double pointValue) {
+			const int x = RoundToInt(arrangeZoom * (pointPos - arrangeStart));
+			const int y = yOffset + drawableEnvHeight - RoundToInt(envelope.NormalizedDisplayValue(pointValue) * drawableEnvHeight);
+			return CheckBounds(mouseDisplayX, x - ENV_HIT_POINT, x + ENV_HIT_POINT_LEFT) && CheckBounds(mouseY, y - ENV_HIT_POINT - tempoHit, y + ENV_HIT_POINT_DOWN + tempoHit);
+		};
 
-		int prevId = envelope.FindPrevious(mousePos);
-		int nextId = prevId + 1;
-
-		int tempoHit = (envelope.IsTempo()) ? (ENV_HIT_POINT) : (0); // for some reason, tempo points have double up/down hit area
+		const double mouseHitPad = 1/arrangeZoom * ENV_HIT_POINT*2;
+		const auto mousePosRange = std::make_pair(mousePos - mouseHitPad, mousePos + mouseHitPad);
 		bool found = false;
 
 		// Check surrounding points first - they take priority over segment
-		if (!found)
 		{
-			// Check all the points around mouse cursor position
-			// gotcha: since point can be partially visible even when it's position is not within arrange start/end we don't check if within bounds
-			double prevPos, prevVal;
-			while (envelope.GetPoint(prevId, &prevPos, &prevVal, NULL, NULL) && CheckBounds(prevPos, mousePosLeft, mousePosRight))
+			TrackEnvelope *trEnv = envelope.GetPointer();
+			const int aiCount = CountAutomationItems(trEnv);
+			for (int ai = 0; ai < aiCount; ai++)
 			{
-				int x = RoundToInt(arrangeZoom * (prevPos - arrangeStart));
-				int y = yOffset + drawableEnvHeight - RoundToInt(envelope.NormalizedDisplayValue(prevVal) * drawableEnvHeight);
-				if (CheckBounds(mouseDisplayX, x - ENV_HIT_POINT, x + ENV_HIT_POINT_LEFT) && CheckBounds(mouseY, y - ENV_HIT_POINT - tempoHit, y + ENV_HIT_POINT_DOWN + tempoHit))
+				const double aiPos = GetSetAutomationItemInfo(trEnv, ai, "D_POSITION", 0, false);
+				const double aiLen = GetSetAutomationItemInfo(trEnv, ai, "D_LENGTH", 0, false);
+				if (mousePos < aiPos || mousePos > aiPos + aiLen)
+					continue;
+
+				// first can be greater than last when looped with a truncated start offset
+				const int prevId = GetEnvelopePointByTimeEx(trEnv, ai | 0x10000000, mousePos);
+				int points[] {prevId, prevId + 1};
+				for (int &pi : points)
 				{
-					mouseHit = 1;
-					pointId = prevId;
-					found = true;
-					break;
+					const int inc = &pi == &points[0] ? -1 : 1;
+
+					for (double pos, value; GetEnvelopePointEx(trEnv, ai, pi, &pos, &value, nullptr, nullptr, nullptr) && CheckBounds(pos, mousePosRange.first, mousePosRange.second); pi += inc)
+					{
+						if (envelope.GetFaderMode())
+							value = ScaleFromEnvelopeMode(envelope.GetFaderMode(), value);
+
+						if (hitTestEnvPoint(pos, value))
+						{
+							mouseHit = 1;
+							pointId = pi;
+							found = true;
+							break;
+						}
+					}
+
+					if (found)
+						break;
 				}
-				--prevId;
+
+				aiId = ai;
+			}
+		}
+		// test if underlying envelope outside of automation items is bypassed (#1488)
+		if (aiId < 0)
+		{
+			int aiOptions = envelope.GetAIoptions(); // -1 == use project default
+			if (aiOptions < 0) aiOptions = *ConfigVar<int>("pooledenvattach");
+			if (aiOptions & 4)
+			{
+				mouseHit = 0;
+				found = true;
 			}
 		}
 		if (!found)
 		{
-			double nextPos, nextVal;
-			while (envelope.GetPoint(nextId, &nextPos, &nextVal, NULL, NULL) && CheckBounds(nextPos, mousePosLeft, mousePosRight))
+			// Check all the points around mouse cursor position
+			// gotcha: since point can be partially visible even when it's position is not within arrange start/end we don't check if within bounds
+			const int prevId = envelope.FindPrevious(mousePos);
+			int points[] {prevId, prevId + 1};
+			for (int &pi : points)
 			{
-				int x = RoundToInt(arrangeZoom * (nextPos - arrangeStart));
-				int y = yOffset + drawableEnvHeight - RoundToInt(envelope.NormalizedDisplayValue(nextVal) * drawableEnvHeight);
-				if (CheckBounds(mouseDisplayX, x - ENV_HIT_POINT, x + ENV_HIT_POINT_LEFT) && CheckBounds(mouseY, y - ENV_HIT_POINT - tempoHit, y + ENV_HIT_POINT_DOWN + tempoHit))
+				const int inc = &pi == &points[0] ? -1 : 1;
+
+				for (double pos, value; envelope.GetPoint(pi, &pos, &value, NULL, NULL) && CheckBounds(pos, mousePosRange.first, mousePosRange.second); pi += inc)
 				{
-					mouseHit = 1;
-					pointId = nextId;
-					found = true;
-					break;
+					if (hitTestEnvPoint(pos, value))
+					{
+						mouseHit = 1;
+						pointId = pi;
+						found = true;
+						break;
+					}
 				}
-				++nextId;
+
+				if (found)
+					break;
 			}
 		}
 
@@ -1219,29 +1247,12 @@ int BR_MouseInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEn
 			}
 		}
 	}
+	WritePtr(aiUnderMouse,    aiId);
 	WritePtr(pointUnderMouse, pointId);
 	return mouseHit;
 }
 
-bool BR_MouseInfo::IsMouseOverAI(BR_Envelope & envelope, int drawableEnvHeight, int yOffset, int mouseY, double mousePos)
-{
-	// Check if mouse is in drawable part of envelope lane where line resides
-	if (mouseY >= yOffset && mouseY < yOffset + drawableEnvHeight)
-	{
-		TrackEnvelope* trEnv = envelope.GetPointer();
-		int AIcount = CountAutomationItems(trEnv);
-		for (int i = 0; i < AIcount; i++) {
-			double AIpos = GetSetAutomationItemInfo(trEnv, i, "D_POSITION", 0, false);
-			double AIlength = GetSetAutomationItemInfo(trEnv, i, "D_LENGTH", 0, false);
-
-			if (mousePos >= AIpos && mousePos < AIpos + AIlength)
-				return true;
-		}
-	}
-	return false;
-}
-
-int BR_MouseInfo::IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight, int trackOffset, list<TrackEnvelope*>& laneEnvs, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope, int* pointUnderMouse)
+int BR_MouseInfo::IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int trackHeight, int trackOffset, list<TrackEnvelope*>& laneEnvs, int mouseDisplayX, int mouseY, double mousePos, double arrangeStart, double arrangeZoom, TrackEnvelope** trackEnvelope, int* aiUnderMouse, int* pointUnderMouse)
 {
 	/* laneEnv list should hold all track envelopes that have their own lane so *
 	*  we don't have to check for their visibility in track lane (chunks are    *
@@ -1297,7 +1308,7 @@ int BR_MouseInfo::IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int track
 						int envOffset = trackOffset + trackGapTop + i*envLaneH + ENV_GAP;
 						BR_Envelope envelope(trackLaneEnvs[i]);
 
-						mouseHit = this->IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, pointUnderMouse);
+						mouseHit = this->IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, aiUnderMouse, pointUnderMouse);
 						if (mouseHit != 0)
 							envelopeUnderMouse = envelope.GetPointer();
 						break;
@@ -1316,7 +1327,7 @@ int BR_MouseInfo::IsMouseOverEnvelopeLineTrackLane (MediaTrack* track, int track
 					int envOffset = trackOffset + trackGapTop + ENV_GAP;
 					BR_Envelope envelope(trackLaneEnvs[i]);
 
-					mouseHit = this->IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, pointUnderMouse);
+					mouseHit = this->IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, aiUnderMouse, pointUnderMouse);
 					if (mouseHit != 0)
 					{
 						envelopeUnderMouse = envelope.GetPointer();
@@ -1372,7 +1383,7 @@ int BR_MouseInfo::IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHei
 						int envOffset = takeOffset + ENV_GAP + + envLaneH * i;
 						BR_Envelope envelope(envelopes[i]);
 
-						mouseHit = this->IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, pointUnderMouse);
+						mouseHit = this->IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, nullptr, pointUnderMouse);
 						if (mouseHit != 0)
 							envelopeUnderMouse = envelope.GetPointer();
 						break;
@@ -1391,7 +1402,7 @@ int BR_MouseInfo::IsMouseOverEnvelopeLineTake (MediaItem_Take* take, int takeHei
 					int envOffset = takeOffset + ENV_GAP;
 					BR_Envelope envelope(envelopes[i]);
 
-					mouseHit = this->IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, pointUnderMouse);
+					mouseHit = this->IsMouseOverEnvelopeLine(envelope, envHeight, envOffset, mouseDisplayX, mouseY, mousePos, arrangeStart, arrangeZoom, nullptr, pointUnderMouse);
 					if (mouseHit != 0)
 					{
 						envelopeUnderMouse = envelope.GetPointer();

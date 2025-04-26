@@ -66,6 +66,7 @@ bool            BR_GetMidiTakePoolGUID (MediaItem_Take* take, char* guidStringOu
 bool            BR_GetMidiTakeTempoInfo (MediaItem_Take* take, bool* ignoreProjTempoOut, double* bpmOut, int* numOut, int* denOut);
 void            BR_GetMouseCursorContext (char* windowOut, int windowOut_sz, char* segmentOut, int segmentOut_sz, char* detailsOut, int detailsOut_sz);
 TrackEnvelope*  BR_GetMouseCursorContext_Envelope (bool* takeEnvelopeOut);
+TrackEnvelope*  BR_GetMouseCursorContext_EnvelopeEx (bool* takeEnvelopeOut, int* aiIdOut, int* pointIdOut);
 MediaItem*      BR_GetMouseCursorContext_Item ();
 void*           BR_GetMouseCursorContext_MIDI (bool* inlineEditorOut, int* noteRowOut, int* ccLaneOut, int* ccLaneValOut, int* ccLaneIdOut);
 double          BR_GetMouseCursorContext_Position ();

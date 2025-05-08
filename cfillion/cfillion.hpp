@@ -66,6 +66,7 @@ bool CF_PCM_Source_SetSectionInfo(PCM_source *section, PCM_source *source,
   double offset, double length, bool reverse, const double *fade);
 
 BOOL CF_GetScrollInfo(HWND, int bar, LPSCROLLINFO);
+void CF_SetTcpScroll(MediaTrack *, int extraPixels);
 
 void CF_NormalizeUTF8(const char *input, unsigned int mode, char *output, int outputSize);
 

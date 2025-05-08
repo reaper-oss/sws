@@ -36,6 +36,7 @@
 #include "SnM/SnM_FX.h"
 #include "SnM/SnM_Window.h"
 #include "version.h"
+#include "Zoom.h"
 
 #include <WDL/localize/localize.h>
 #include <WDL/projectcontext.h>
@@ -580,6 +581,12 @@ BOOL CF_GetScrollInfo(HWND hwnd, const int bar, LPSCROLLINFO si)
   const auto rv = CoolSB_GetScrollInfo(hwnd, bar, si);
   si->fMask |= unmask;
   return rv;
+}
+
+void CF_SetTcpScroll(MediaTrack *track, const int extraPixels)
+{
+  const int iTrack { track ? CSurf_TrackToID(track, false) : extraPixels };
+  SetVertPos(GetTrackWnd(), iTrack, track == nullptr, extraPixels);
 }
 
 void CF_NormalizeUTF8(const char *input, const unsigned int mode,

@@ -384,6 +384,7 @@ Mode values:
   * 1 = compatibility decomposition
 
 Warning: this function is no-op on Windows XP (the input string is returned as-is).)", },
+	{ APIFUNC(CF_SetTcpScroll), "void", "MediaTrack*,int", "track,extraPixels", "Scroll the TCP to the specified track (if non-null) + extraPixels.", },
 
 	{ APIFUNC(CF_CreatePreview), "CF_Preview*", "PCM_source*", "source", R"(Create a new preview object. Does not take ownership of the source (don't forget to destroy it unless it came from a take!). See CF_Preview_Play and the others CF_Preview_* functions.
 

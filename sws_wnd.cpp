@@ -1664,12 +1664,13 @@ int SWS_ListView::DisplayToDataCol(int iCol)
 	return iDataCol;
 }
 
-int SWS_ListView::DataToDisplayCol(int iCol)
+int SWS_ListView::DataToDisplayCol(const int iCol)
 {	// The data col # can be more than the display col if there are hidden columns
+	int dispCol = iCol;
 	for (int i = 0; i < iCol; i++)
 		if (m_pCols[i].iPos == -1)
-			iCol--;
-	return iCol;
+			dispCol--;
+	return dispCol;
 }
 
 int SWS_ListView::sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam)

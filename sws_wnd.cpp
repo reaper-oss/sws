@@ -1363,10 +1363,11 @@ bool SWS_ListView::DoColumnMenu(int x, int y)
 
 				if (m_pCols[iCol].iPos == -1)
 				{	// Adding column
+					const int dispCol = DataToDisplayCol(iCol);
 					for (int i = 0; i < m_iCols; i++)
-						if (m_pCols[i].iPos >= iCol)
+						if (m_pCols[i].iPos >= dispCol)
 							m_pCols[i].iPos++;
-					m_pCols[iCol].iPos = iCol;
+					m_pCols[iCol].iPos = dispCol;
 				}
 				else
 				{	// Deleting column

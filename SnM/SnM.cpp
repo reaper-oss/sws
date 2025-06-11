@@ -904,17 +904,19 @@ bool SNM_GetActionName(const char* _custId, WDL_FastString* _nameOut, int _slot)
 // Action sections info, keep SNM_SEC_IDX_* enums in sync!
 ///////////////////////////////////////////////////////////////////////////////
 
-SECTION_INFO_T *SNM_GetActionSectionInfo(int _idx)
+const SECTION_INFO_T *SNM_GetActionSectionInfo(int _idx)
 {
-  static SECTION_INFO_T sectionInfos[] = {
-    {0,		"S&M_CYCLACTION_",			"Main_Cyclactions"},
-    {100,	"S&M_MAIN_ALT_CYCLACTION",	"MainAlt_Cyclactions"},
-    {32063,	"S&M_MEDIAEX_CYCLACTION",	"MediaEx_Cyclactions"},
-    {32060,	"S&M_ME_PIANO_CYCLACTION",	"ME_Piano_Cyclactions"},
-    {32061,	"S&M_ME_LIST_CYCLACTION",	"ME_List_Cyclactions"},
-    {32062,	"S&M_ME_INLINE_CYCLACTION", "ME_Inline_Cyclactions"}
-  };  
-  return (_idx>=SNM_SEC_IDX_MAIN && _idx<SNM_NUM_MANAGED_SECTIONS ? &sectionInfos[_idx] : NULL);
+  static const SECTION_INFO_T sectionInfos[] = {
+    {0,     "S&M_CYCLACTION_",          "Main_Cyclactions",      "Main"},
+    {100,   "S&M_MAIN_ALT_CYCLACTION",  "MainAlt_Cyclactions",   "Main (alt recording)"},
+    {32063, "S&M_MEDIAEX_CYCLACTION",   "MediaEx_Cyclactions",   "Media Explorer"},
+    {32060, "S&M_ME_PIANO_CYCLACTION",  "ME_Piano_Cyclactions",  "MIDI Editor"},
+    {32061, "S&M_ME_LIST_CYCLACTION",   "ME_List_Cyclactions",   "MIDI Event List Editor"},
+    {32062, "S&M_ME_INLINE_CYCLACTION", "ME_Inline_Cyclactions", "MIDI Inline Editor"},
+    {32065, "S&M_CE_CYCLACTION",        "CE_Cyclactions",        "Crossfade Editor"},
+  };
+  static_assert(__ARRAY_SIZE(sectionInfos) == SNM_NUM_MANAGED_SECTIONS, "Mismatched sections");
+  return _idx>=SNM_SEC_IDX_MAIN && _idx<SNM_NUM_MANAGED_SECTIONS ? &sectionInfos[_idx] : NULL;
 }
 
 

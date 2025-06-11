@@ -775,6 +775,7 @@ error:
 		IMPAPI(CreateTakeAudioAccessor);
 		IMPAPI(CreateTrackAudioAccessor);
 		IMPAPI(CreateTrackSend); // v5.15pre1+
+		IMPAP_OPT(CrossfadeEditor_OnCommand); // v7.40+
 		IMPAPI(CSurf_FlushUndo);
 		IMPAPI(CSurf_GoEnd);
 		IMPAPI(CSurf_OnMuteChange);

@@ -72,6 +72,7 @@ REAPER_EXTRA_API_DECL void (*ReaPack_FreeEntry)(ReaPack_PackageEntry *);
 #define CF_TEXT RegisterClipboardFormat("SWELL__CF_TEXT")
 #endif
 
+#include <WDL/wdltypes.h> // WDL_INT64
 #include "reaper_plugin_functions.h"
 
 #undef WDL_VirtualWnd_BGCfg

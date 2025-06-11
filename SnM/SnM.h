@@ -232,6 +232,7 @@ typedef struct SECTION_INFO_T {
 	int unique_id;
 	const char* ca_cust_id;
 	const char* ca_ini_sec;
+	const char* fallback_name;
 } SECTION_INFO_T;
 
 
@@ -348,11 +349,12 @@ enum {
   SNM_SEC_IDX_ME,
   SNM_SEC_IDX_ME_EL,
   SNM_SEC_IDX_ME_INLINE,
+  SNM_SEC_IDX_CE,
   SNM_NUM_MANAGED_SECTIONS
 };
 
 // various properties indexed with the above enum: keep both in sync!
-SECTION_INFO_T *SNM_GetActionSectionInfo(int _idx);
+const SECTION_INFO_T *SNM_GetActionSectionInfo(int _idx);
 
 #define SNM_NUM_NATIVE_SECTIONS   SNM_NUM_MANAGED_SECTIONS
 #define SNM_MAX_CA_SECTIONS       SNM_NUM_NATIVE_SECTIONS

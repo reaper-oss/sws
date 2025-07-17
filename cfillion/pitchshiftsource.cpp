@@ -386,11 +386,12 @@ bool PitchShiftSource_MIDI::requestStop()
   return false;
 }
 
-void PitchShiftSource::seekOrLoop(const bool looping)
+void PitchShiftSource::seekOrLoop(const bool isSeek, const bool looping)
 {
   WDL_MutexLockExclusive lock { &m_mutex };
   m_flags &= ~(Looping | WrappedAround);
-  m_flags |= ManualSeek;
+  if(isSeek)
+    m_flags |= ManualSeek;
   if(looping)
     m_flags |= Looping;
 }

@@ -1213,6 +1213,11 @@ bool BR_Envelope::IsScaledToFader ()
 	return (m_properties.faderMode == 1);
 }
 
+int BR_Envelope::GetFaderMode ()
+{
+	return m_properties.faderMode;
+}
+
 int BR_Envelope::GetAIoptions()
 {
 	this->FillProperties();

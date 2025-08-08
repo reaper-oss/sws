@@ -140,6 +140,7 @@ public:
 	bool IsInLane ();
 	bool IsArmed ();
 	bool IsScaledToFader ();
+	int GetFaderMode();
 	int GetAIoptions();
 	int GetLaneHeight ();
 	int GetDefaultShape ();

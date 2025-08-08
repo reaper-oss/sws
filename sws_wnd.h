@@ -149,6 +149,7 @@ protected:
 
 private:
 	void ShowColumns();
+	void SaveColumnsOrder();
 	void Sort();
 
 #ifndef _WIN32

@@ -1069,29 +1069,12 @@ void SWS_ListView::OnDestroy()
 	// For safety
 	EditListItemEnd(false);
 
-	// Save cols
-	int cols[20];
-	int iCols = 0;
-	for (int i = 0; i < m_iCols; i++)
-		if (m_pCols[i].iPos != -1)
-			iCols++;
-
-#ifdef _WIN32
-	ListView_GetColumnOrderArray(m_hwndList, iCols, &cols);
-#else
-	ListView_GetColumnOrderArray(m_hwndList, iCols, cols);
-#endif
-
-	iCols = 0;
-
-	for (int i = 0; i < m_iCols; i++)
-		if (m_pCols[i].iPos != -1)
-			m_pCols[i].iPos = cols[iCols++];
+	SaveColumnsOrder();
 
 	char str[256];
 	sprintf(str, "%d", m_iSortCol);
 
-	iCols = 0;
+	int iCols = 0;
 	for (int i = 0; i < m_iCols; i++)
 		if (m_pCols[i].iPos >= 0)
 			snprintf(str + strlen(str), 256-strlen(str), " %d %d", ListView_GetColumnWidth(m_hwndList, iCols++), m_pCols[i].iPos);
@@ -1371,6 +1354,8 @@ bool SWS_ListView::DoColumnMenu(int x, int y)
 			}
 			else
 			{
+				SaveColumnsOrder();
+
 				// Save all visible column widths
 				for (int i = 0; i < m_iCols; i++)
 					if (m_pCols[i].iPos != -1)
@@ -1378,10 +1363,11 @@ bool SWS_ListView::DoColumnMenu(int x, int y)
 
 				if (m_pCols[iCol].iPos == -1)
 				{	// Adding column
+					const int dispCol = DataToDisplayCol(iCol);
 					for (int i = 0; i < m_iCols; i++)
-						if (m_pCols[i].iPos >= iCol)
+						if (m_pCols[i].iPos >= dispCol)
 							m_pCols[i].iPos++;
-					m_pCols[iCol].iPos = iCol;
+					m_pCols[iCol].iPos = dispCol;
 				}
 				else
 				{	// Deleting column
@@ -1609,17 +1595,29 @@ void SWS_ListView::ShowColumns()
 		}
 	}
 
-	int cols[20];
+	std::vector<int> cols;
+	cols.reserve(m_iCols);
+	for (int i = 0; i < m_iCols; i++)
+		if (m_pCols[i].iPos != -1)
+			cols.push_back(m_pCols[i].iPos);
+
+	ListView_SetColumnOrderArray(m_hwndList, cols.size(), cols.data());
+}
+
+void SWS_ListView::SaveColumnsOrder()
+{
 	int iCols = 0;
 	for (int i = 0; i < m_iCols; i++)
 		if (m_pCols[i].iPos != -1)
-			cols[iCols++] = m_pCols[i].iPos;
+			iCols++;
 
-#ifdef _WIN32
-	ListView_SetColumnOrderArray(m_hwndList, iCols, &cols);
-#else
-	ListView_SetColumnOrderArray(m_hwndList, iCols, cols);
-#endif
+	std::vector<int> cols(iCols);
+	ListView_GetColumnOrderArray(m_hwndList, iCols, cols.data());
+
+	iCols = 0;
+	for (int i = 0; i < m_iCols; i++)
+		if (m_pCols[i].iPos != -1)
+			m_pCols[i].iPos = cols[iCols++];
 }
 
 void SWS_ListView::Sort()
@@ -1664,12 +1662,13 @@ int SWS_ListView::DisplayToDataCol(int iCol)
 	return iDataCol;
 }
 
-int SWS_ListView::DataToDisplayCol(int iCol)
+int SWS_ListView::DataToDisplayCol(const int iCol)
 {	// The data col # can be more than the display col if there are hidden columns
+	int dispCol = iCol;
 	for (int i = 0; i < iCol; i++)
 		if (m_pCols[i].iPos == -1)
-			iCol--;
-	return iCol;
+			dispCol--;
+	return dispCol;
 }
 
 int SWS_ListView::sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam)

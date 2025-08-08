@@ -196,7 +196,7 @@ deploy:
   description: ''
   force_update: true
   auth_token:
-    secure: dKuYK8SyWSI/e/akb6EXvhMgumwjN2696hvjJbIZlXeSJjlWmOy9wUDRKwjWLVA06RBfguJppOBN9zjNB1Ur3h8rMYFAQnJnV2r7UW3/M1sEEl75E1+bmMT1HWAuTwkh
+    secure: dKuYK8SyWSI/e/akb6EXvvx2CQRMZHPsWmVzv7H76SEGn3GKLu/H7pMh9GL5l436lm+7YAXQtCknfiQs2zBNzw6eOsJCLDifNJhFPWMSPIGvFgCw6LwpL9tFk3IpgpNM
   artifact: /.*\.(dll|dylib|so)|sws_python(32|64)\.py|SWS_Template\.ReaperLangPack/
   on:
     APPVEYOR_REPO_TAG: true

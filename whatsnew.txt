@@ -1,3 +1,33 @@
+!v2.14.0.5 pre-release build (August 8, 2025)
+
+This version of SWS may be installed using either the traditional installers (.exe, .dmg, .tar.xz) or https://reapack.com/|ReaPack| (v1.2.4.4 or newer) via the default ReaTeam Extensions repository.
+
+Actions:
++Fix a crash in "SWS: Reset item rate, preserving length, clear 'preserve pitch'" when a selected item contains an empty take (issue 1939)
+
+Cycle actions:
++Add support for REAPER v7.40's new Crossfade Editor section
+
+Hit detection:
++Fix Y offset in hit detection of envelope points and segments (issue 954)
++Implement hit detection of envelope points within automation items (issue 922)
+
+List view: (issue 1947)
++Fix incorrect width when enabling columns and more than one is hidden
++Fix position of inserted columns ignoring preceding hidden ones
++Preserve custom order when adding or removing columns
+
+Notes:
++Clear cached previous text when closing the window (issue 1942)
+
+MIDI Editor:
++Repair regression caused by the MIDI Editor HiDPI fix on Windows and macOS (post 2858128)
+
+ReaScript API:
++Add BR_GetMouseCursorContext_EnvelopeEx returning the index of automation item and point under mouse
++Add SetVertPos (post 2865051)
++CF_Preview: fix wrap around detection when position or loop is set without ever seeking
+
 !v2.14.0.4 pre-release build (April 2, 2025)
 
 This version of SWS may be installed using either the traditional installers (.exe, .dmg, .tar.xz) or https://reapack.com/|ReaPack| (v1.2.4.4 or newer) via the default ReaTeam Extensions repository.

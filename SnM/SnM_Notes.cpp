@@ -254,6 +254,7 @@ void NotesWnd::OnDestroy()
 	g_prevNotesType = -1;
 	m_cbType.Empty();
 	m_edit = nullptr;
+	memset(g_lastText, 0, sizeof(g_lastText));
 }
 
 // note: no diff with current type, init would fail otherwise

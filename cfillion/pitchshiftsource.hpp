@@ -75,7 +75,7 @@ public:
   bool   startFadeOut();
   bool   readPeak(size_t, double *);
   virtual bool requestStop() { return true; }
-  void seekOrLoop(bool looping);
+  void seekOrLoop(bool isSeek, bool looping);
 
 protected:
   struct Block {

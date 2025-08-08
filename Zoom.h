@@ -32,3 +32,4 @@ void ZoomSlice();
 int ZoomInit(bool hookREAPERWndProcs);
 void ZoomExit();
 void ZoomToSelItems(COMMAND_T* = NULL);
+void SetVertPos(HWND, int iTrack, bool trackIsPixels, int extraPixels);

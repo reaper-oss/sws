@@ -1075,7 +1075,7 @@ int CheckSwsMacroScriptNumCustomId(const char* _custId, int _secIdx)
 
 int SNM_GetActionSectionUniqueId(int _sectionIdx)
 {
-	SECTION_INFO_T *info = SNM_GetActionSectionInfo(_sectionIdx);
+	const SECTION_INFO_T *info = SNM_GetActionSectionInfo(_sectionIdx);
 	if (info) return info->unique_id;
 	return -1;
 }
@@ -1092,6 +1092,8 @@ const char* SNM_GetActionSectionName(int _sectionIdx)
 {
 	if (KbdSectionInfo* sec = SNM_GetActionSection(_sectionIdx))
 		return __localizeFunc(sec->name,"accel_sec",0);
+	if (const SECTION_INFO_T *info = SNM_GetActionSectionInfo(_sectionIdx))
+		return info->fallback_name;
 	return "";
 }
 

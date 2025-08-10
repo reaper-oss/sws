@@ -875,10 +875,14 @@ static SWSProjConfig<int> g_zoomLevel;
 // Undo zoom prefs
 static bool g_bUndoSWSOnly = false;
 static bool g_bLastUndoProj = false;
+static bool g_bSaveZoomSlices = false;
 
 // Save the current zoom state, called from the slice
 void SaveZoomSlice(bool bSWS)
 {
+	if (!g_bSaveZoomSlices)
+		return;
+
 	// Do the initialization of g_zoomLevel, as project changes can result in new PtrLists
 	if (g_zoomStack.Get()->GetSize() == 0)
 		*g_zoomLevel.Get() = 0;
@@ -919,8 +923,19 @@ void SaveZoomSlice(bool bSWS)
 		g_zoomStack.Get()->Get(*g_zoomLevel.Get())->SavePos();
 }
 
+static bool CheckZoomSlicesEnabled()
+{
+	if (g_bSaveZoomSlices)
+		return true;
+
+	MessageBox(g_hwndParent, __LOCALIZE("This feature is currently disabled. Enable SWS undo/redo zoom actions (adds overhead) in Extensions > SWS/S&M > Zoom preferences or consider using the native REAPER actions \"restore next/previous zoom level\".","sws_DLG_151"), __LOCALIZE("SWS - Error","sws_mbox"), MB_OK);
+	return false;
+}
+
 void UndoZoom(COMMAND_T* = NULL)
 {
+	if (!CheckZoomSlicesEnabled())
+		return;
 	if (*g_zoomLevel.Get() + 1 < g_zoomStack.Get()->GetSize())
 	{
 		*g_zoomLevel.Get() += 1;
@@ -939,6 +954,8 @@ void UndoZoom(COMMAND_T* = NULL)
 
 void RedoZoom(COMMAND_T*)
 {
+	if (!CheckZoomSlicesEnabled())
+		return;
 	if (*g_zoomLevel.Get() > 0)
 	{
 		*g_zoomLevel.Get() -= 1;
@@ -1457,6 +1474,7 @@ static INT_PTR WINAPI ZoomPrefsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 				CheckDlgButton(hwndDlg, IDC_DRAGUP_ZOOM, BST_CHECKED);
 			CheckDlgButton(hwndDlg, IDC_UNDOSWSONLY, g_bUndoSWSOnly);
 			CheckDlgButton(hwndDlg, IDC_LASTUNDOPROJ, g_bLastUndoProj);
+			CheckDlgButton(hwndDlg, IDC_ZOOM_UNDO, g_bSaveZoomSlices);
 			for (int i = 0; i < NUM_MODIFIERS; i++)
 				SendMessage(GetDlgItem(hwndDlg, IDC_MMMODIFIER), CB_ADDSTRING, 0, (LPARAM)g_modifiers[i].cDesc);
 			for (int i = 0; i < NUM_MODIFIERS; i++)
@@ -1507,6 +1525,7 @@ static INT_PTR WINAPI ZoomPrefsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 					g_bDragUpUndo     = IsDlgButtonChecked(hwndDlg, IDC_DRAGUP_UNDO) == BST_CHECKED;
 					g_bUndoSWSOnly    = IsDlgButtonChecked(hwndDlg, IDC_UNDOSWSONLY) == BST_CHECKED;
 					g_bLastUndoProj   = IsDlgButtonChecked(hwndDlg, IDC_LASTUNDOPROJ) == BST_CHECKED;
+					g_bSaveZoomSlices = IsDlgButtonChecked(hwndDlg, IDC_ZOOM_UNDO) == BST_CHECKED;
 					g_iMidMouseModifier = g_modifiers[SendMessage(GetDlgItem(hwndDlg, IDC_MMMODIFIER), CB_GETCURSEL, 0, 0)].iModifier;
 					g_bSetCursor	  = IsDlgButtonChecked(hwndDlg, IDC_MOVECUR) == BST_CHECKED;
 					g_bSeekPlay       = IsDlgButtonChecked(hwndDlg, IDC_SEEKPLAY) == BST_CHECKED;
@@ -1710,6 +1729,7 @@ int ZoomInit(bool hookREAPERWndProcs)
 	g_bSeekPlay = !!(iPrefs & 8192);
 	g_bDragZoomUpper = !!(iPrefs & 16384);
 	g_bDragZoomLower = !!(iPrefs & 32768);
+	g_bSaveZoomSlices = !!(iPrefs & 65536);
 	char str[32];
 	GetPrivateProfileString(SWS_INI, DRAGZOOMSCALE_KEY, "0.1", str, 32, get_ini_file());
 	g_dDragZoomScale = atof(str);
@@ -1727,7 +1747,7 @@ void ZoomExit()
 		(g_bUnzoomMode ? 8 : 0) + (g_bUndoSWSOnly ? 16 : 0) + (g_bLastUndoProj ? 32 : 0) +
 		(g_bDragUpUndo ? 64 : 0) + (g_iMidMouseModifier << 8) + (g_bSetCursor ? 2048 : 0) +
 		(g_bSetTimesel ? 4096 : 0) + (g_bSeekPlay ? 8192 : 0) + (g_bDragZoomUpper ? 16384 : 0) +
-		(g_bDragZoomLower ? 32768 : 0));
+		(g_bDragZoomLower ? 32768 : 0) + (g_bSaveZoomSlices ? 65536 : 0));
 	WritePrivateProfileString(SWS_INI, ZOOMPREFS_KEY, str, get_ini_file());
 	sprintf(str, "%.2f", g_dDragZoomScale);
 	WritePrivateProfileString(SWS_INI, DRAGZOOMSCALE_KEY, str, get_ini_file());

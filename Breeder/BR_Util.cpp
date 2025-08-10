@@ -2297,7 +2297,7 @@ static int LimitTrackSpacerSize (MediaTrack* track, const int maxgap, const bool
 bool HasTrackSpacerBefore (MediaTrack* track, const bool isMCP)
 {
 	// faster than CSurf_TrackToID
-	int i { static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER")) - 1 };
+	int i = static_cast<int>(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER")) - 1;
 
 	do
 	{
@@ -2316,7 +2316,7 @@ int GetTrackSpacerSize (MediaTrack* track, const bool isMCP, const int* heightOv
 	{
 		if (!track)
 			return *trackgapmax;
-		else if (HasTrackSpacerBefore(track, isMCP))
+		else if (IsTrackVisible(track, isMCP) && HasTrackSpacerBefore(track, isMCP))
 			return LimitTrackSpacerSize(track, *trackgapmax, isMCP, heightOverride);
 	}
 

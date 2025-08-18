@@ -882,7 +882,7 @@ BEGIN
     CONTROL         "",IDC_PROGRESS,"msctls_progress32",0x0,4,9,254,11
 END
 
-IDD_ZOOMPREFS DIALOGEX 0, 0, 243, 260
+IDD_ZOOMPREFS DIALOGEX 0, 0, 243, 273
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "SWS Zoom Preferences"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
@@ -913,8 +913,10 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,209,206,10
     CONTROL         "Last undo always zooms out to project",IDC_LASTUNDOPROJ,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,222,206,10
-    DEFPUSHBUTTON   "OK",IDOK,130,239,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,186,239,50,14
+    CONTROL         "Enable SWS undo/redo zoom actions (adds overhead)",IDC_ZOOM_UNDO,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,235,206,10
+    DEFPUSHBUTTON   "OK",IDOK,130,252,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,186,252,50,14
 END
 
 IDD_AW_ITEM_SMOOTHING DIALOGEX 0, 0, 263, 119

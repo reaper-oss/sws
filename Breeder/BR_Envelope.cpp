@@ -1580,9 +1580,24 @@ void FitEnvPointsToTimeSel (COMMAND_T* ct)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 }
 
+static int GetAutomationItemAtPos(TrackEnvelope *env, const double pos, const double fudgeFactor)
+{
+	const int count = CountAutomationItems(env);
+	for (int ai = 0; ai < count; ai++)
+	{
+		const double aiPos = GetSetAutomationItemInfo(env, ai, "D_POSITION", 0, false) - fudgeFactor;
+		const double aiLen = GetSetAutomationItemInfo(env, ai, "D_LENGTH", 0, false) + fudgeFactor;
+		if (pos >= aiPos && pos < aiPos + aiLen)
+			return ai;
+	}
+
+	return -1;
+}
+
 void CreateEnvPointMouse (COMMAND_T* ct)
 {
-	BR_Envelope envelope(GetSelectedEnvelope(NULL));
+	TrackEnvelope *trEnv = GetSelectedEnvelope(NULL);
+	BR_Envelope envelope(trEnv);
 	double position = PositionAtMouseCursor(false);
 
 	// For take envelopes check cursor position here in case it gets snapped later
@@ -1594,29 +1609,44 @@ void CreateEnvPointMouse (COMMAND_T* ct)
 			return;
 	}
 
-	if (position != -1 && envelope.VisibleInArrange(NULL, NULL))
+	if (position == -1 || !envelope.VisibleInArrange(NULL, NULL))
+		return;
+
+	position = SnapToGrid(NULL, position);
+	const double fudgeFactor = envelope.IsTempo() ? MIN_TEMPO_DIST : MIN_ENV_DIST;
+	const int ai = GetAutomationItemAtPos(trEnv, position, fudgeFactor);
+	if (ai >= 0)
 	{
-		position = SnapToGrid(NULL, position);
-		double fudgeFactor = (envelope.IsTempo()) ? (MIN_TEMPO_DIST) : (MIN_ENV_DIST);
-		if (!envelope.ValidateId(envelope.Find(position, fudgeFactor)))
+		const int point = GetEnvelopePointByTimeEx(trEnv, ai, position + fudgeFactor);
+		double foundPos, value;
+		bool found = GetEnvelopePointEx(trEnv, ai, point, &foundPos, NULL, NULL, NULL, NULL);
+		if (found && foundPos >= position - fudgeFactor)
+			return;
+		Envelope_Evaluate(trEnv, position, ConfigVar<int>("projsrate").value_or(-1), 1, &value, NULL, NULL, NULL);
+		InsertEnvelopePointEx(trEnv, ai, position, value, envelope.GetDefaultShape(), 0.0, false, NULL);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_POOLEDENVS, -1);
+		return;
+	}
+
+	if (envelope.ValidateId(envelope.Find(position, fudgeFactor)))
+		return;
+
+	const double value = envelope.ValueAtPosition(position);
+
+	if (envelope.IsTempo())
+	{
+		bool insertedStretchMarkers = InsertStretchMarkerInAllItems(position);
+		if (SetTempoTimeSigMarker(NULL, -1, position, -1, -1, value, 0, 0, !envelope.GetDefaultShape()) || insertedStretchMarkers)
 		{
-			double value = envelope.ValueAtPosition(position);
-			if (envelope.IsTempo())
-			{
-				bool insertedStretchMarkers = InsertStretchMarkerInAllItems(position);
-				if (SetTempoTimeSigMarker(NULL, -1, position, -1, -1, value, 0, 0, !envelope.GetDefaultShape()) || insertedStretchMarkers)
-				{
-					UpdateTimeline();
-					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS | UNDO_STATE_MISCCFG, -1);
-				}
-			}
-			else
-			{
-				envelope.CreatePoint(envelope.CountPoints(), position, value, envelope.GetDefaultShape(), 0, false, true);
-				if (envelope.Commit())
-					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
-			}
+			UpdateTimeline();
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS | UNDO_STATE_MISCCFG, -1);
 		}
+	}
+	else
+	{
+		envelope.CreatePoint(envelope.CountPoints(), position, value, envelope.GetDefaultShape(), 0, false, true);
+		if (envelope.Commit())
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 	}
 }
 

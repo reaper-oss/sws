@@ -805,29 +805,32 @@ void CursorToEnv2 (COMMAND_T* ct)
 
 void SelNextPrevEnvPoint (COMMAND_T* ct)
 {
-	BR_Envelope envelope(GetSelectedEnvelope(NULL));
-	if (!envelope.CountSelected())
+	TrackEnvelope *env = GetSelectedEnvelope(nullptr);
+	if (!env)
 		return;
 
-	int id;
-	if ((int)ct->user > 0) id = envelope.GetSelected(envelope.CountSelected()-1) + 1;
-	else                   id = envelope.GetSelected(0) - 1;
+	envelope::FlatEnvPoints points {env};
+	if (points.empty())
+		return;
 
-	if (envelope.ValidateId(id))
+	auto current = points.findFirst([](const envelope::FlatEnvPoints::Point &pt) { return pt.sel; });
+	auto target = current + ((int)ct->user > 0 ? 1 : -1);
+	if (target < &points[0] || target > &points[points.size() - 1])
+		return;
+
+	PreventUIRefresh(1);
+	for (const auto &pt : points)
 	{
-		envelope.UnselectAll();
-		envelope.SetSelection(id, true);
-
-		if (envelope.Commit())
-		{
-			double pos, prevPos;
-			envelope.GetPoint(id, &pos, NULL, NULL, NULL);
-			envelope.GetPoint(((int)ct->user > 0) ? (id-1) : (id+1), &prevPos, NULL, NULL, NULL);
-			MoveArrangeToTarget(pos, prevPos);
-
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
-		}
+		if(&pt == target)
+			SetEnvelopePointEx(env, pt.ai, pt.id, nullptr, nullptr, nullptr, nullptr, &g_bTrue, &g_bFalse);
+		else if (pt.sel)
+			SetEnvelopePointEx(env, pt.ai, pt.id, nullptr, nullptr, nullptr, nullptr, &g_bFalse, &g_bFalse);
 	}
+	PreventUIRefresh(-1);
+
+	MoveArrangeToTarget(target->pos, current->pos);
+
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS | UNDO_STATE_POOLEDENVS, -1);
 }
 
 void ExpandEnvSel (COMMAND_T* ct)

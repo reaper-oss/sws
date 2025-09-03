@@ -805,29 +805,32 @@ void CursorToEnv2 (COMMAND_T* ct)
 
 void SelNextPrevEnvPoint (COMMAND_T* ct)
 {
-	BR_Envelope envelope(GetSelectedEnvelope(NULL));
-	if (!envelope.CountSelected())
+	TrackEnvelope *env = GetSelectedEnvelope(nullptr);
+	if (!env)
 		return;
 
-	int id;
-	if ((int)ct->user > 0) id = envelope.GetSelected(envelope.CountSelected()-1) + 1;
-	else                   id = envelope.GetSelected(0) - 1;
+	envelope::FlatEnvPoints points {env};
+	if (points.empty())
+		return;
 
-	if (envelope.ValidateId(id))
+	auto current = points.findFirst([](const envelope::FlatEnvPoints::Point &pt) { return pt.sel; });
+	auto target = current + ((int)ct->user > 0 ? 1 : -1);
+	if (target < &points[0] || target > &points[points.size() - 1])
+		return;
+
+	PreventUIRefresh(1);
+	for (const auto &pt : points)
 	{
-		envelope.UnselectAll();
-		envelope.SetSelection(id, true);
-
-		if (envelope.Commit())
-		{
-			double pos, prevPos;
-			envelope.GetPoint(id, &pos, NULL, NULL, NULL);
-			envelope.GetPoint(((int)ct->user > 0) ? (id-1) : (id+1), &prevPos, NULL, NULL, NULL);
-			MoveArrangeToTarget(pos, prevPos);
-
-			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
-		}
+		if(&pt == target)
+			SetEnvelopePointEx(env, pt.ai, pt.id, nullptr, nullptr, nullptr, nullptr, &g_bTrue, &g_bFalse);
+		else if (pt.sel)
+			SetEnvelopePointEx(env, pt.ai, pt.id, nullptr, nullptr, nullptr, nullptr, &g_bFalse, &g_bFalse);
 	}
+	PreventUIRefresh(-1);
+
+	MoveArrangeToTarget(target->pos, current->pos);
+
+	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS | UNDO_STATE_POOLEDENVS, -1);
 }
 
 void ExpandEnvSel (COMMAND_T* ct)
@@ -1580,9 +1583,24 @@ void FitEnvPointsToTimeSel (COMMAND_T* ct)
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 }
 
+static int GetAutomationItemAtPos(TrackEnvelope *env, const double pos, const double fudgeFactor)
+{
+	const int count = CountAutomationItems(env);
+	for (int ai = 0; ai < count; ai++)
+	{
+		const double aiPos = GetSetAutomationItemInfo(env, ai, "D_POSITION", 0, false) - fudgeFactor;
+		const double aiLen = GetSetAutomationItemInfo(env, ai, "D_LENGTH", 0, false) + fudgeFactor;
+		if (pos >= aiPos && pos < aiPos + aiLen)
+			return ai;
+	}
+
+	return -1;
+}
+
 void CreateEnvPointMouse (COMMAND_T* ct)
 {
-	BR_Envelope envelope(GetSelectedEnvelope(NULL));
+	TrackEnvelope *trEnv = GetSelectedEnvelope(NULL);
+	BR_Envelope envelope(trEnv);
 	double position = PositionAtMouseCursor(false);
 
 	// For take envelopes check cursor position here in case it gets snapped later
@@ -1594,29 +1612,44 @@ void CreateEnvPointMouse (COMMAND_T* ct)
 			return;
 	}
 
-	if (position != -1 && envelope.VisibleInArrange(NULL, NULL))
+	if (position == -1 || !envelope.VisibleInArrange(NULL, NULL))
+		return;
+
+	position = SnapToGrid(NULL, position);
+	const double fudgeFactor = envelope.IsTempo() ? MIN_TEMPO_DIST : MIN_ENV_DIST;
+	const int ai = GetAutomationItemAtPos(trEnv, position, fudgeFactor);
+	if (ai >= 0)
 	{
-		position = SnapToGrid(NULL, position);
-		double fudgeFactor = (envelope.IsTempo()) ? (MIN_TEMPO_DIST) : (MIN_ENV_DIST);
-		if (!envelope.ValidateId(envelope.Find(position, fudgeFactor)))
+		const int point = GetEnvelopePointByTimeEx(trEnv, ai, position + fudgeFactor);
+		double foundPos, value;
+		bool found = GetEnvelopePointEx(trEnv, ai, point, &foundPos, NULL, NULL, NULL, NULL);
+		if (found && foundPos >= position - fudgeFactor)
+			return;
+		Envelope_Evaluate(trEnv, position, ConfigVar<int>("projsrate").value_or(-1), 1, &value, NULL, NULL, NULL);
+		InsertEnvelopePointEx(trEnv, ai, position, value, envelope.GetDefaultShape(), 0.0, false, NULL);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_POOLEDENVS, -1);
+		return;
+	}
+
+	if (envelope.ValidateId(envelope.Find(position, fudgeFactor)))
+		return;
+
+	const double value = envelope.ValueAtPosition(position);
+
+	if (envelope.IsTempo())
+	{
+		bool insertedStretchMarkers = InsertStretchMarkerInAllItems(position);
+		if (SetTempoTimeSigMarker(NULL, -1, position, -1, -1, value, 0, 0, !envelope.GetDefaultShape()) || insertedStretchMarkers)
 		{
-			double value = envelope.ValueAtPosition(position);
-			if (envelope.IsTempo())
-			{
-				bool insertedStretchMarkers = InsertStretchMarkerInAllItems(position);
-				if (SetTempoTimeSigMarker(NULL, -1, position, -1, -1, value, 0, 0, !envelope.GetDefaultShape()) || insertedStretchMarkers)
-				{
-					UpdateTimeline();
-					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS | UNDO_STATE_MISCCFG, -1);
-				}
-			}
-			else
-			{
-				envelope.CreatePoint(envelope.CountPoints(), position, value, envelope.GetDefaultShape(), 0, false, true);
-				if (envelope.Commit())
-					Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
-			}
+			UpdateTimeline();
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS | UNDO_STATE_MISCCFG, -1);
 		}
+	}
+	else
+	{
+		envelope.CreatePoint(envelope.CountPoints(), position, value, envelope.GetDefaultShape(), 0, false, true);
+		if (envelope.Commit())
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_ITEMS, -1);
 	}
 }
 
@@ -1660,38 +1693,47 @@ void SelectEnvelopeUnderMouse (COMMAND_T* ct)
 void SelectDeleteEnvPointUnderMouse (COMMAND_T* ct)
 {
 	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE);
-	if (!strcmp(mouseInfo.GetDetails(), "env_point") && mouseInfo.GetAutomationItem() == -1)
+	if (strcmp(mouseInfo.GetDetails(), "env_point") || !mouseInfo.GetEnvelope())
+		return;
+	if (abs((int)ct->user) == 1 && mouseInfo.GetEnvelope() != GetSelectedEnvelope(NULL))
+		return;
+
+	if (mouseInfo.GetAutomationItem() != -1)
 	{
-		if (mouseInfo.GetEnvelope() && (abs((int)ct->user) == 2 || (abs((int)ct->user) == 1 && mouseInfo.GetEnvelope() == GetSelectedEnvelope(NULL))))
+		if((int)ct->user > 0)
+			SetEnvelopePointEx(mouseInfo.GetEnvelope(), mouseInfo.GetAutomationItem(), mouseInfo.GetEnvelopePoint(), NULL, NULL, NULL, NULL, &g_bTrue, &g_bFalse);
+		else
+			DeleteEnvelopePointEx(mouseInfo.GetEnvelope(), mouseInfo.GetAutomationItem(), mouseInfo.GetEnvelopePoint());
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_POOLEDENVS, -1);
+		return;
+	}
+
+	BR_Envelope envelope(mouseInfo.GetEnvelope(), false);
+	bool tempoMapEdited = false;
+
+	if ((int)ct->user > 0 && !envelope.GetSelection(mouseInfo.GetEnvelopePoint()))
+		envelope.SetSelection(mouseInfo.GetEnvelopePoint(), true);
+	else if ((int)ct->user < 0)
+	{
+		if (envelope.IsTempo())
 		{
-			BR_Envelope envelope(mouseInfo.GetEnvelope(), false);
-			bool tempoMapEdited = false;
-
-			if ((int)ct->user > 0 && !envelope.GetSelection(mouseInfo.GetEnvelopePoint()))
-				envelope.SetSelection(mouseInfo.GetEnvelopePoint(), true);
-			else if ((int)ct->user < 0)
+			int id = mouseInfo.GetEnvelopePoint();
+			if (id > 0 && DeleteTempoTimeSigMarker(NULL, id))
 			{
-				if (envelope.IsTempo())
-				{
-					int id = mouseInfo.GetEnvelopePoint();
-					if (id > 0 && DeleteTempoTimeSigMarker(NULL, id))
-					{
-						UpdateTimeline();
-						tempoMapEdited = true;
-					}
-				}
-				else
-				{
-					envelope.DeletePoint(mouseInfo.GetEnvelopePoint());
-					if (envelope.CountPoints() == 0) // in case there are no more points left, envelope will get removed - so insert default point back
-						envelope.CreatePoint(0, 0, envelope.LaneCenterValue(), envelope.GetDefaultShape(), 0, false); // position = 0 is why we created BR_Envelope with !takeEnvelopesUseProjectTime
-				}
+				UpdateTimeline();
+				tempoMapEdited = true;
 			}
-
-			if (envelope.Commit() || tempoMapEdited)
-				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+		}
+		else
+		{
+			envelope.DeletePoint(mouseInfo.GetEnvelopePoint());
+			if (envelope.CountPoints() == 0) // in case there are no more points left, envelope will get removed - so insert default point back
+				envelope.CreatePoint(0, 0, envelope.LaneCenterValue(), envelope.GetDefaultShape(), 0, false); // position = 0 is why we created BR_Envelope with !takeEnvelopesUseProjectTime
 		}
 	}
+
+	if (envelope.Commit() || tempoMapEdited)
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
 void UnselectEnvelope (COMMAND_T* ct)

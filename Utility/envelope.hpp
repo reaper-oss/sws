@@ -30,10 +30,32 @@
 
 namespace envelope
 {
+
 std::string GetEnvelopeStateChunkBig(TrackEnvelope *, bool isUndo = false);
 
 class bad_get_env_chunk_big : public std::runtime_error {
 public:
 	using runtime_error::runtime_error;
 };
+
+class FlatEnvPoints {
+public:
+	struct Point { int ai, id; double pos; bool sel; };
+
+	FlatEnvPoints(TrackEnvelope *env);
+
+	bool empty() const { return m_points.empty(); }
+	size_t size() const { return m_points.size(); }
+	const Point &operator[](const size_t i) const { return m_points[i]; }
+
+	const Point *findLast(bool (*)(const Point &)) const;
+	const Point *findFirst(bool (*)(const Point &)) const;
+
+	std::vector<Point>::const_iterator begin() const { return m_points.begin(); }
+	std::vector<Point>::const_iterator end() const { return m_points.end(); }
+
+private:
+	std::vector<Point> m_points;
+};
+
 }

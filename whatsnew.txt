@@ -1,3 +1,10 @@
+!v2.14.0.6 featured build (September 3, 2025)
+
+This version of SWS may be installed using either the traditional installers (.exe, .dmg, .tar.xz) or https://reapack.com/|ReaPack| (v1.2.4.4 or newer) via the default ReaTeam Extensions repository.
+
++Disable "SWS: Redo/Undo zoom" actions by default to remove unnecessary CPU overhead
++Fix excessive CPU usage when many hidden tracks have visual spacers (post 2883811)
+
 !v2.14.0.5 pre-release build (August 8, 2025)
 
 This version of SWS may be installed using either the traditional installers (.exe, .dmg, .tar.xz) or https://reapack.com/|ReaPack| (v1.2.4.4 or newer) via the default ReaTeam Extensions repository.

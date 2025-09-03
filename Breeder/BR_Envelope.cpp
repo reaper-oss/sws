@@ -1690,38 +1690,47 @@ void SelectEnvelopeUnderMouse (COMMAND_T* ct)
 void SelectDeleteEnvPointUnderMouse (COMMAND_T* ct)
 {
 	BR_MouseInfo mouseInfo(BR_MouseInfo::MODE_ARRANGE);
-	if (!strcmp(mouseInfo.GetDetails(), "env_point") && mouseInfo.GetAutomationItem() == -1)
+	if (strcmp(mouseInfo.GetDetails(), "env_point") || !mouseInfo.GetEnvelope())
+		return;
+	if (abs((int)ct->user) == 1 && mouseInfo.GetEnvelope() != GetSelectedEnvelope(NULL))
+		return;
+
+	if (mouseInfo.GetAutomationItem() != -1)
 	{
-		if (mouseInfo.GetEnvelope() && (abs((int)ct->user) == 2 || (abs((int)ct->user) == 1 && mouseInfo.GetEnvelope() == GetSelectedEnvelope(NULL))))
+		if((int)ct->user > 0)
+			SetEnvelopePointEx(mouseInfo.GetEnvelope(), mouseInfo.GetAutomationItem(), mouseInfo.GetEnvelopePoint(), NULL, NULL, NULL, NULL, &g_bTrue, &g_bFalse);
+		else
+			DeleteEnvelopePointEx(mouseInfo.GetEnvelope(), mouseInfo.GetAutomationItem(), mouseInfo.GetEnvelopePoint());
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_POOLEDENVS, -1);
+		return;
+	}
+
+	BR_Envelope envelope(mouseInfo.GetEnvelope(), false);
+	bool tempoMapEdited = false;
+
+	if ((int)ct->user > 0 && !envelope.GetSelection(mouseInfo.GetEnvelopePoint()))
+		envelope.SetSelection(mouseInfo.GetEnvelopePoint(), true);
+	else if ((int)ct->user < 0)
+	{
+		if (envelope.IsTempo())
 		{
-			BR_Envelope envelope(mouseInfo.GetEnvelope(), false);
-			bool tempoMapEdited = false;
-
-			if ((int)ct->user > 0 && !envelope.GetSelection(mouseInfo.GetEnvelopePoint()))
-				envelope.SetSelection(mouseInfo.GetEnvelopePoint(), true);
-			else if ((int)ct->user < 0)
+			int id = mouseInfo.GetEnvelopePoint();
+			if (id > 0 && DeleteTempoTimeSigMarker(NULL, id))
 			{
-				if (envelope.IsTempo())
-				{
-					int id = mouseInfo.GetEnvelopePoint();
-					if (id > 0 && DeleteTempoTimeSigMarker(NULL, id))
-					{
-						UpdateTimeline();
-						tempoMapEdited = true;
-					}
-				}
-				else
-				{
-					envelope.DeletePoint(mouseInfo.GetEnvelopePoint());
-					if (envelope.CountPoints() == 0) // in case there are no more points left, envelope will get removed - so insert default point back
-						envelope.CreatePoint(0, 0, envelope.LaneCenterValue(), envelope.GetDefaultShape(), 0, false); // position = 0 is why we created BR_Envelope with !takeEnvelopesUseProjectTime
-				}
+				UpdateTimeline();
+				tempoMapEdited = true;
 			}
-
-			if (envelope.Commit() || tempoMapEdited)
-				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+		}
+		else
+		{
+			envelope.DeletePoint(mouseInfo.GetEnvelopePoint());
+			if (envelope.CountPoints() == 0) // in case there are no more points left, envelope will get removed - so insert default point back
+				envelope.CreatePoint(0, 0, envelope.LaneCenterValue(), envelope.GetDefaultShape(), 0, false); // position = 0 is why we created BR_Envelope with !takeEnvelopesUseProjectTime
 		}
 	}
+
+	if (envelope.Commit() || tempoMapEdited)
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
 }
 
 void UnselectEnvelope (COMMAND_T* ct)

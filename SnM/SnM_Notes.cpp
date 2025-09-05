@@ -1682,6 +1682,10 @@ void OpenNotes(COMMAND_T* _ct)
 			newType = g_notesType;
 
 		w->Show(g_notesType == newType /* i.e toggle */, true);
+
+		if (!w->GetHWND())
+			return;
+
 		w->SetType(newType);
 
 		if (!g_locked)

@@ -1171,8 +1171,8 @@ int BR_MouseInfo::IsMouseOverEnvelopeLine (BR_Envelope& envelope, int drawableEn
 				if (mousePos < aiPos || mousePos > aiPos + aiLen)
 					continue;
 
-				// first can be greater than last when looped with a truncated start offset
-				const int prevId = GetEnvelopePointByTimeEx(trEnv, ai | 0x10000000, mousePos);
+				static const int aiVisibleFlag = atof(GetAppVersion()) <= 7.45 ? 0x10000000 : 0; // p=2888669
+				const int prevId = GetEnvelopePointByTimeEx(trEnv, ai | aiVisibleFlag, mousePos);
 				int points[] {prevId, prevId + 1};
 				for (int &pi : points)
 				{

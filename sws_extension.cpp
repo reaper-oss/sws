@@ -788,6 +788,7 @@ error:
 		IMPAPI(CSurf_TrackFromID);
 		IMPAPI(CSurf_TrackToID);
 		IMPAPI(DB2SLIDER);
+		IMPAPI(DeleteEnvelopePointEx);
 		IMPAPI(DeleteEnvelopePointRange); // v5pre5+
 		IMPAPI(DeleteEnvelopePointRangeEx); // v5.4pre3+
 		IMPAPI(DeleteActionShortcut);

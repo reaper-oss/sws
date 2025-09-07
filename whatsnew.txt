@@ -1,3 +1,14 @@
+!v2.14.0.7 featured build (September 7, 2025)
+
+This version of SWS may be installed using either the traditional installers (.exe, .dmg, .tar.xz) or https://reapack.com/|ReaPack| (v1.2.4.4 or newer) via the default ReaTeam Extensions repository.
+
+Hit detection:
++Repair hit detection of envelope segment in non-first tracks (post 2889179)
++Update automation item point hit testing to support REAPER v7.46 API fixes (post 2888669)
+
+Notes:
++Fix empty notes when re-opening the window after closing it using an action (issue 1965)
+
 !v2.14.0.6 featured build (September 3, 2025)
 
 This version of SWS may be installed using either the traditional installers (.exe, .dmg, .tar.xz) or https://reapack.com/|ReaPack| (v1.2.4.4 or newer) via the default ReaTeam Extensions repository.

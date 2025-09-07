@@ -1,5 +1,5 @@
-#define SWS_VERSION 2,14,0,6
-#define SWS_VERSION_STR "2, 14, 0, 6\0"
+#define SWS_VERSION 2,14,0,7
+#define SWS_VERSION_STR "2, 14, 0, 7\0"
 #define SWS_VERSION_TYPE SWS_VERSION_STABLE
 #define SWS_VERSION_STABLE   "Featured"
 #define SWS_VERSION_UNSTABLE "Pre-release"

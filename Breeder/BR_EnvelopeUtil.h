@@ -302,7 +302,7 @@ double CalculateMeasureAtPosition (double startBpm, double endBpm, double timeLe
 double CalculatePositionAtMeasure (double startBpm, double endBpm, double timeLen, double targetMeasure);
 void CalculateMiddlePoint (double* middleTime, double* middleBpm, double measure, double startTime, double endTime, double startBpm, double endBpm);
 void CalculateSplitMiddlePoints (double* time1, double* time2, double* bpm1, double* bpm2, double splitRatio, double measure, double startTime, double middleTime, double endTime, double startBpm, double middleBpm, double endBpm);
-void InitTempoMap ();  // will make sure there's at least one point in tempo map (we can't manipulate tempo map's chunk (i.e. insert new points) if there isn't at least one point in tempo map)
+bool InitTempoMap ();  // will make sure there's at least one point in tempo map (we can't manipulate tempo map's chunk (i.e. insert new points) if there isn't at least one point in tempo map)
 void RemoveTempoMap ();
 void UnselectAllTempoMarkers ();
 void UpdateTempoTimeline (); // UpdateTimeline() isn't enough after changing tempo points through chunk - call this instead

@@ -2600,6 +2600,7 @@ void AWProjectTimebase(COMMAND_T* t)
 	*ConfigVar<int>("itemtimelock") = (int)t->user;
 	UpdateTimebaseToolbar();
 	// ?Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_MISCCFG, -1);
+	UpdateArrange();
 }
 
 int IsProjectTimebase(COMMAND_T* t)
@@ -3016,8 +3017,10 @@ void AWSelTracksTimebase(COMMAND_T* t)
 		SetMediaTrackInfo_Value(selTracks.Get()[i], "C_BEATATTACHMODE", (double)t->user);
 	UpdateTrackTimebaseToolbar();
 
-	if (selTracks.GetSize())
+	if (selTracks.GetSize()) {
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
+		UpdateArrange();
+	}	
 }
 
 int IsSelTracksTimebase(COMMAND_T* t)
@@ -3099,8 +3102,10 @@ void AWSelItemsTimebase(COMMAND_T* t)
 
 	UpdateItemTimebaseToolbar();
 
-	if (selItems.GetSize())
+	if (selItems.GetSize()) {
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_TRACKCFG, -1);
+		UpdateArrange();
+	}	
 }
 
 int IsSelItemsTimebase(COMMAND_T* t)

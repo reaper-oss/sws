@@ -1140,7 +1140,7 @@ void NudgeTrackVolumeDB(int tkIndex,double decibel)
 		double curgain=*(double*)GetSetMediaTrackInfo(pTk,"D_VOL",0);
 		double curvol=VAL2DB(curgain);
 		curvol+=decibel;
-		double newgain= exp((curvol)*0.11512925464970228420089957273422);
+		double newgain= pow(10, curvol / 20);
 		GetSetMediaTrackInfo(pTk,"D_VOL",&newgain);
 
 	}

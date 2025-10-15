@@ -311,7 +311,7 @@ void DoNudgeItemVols(bool UseConf,bool Positive,double TheNudgeAmount)
 					NewVol=OldVolDB+NudgeAmount; else NewVol=OldVolDB-NudgeAmount;
 				double NewVolGain;
 				if (NewVol>-144.0)
-					NewVolGain=exp(NewVol*0.115129254);
+					NewVolGain=pow(10, NewVol / 20);
 				else
 					NewVolGain=0;
 				GetSetMediaItemInfo(CurItem,"D_VOL",&NewVolGain);
@@ -350,7 +350,7 @@ void DoNudgeTakeVols(bool UseConf,bool Positive,double TheNudgeAmount)
 			NewVol=OldVolDB+NudgeAmount; else NewVol=OldVolDB-NudgeAmount;
 		double NewVolGain;
 		if (NewVol>-144.0)
-			NewVolGain=exp(NewVol*0.115129254);
+			NewVolGain=pow(10, NewVol / 20);
 			else NewVolGain=0;
 		if (IsTakePolarityFlipped(CurTake))
 			NewVolGain = -NewVolGain;
@@ -790,7 +790,7 @@ void On_SliderMove(HWND theHwnd,WPARAM wParam,LPARAM lParam,HWND SliderHandle,in
 				{
 					if (TheSlipos == 0)
 						NewVol = -0.00000001; // trick to prevent polarity reset if take vol. is set to 0.0 (-inf)
-					else 
+					else
 						NewVol = -NewVol;
 				}
 				GetSetMediaItemTakeInfo(CurTake, "D_VOL", &NewVol);
@@ -935,7 +935,6 @@ WDL_DLGRET TakeMixerDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 								NewVol = -NewVol;
 							GetSetMediaItemTakeInfo(CurTake, "D_VOL", &NewVol);
 						}
-							
 						double NewPan=g_TakeMixerState.StoredPans[i];
 						if (CurTake)
 							GetSetMediaItemTakeInfo(CurTake,"D_PAN",&NewPan);

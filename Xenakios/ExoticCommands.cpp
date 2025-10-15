@@ -790,7 +790,7 @@ void On_SliderMove(HWND theHwnd,WPARAM wParam,LPARAM lParam,HWND SliderHandle,in
 				{
 					if (TheSlipos == 0)
 						NewVol = -0.00000001; // trick to prevent polarity reset if take vol. is set to 0.0 (-inf)
-					else 
+					else
 						NewVol = -NewVol;
 				}
 				GetSetMediaItemTakeInfo(CurTake, "D_VOL", &NewVol);

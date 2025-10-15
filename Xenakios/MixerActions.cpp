@@ -10,10 +10,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -64,7 +64,7 @@ void DoSelectTrack(int tkOffset, bool keepCurrent)
 		if (*(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(i+1, false), "I_SELECTED", NULL))
 			oldSelectedTracks.push_back(i);
 	}
-	
+
 	int iNewSel = 0;
 	for (int i = 0; i < (int)oldSelectedTracks.size(); i++)
 	{
@@ -75,13 +75,13 @@ void DoSelectTrack(int tkOffset, bool keepCurrent)
 			selTracks.Get()[newIndex] = 1;
 		}
 	}
-	
+
 	if (keepCurrent)
 		for (int i = 0; i < (int)oldSelectedTracks.size(); i++)
 			selTracks.Get()[oldSelectedTracks[i]] = 1;
 	else if (iNewSel == 0) // Don't remove everything!
-		return;		
-	
+		return;
+
 	for (int i = 0; i < GetNumTracks(); i++)
 	{	// Only change the sel at the end
 		MediaTrack* tr = CSurf_TrackFromID(i+1, false);
@@ -89,7 +89,7 @@ void DoSelectTrack(int tkOffset, bool keepCurrent)
 			GetSetMediaTrackInfo(tr, "I_SELECTED", &(selTracks.Get()[i]));
 	}
 }
-	
+
 
 void DoSelectNextTrack(COMMAND_T*)
 {
@@ -139,10 +139,10 @@ void DoTraxRecArmed(COMMAND_T* ct)
 		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
 			GetSetMediaTrackInfo(CurTrack, "I_RECARM", &iRecArm);
 	}
-	UpdateTimeline();	
+	UpdateTimeline();
 }
 
-//JFB dup with SWS 
+//JFB dup with SWS
 void DoBypassFXofSelTrax(COMMAND_T* ct)
 {
 	int iBypass = (int)ct->user;
@@ -189,7 +189,7 @@ void DoSetSymmetricalpansL2R(COMMAND_T* ct)
 				GetSetMediaTrackInfo(CurTrack, "D_PAN", &newpan);
 			}
 		}
-		Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);	
+		Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);
 	}
 }
 
@@ -210,7 +210,7 @@ void DoSetSymmetricalpansR2L(COMMAND_T* ct)
 				GetSetMediaTrackInfo(CurTrack, "D_PAN", &newpan);
 			}
 		}
-		Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);	
+		Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);
 	}
 }
 
@@ -237,7 +237,7 @@ void DoSelRandomTrack(COMMAND_T*)
 	GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
 }
 
-typedef struct 
+typedef struct
 {
 	GUID guid;
 	int Heigth;
@@ -403,7 +403,7 @@ void DoSetSelectedTrackNormal(COMMAND_T* ct)
 			}
 			Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 		}
-		
+
 	}
 }
 
@@ -506,7 +506,7 @@ void DoRenameTracksDlg(COMMAND_T* ct)
 		if (isSel==1)
 			VecSelTracks.push_back(CurTrack);
 	}
-	if (VecSelTracks.size()==0) 
+	if (VecSelTracks.size()==0)
 	{
 		MessageBox(g_hwndParent, __LOCALIZE("No selected track!","sws_mbox"),__LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		return;
@@ -621,7 +621,7 @@ void DoTraxLabelSuffix(COMMAND_T* ct)
 	{
 		string NewLabel;
 		NewLabel.assign((char*)GetSetMediaTrackInfo(TheTracks[i],"P_NAME",NULL));
-			
+
 		NewLabel.append(g_command_params.TrackLabelSuffix);
 		char buf[512];
 		strcpy(buf,NewLabel.c_str());
@@ -769,7 +769,7 @@ void DoRenderReceivesAsStems(COMMAND_T*)
 		for (i=0;i<(int)TheTracks.size();i++)
 		{
 			bool blah=false;
-			
+
 			Main_OnCommand(40297,0); // unselect all tracks
 			int meh=1;
 			j=0;
@@ -785,7 +785,7 @@ void DoRenderReceivesAsStems(COMMAND_T*)
 			}
 			GetSetMediaTrackInfo(SourceTrack,"B_MUTE",&blah); // render stems action mutes original track, so counteract here
 			GetSetMediaTrackInfo(SourceTrack,"I_SELECTED",&meh);
-			
+
 			vector<bool> receiveMutes;
 			receiveMutes.clear();
 			j=0;
@@ -819,7 +819,7 @@ void DoRenderReceivesAsStems(COMMAND_T*)
 					GetSetMediaTrackInfo(SourceTrack,"I_SELECTED",&meh);
 					Main_OnCommand(40405,0);
 					// stem render messes up selected track etc, so need to do this crap
-					
+
 					Main_OnCommand(40297,0); // unselect all tracks
 					int l;
 					for (l=0;l<GetNumTracks();l++)
@@ -858,7 +858,7 @@ void DoRenderReceivesAsStems(COMMAND_T*)
 void DoSetRenderSpeedToRealtime2(COMMAND_T*)
 {
 	if (ConfigVar<int> renderspeedmode = "workrender")
-	{ 
+	{
 		bitset<32> blah(*renderspeedmode);
 		blah.set(3);
 		*renderspeedmode=blah.to_ulong();
@@ -870,7 +870,7 @@ void DoSetRenderSpeedToRealtime2(COMMAND_T*)
 void DoSetRenderSpeedToNonLim(COMMAND_T*)
 {
 	if (ConfigVar<int> renderspeedmode = "workrender")
-	{ 
+	{
 		bitset<32> blah(*renderspeedmode);
 		blah.reset(3);
 		*renderspeedmode=blah.to_ulong();
@@ -884,7 +884,7 @@ int g_renderspeed=-1;
 void DoStoreRenderSpeed(COMMAND_T*)
 {
 	if (const ConfigVar<int> renderspeedmode = "workrender")
-	{ 
+	{
 		g_renderspeed=*renderspeedmode;
 	}
 	else
@@ -894,15 +894,15 @@ void DoStoreRenderSpeed(COMMAND_T*)
 void DoRecallRenderSpeed(COMMAND_T*)
 {
 	if (ConfigVar<int> renderspeedmode = "workrender")
-	{ 
+	{
 		if (g_renderspeed>=0)
 			*renderspeedmode=g_renderspeed;
 		else
 			MessageBox(g_hwndParent, __LOCALIZE("Render speed has not been stored","sws_mbox"),__LOCALIZE("Xenakios - Info","sws_mbox"), MB_OK);
-	} 
+	}
 	else
 		MessageBox(g_hwndParent, __LOCALIZE("Error getting configuration variable from REAPER","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
-} 
+}
 
 typedef struct
 {
@@ -966,7 +966,7 @@ void SetAllTrackSolos(int solomode)
 	{
 		MediaTrack *tk=CSurf_TrackFromID(i+1,false);
 		if (tk)
-			GetSetMediaTrackInfo(tk,"I_SOLO",&solomode);	
+			GetSetMediaTrackInfo(tk,"I_SOLO",&solomode);
 	}
 }
 
@@ -996,7 +996,7 @@ void DoToggleReferenceTrack(COMMAND_T*)
 				double mvol=1.0;
 				GetSetMediaTrackInfo(mtk,"D_VOL",&mvol);
 			}
-		} 
+		}
 		else
 			MessageBox(g_hwndParent, __LOCALIZE("Reference track does not exist in this project.\nMaybe it is in another project tab?","sws_mbox"),__LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 	}
@@ -1016,7 +1016,7 @@ void DoToggleReferenceTrack(COMMAND_T*)
 			{
 				GetSetMediaTrackInfo(mtk,"D_VOL",&g_RefMasterVolume);
 			}
-		} 
+		}
 		else
 			MessageBox(g_hwndParent, __LOCALIZE("Reference track does not exist in this project.\nMaybe it is in another project tab?","sws_mbox"),__LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 	}
@@ -1028,7 +1028,7 @@ bool Ref_track_PEL(const char *line, ProjectStateContext *ctx, bool isUndo, stru
   LineParser lp(commentign);
   if (lp.parse(line) || lp.getnumtokens()<1) return false;
   if (strcmp(lp.gettoken_str(0),"<XENAKIOSCOMMANDS")) return false; // only look for <XENAKIOSCOMMANDS lines
-  
+
   int child_count=1;
   for (;;)
   {
@@ -1098,7 +1098,7 @@ void Ref_track_SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct
 		int i;
 		int ntk=GetNumTracks();
 		if (ntk>4095) ntk=4095;
-		
+
 
 		for (i=0;i<ntk;i++)
 		{
@@ -1128,7 +1128,7 @@ void Ref_track_BeginLoadProjectState(bool isUndo, struct project_config_extensio
 project_config_extension_t xen_reftrack_pcreg={
 	Ref_track_PEL,
 	Ref_track_SaveExtensionConfig,
-	Ref_track_BeginLoadProjectState, 
+	Ref_track_BeginLoadProjectState,
 	NULL,
 };
 

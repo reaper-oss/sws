@@ -292,8 +292,8 @@ bool BR_GetMediaItemImageResource (MediaItem* item, char* imageOut, int imageOut
 		char image[SNM_MAX_PATH]      = "";
 		char imageFlags[SNM_MAX_PATH] = "0";
 
-		resourceFound =  !!p.Parse(SNM_GET_CHUNK_CHAR, 1, "ITEM", "RESOURCEFN",       0, 1, image,      NULL, "VOLPAN");
-		if (resourceFound) p.Parse(SNM_GET_CHUNK_CHAR, 1, "ITEM", "IMGRESOURCEFLAGS", 0, 1, imageFlags, NULL, "VOLPAN");
+		resourceFound = !!p.Parse(SNM_GET_CHUNK_CHAR, 1, "ITEM", "RESOURCEFN", 0, 1, image, NULL, "VOLPAN");
+		p.Parse(SNM_GET_CHUNK_CHAR, 1, "ITEM", "IMGRESOURCEFLAGS", 0, 1, imageFlags, NULL, "VOLPAN");
 
 		if (imageOut && imageOut_sz > 0) snprintf(imageOut, imageOut_sz, "%s", image);
 		WritePtr(imageFlagsOut, atoi(imageFlags));

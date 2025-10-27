@@ -2260,7 +2260,7 @@ enum TrackFixedLanesFlags
 	ShowBigLanes = 1<<3,
 };
 
-static char GetTrackFixedLanesFlags (MediaTrack* track)
+char GetTrackFixedLanesFlags (MediaTrack* track)
 {
 	if (void *settings = GetSetMediaTrackInfo(track, "C_LANESETTINGS", nullptr))
 		return *static_cast<char *>(settings); // v7.12+

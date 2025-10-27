@@ -125,7 +125,7 @@ void AdjustEnvelopeOrTrackHeightUnderMouse(COMMAND_T* ct, int val, int valhw, in
 			{
 				if (brEnv.IsTakeEnvelope())
 				{
-					SetTrackHeight(brEnv.GetParent(), SetToBounds(height + GetTrackHeight(brEnv.GetParent(), NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()), true);
+					SetTrackHeight(brEnv.GetParent(), SetToBounds(height + GetTrackHeight(brEnv.GetParent(), NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()));
 					SetArrangeScrollTo(brEnv.GetParent(), static_cast<VerticalZoomCenter>((int)ct->user));
 				}
 				else
@@ -137,13 +137,13 @@ void AdjustEnvelopeOrTrackHeightUnderMouse(COMMAND_T* ct, int val, int valhw, in
 			}
 			else
 			{
-				SetTrackHeight(brEnv.GetParent(), SetToBounds(height + GetTrackHeight(brEnv.GetParent(), NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()), true);
+				SetTrackHeight(brEnv.GetParent(), SetToBounds(height + GetTrackHeight(brEnv.GetParent(), NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()));
 				SetArrangeScrollTo(brEnv.GetParent(), static_cast<VerticalZoomCenter>((int)ct->user));
 			}
 		}
 		else if (tr)
 		{
-			SetTrackHeight(tr, SetToBounds(height + GetTrackHeight(tr, NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()), true);
+			SetTrackHeight(tr, SetToBounds(height + GetTrackHeight(tr, NULL), GetTcpTrackMinHeight(), GetCurrentTcpMaxHeight()));
 			SetArrangeScrollTo(tr, static_cast<VerticalZoomCenter>((int)ct->user));
 		}
 

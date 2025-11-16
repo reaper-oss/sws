@@ -72,9 +72,9 @@ public:
     bool m_bMute;
     int m_iSolo;
     int m_iFXEn;
-        int m_iVis;
-        int m_iSel;
-        int m_iRecArm;
+    int m_iVis;
+    int m_iSel;
+    int m_iRecArm;
 	bool m_bPhase;
 	// track playback offset, REAPER v6.0+
 	int m_iPlayOffsetFlag;

@@ -174,9 +174,9 @@ TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 	m_dVol            = *((double*)GetSetMediaTrackInfo(tr, "D_VOL", NULL));
 	m_dPan            = *((double*)GetSetMediaTrackInfo(tr, "D_PAN", NULL));
 	m_bMute           = *((bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL));
-        m_iSolo           = *((int*)GetSetMediaTrackInfo(tr, "I_SOLO", NULL));
-        m_iRecArm         = *((int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL));
-        m_iFXEn           = *((int*)GetSetMediaTrackInfo(tr, "I_FXEN", NULL));
+	m_iSolo           = *((int*)GetSetMediaTrackInfo(tr, "I_SOLO", NULL));
+	m_iRecArm         = *((int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL));
+	m_iFXEn           = *((int*)GetSetMediaTrackInfo(tr, "I_FXEN", NULL));
 	m_iVis            = GetTrackVis(tr);
 	m_iSel            = *((int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL));
 	m_iPanMode        = *((int*)GetSetMediaTrackInfo(tr, "I_PANMODE", NULL));
@@ -227,9 +227,9 @@ TrackSnapshot::TrackSnapshot(TrackSnapshot& ts):m_sends(ts.m_sends)
 	m_dVol            = ts.m_dVol;
 	m_dPan            = ts.m_dPan;
 	m_bMute           = ts.m_bMute;
-        m_iSolo           = ts.m_iSolo;
-        m_iRecArm         = ts.m_iRecArm;
-        m_iFXEn           = ts.m_iFXEn;
+	m_iSolo           = ts.m_iSolo;
+	m_iRecArm         = ts.m_iRecArm;
+	m_iFXEn           = ts.m_iFXEn;
 	m_iVis            = ts.m_iVis;
 	m_iSel            = ts.m_iSel;
 	for (int i = 0; i < ts.m_fx.GetSize(); i++)
@@ -256,25 +256,25 @@ TrackSnapshot::TrackSnapshot(LineParser* lp)
 	stringToGuid(lp->gettoken_str(1), &m_guid);
 	m_dVol            = lp->gettoken_float(2);
 	m_dPan            = lp->gettoken_float(3);
-        const int numTokens = lp->getnumtokens();
-        const bool hasRecArm = numTokens >= 18;
-        const int offset = hasRecArm ? 1 : 0;
+	const int numTokens = lp->getnumtokens();
+	const bool hasRecArm = numTokens >= 18;
+	const int offset = hasRecArm ? 1 : 0;
 
-        m_bMute           = lp->gettoken_int(4) ? true : false;
-        m_iSolo           = lp->gettoken_int(5);
-        m_iRecArm         = hasRecArm ? lp->gettoken_int(6) : 0;
-        m_iFXEn           = lp->gettoken_int(6 + offset);
-        // For backward compat, flip the TCP vis bit
-        m_iVis            = lp->gettoken_int(7 + offset) ^ 2;
-        m_iSel            = lp->gettoken_int(8 + offset);
-        m_iPanMode        = numTokens < (10 + offset) ? -1 : lp->gettoken_int(9 + offset); // If loading old format, set pan mode to -1 for proj default
-        m_dPanWidth       = lp->gettoken_float(10 + offset);
-        m_dPanL           = lp->gettoken_float(11 + offset);
-        m_dPanR           = lp->gettoken_float(12 + offset);
-        m_dPanLaw         = numTokens < (14 + offset) ? -100.0 : lp->gettoken_float(13 + offset); // If loading old format, set law to -2 for "ignore"
-        m_bPhase          = lp->gettoken_int(14 + offset) ? true : false;
-        m_iPlayOffsetFlag = lp->gettoken_int(15 + offset);
-        m_dPlayOffset     = lp->gettoken_float(16 + offset);
+	m_bMute           = lp->gettoken_int(4) ? true : false;
+	m_iSolo           = lp->gettoken_int(5);
+	m_iRecArm         = hasRecArm ? lp->gettoken_int(6) : 0;
+	m_iFXEn           = lp->gettoken_int(6 + offset);
+	// For backward compat, flip the TCP vis bit
+	m_iVis            = lp->gettoken_int(7 + offset) ^ 2;
+	m_iSel            = lp->gettoken_int(8 + offset);
+	m_iPanMode        = numTokens < (10 + offset) ? -1 : lp->gettoken_int(9 + offset); // If loading old format, set pan mode to -1 for proj default
+	m_dPanWidth       = lp->gettoken_float(10 + offset);
+	m_dPanL           = lp->gettoken_float(11 + offset);
+	m_dPanR           = lp->gettoken_float(12 + offset);
+	m_dPanLaw         = numTokens < (14 + offset) ? -100.0 : lp->gettoken_float(13 + offset); // If loading old format, set law to -2 for "ignore"
+	m_bPhase          = lp->gettoken_int(14 + offset) ? true : false;
+	m_iPlayOffsetFlag = lp->gettoken_int(15 + offset);
+	m_dPlayOffset     = lp->gettoken_float(16 + offset);
 
 
 	// Set the track name "early" for backward compat
@@ -327,17 +327,17 @@ bool TrackSnapshot::UpdateReaper(int mask, bool bSelOnly, int* fxErr, bool wantC
 		GetSetEnvelope(tr, &m_sWidthEnv, "Width (Pre-FX)", true);
 		GetSetEnvelope(tr, &m_sWidthEnv2, "Width", true);
 	}
-        if (mask & MUTE_MASK)
-        {
-                GetSetMediaTrackInfo(tr, "B_MUTE", &m_bMute);
-                GetSetEnvelope(tr, &m_sMuteEnv, "Mute", true);
-        }
-        if (mask & SOLO_MASK)
-                GetSetMediaTrackInfo(tr, "I_SOLO", &m_iSolo);
-        if (mask & RECARM_MASK)
-                GetSetMediaTrackInfo(tr, "I_RECARM", &m_iRecArm);
-        if (mask & VIS_MASK)
-                SetTrackVis(tr, m_iVis); // ignores master
+	if (mask & MUTE_MASK)
+	{
+		GetSetMediaTrackInfo(tr, "B_MUTE", &m_bMute);
+		GetSetEnvelope(tr, &m_sMuteEnv, "Mute", true);
+	}
+	if (mask & SOLO_MASK)
+		GetSetMediaTrackInfo(tr, "I_SOLO", &m_iSolo);
+	if (mask & RECARM_MASK)
+		GetSetMediaTrackInfo(tr, "I_RECARM", &m_iRecArm);
+	if (mask & VIS_MASK)
+		SetTrackVis(tr, m_iVis); // ignores master
 	if (mask & SEL_MASK)
 		GetSetMediaTrackInfo(tr, "I_SELECTED", &m_iSel);
 	if (mask & FXATM_MASK) // DEPRECATED, keep for previously saved snapshots
@@ -406,8 +406,8 @@ void TrackSnapshot::GetChunk(WDL_FastString* chunk)
 {
 	char guidStr[64];
 	guidToString(&m_guid, guidStr);
-        chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "<TRACK %s %.14f %.14f %d %d %d %d %d %d %d %.14f %.14f %.14f %.14f %d %d %.14f\n",
-                guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iRecArm, m_iFXEn, m_iVis ^ 2, m_iSel, m_iPanMode, m_dPanWidth, m_dPanL, m_dPanR, m_dPanLaw, m_bPhase ? 1 : 0, m_iPlayOffsetFlag, m_dPlayOffset);
+	chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "<TRACK %s %.14f %.14f %d %d %d %d %d %d %d %.14f %.14f %.14f %.14f %d %d %.14f\n",
+		guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iRecArm, m_iFXEn, m_iVis ^ 2, m_iSel, m_iPanMode, m_dPanWidth, m_dPanL, m_dPanR, m_dPanLaw, m_bPhase ? 1 : 0, m_iPlayOffsetFlag, m_dPlayOffset);
 	chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "NAME \"%s\" %d\n", m_sName.Get(), m_iTrackNum);
 	
 	m_sends.GetChunk(chunk);
@@ -531,23 +531,23 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 			details->Append("\r\n");
 		}
 	}
-        if (iMask & SOLO_MASK)
-        {
-                details->Append(__LOCALIZE("Solo","sws_DLG_101"));
-                details->Append(": ");
-                details->Append(m_iSolo ? __LOCALIZE("on","sws_DLG_101") : __LOCALIZE("off","sws_DLG_101"));
-                details->Append("\r\n");
-        }
-        if (iMask & RECARM_MASK)
-        {
-                details->Append(__LOCALIZE("Record arm","sws_DLG_101"));
-                details->Append(": ");
-                details->Append(m_iRecArm ? __LOCALIZE("on","sws_DLG_101") : __LOCALIZE("off","sws_DLG_101"));
-                details->Append("\r\n");
-        }
-        if (iMask & SEL_MASK)
-        {
-                details->Append(__LOCALIZE("Selected","sws_DLG_101"));
+	if (iMask & SOLO_MASK)
+	{
+		details->Append(__LOCALIZE("Solo","sws_DLG_101"));
+		details->Append(": ");
+		details->Append(m_iSolo ? __LOCALIZE("on","sws_DLG_101") : __LOCALIZE("off","sws_DLG_101"));
+		details->Append("\r\n");
+	}
+	if (iMask & RECARM_MASK)
+	{
+		details->Append(__LOCALIZE("Record arm","sws_DLG_101"));
+		details->Append(": ");
+		details->Append(m_iRecArm ? __LOCALIZE("on","sws_DLG_101") : __LOCALIZE("off","sws_DLG_101"));
+		details->Append("\r\n");
+	}
+	if (iMask & SEL_MASK)
+	{
+		details->Append(__LOCALIZE("Selected","sws_DLG_101"));
 		details->Append(": ");
 		details->Append(m_iSel ? __LOCALIZE("yes","sws_DLG_101") : __LOCALIZE("no","sws_DLG_101"));
 		details->Append("\r\n");

@@ -270,7 +270,7 @@ TrackSnapshot::TrackSnapshot(LineParser* lp)
 	m_bPhase          = lp->gettoken_int(14) ? true : false;
 	m_iPlayOffsetFlag = lp->gettoken_int(15);
 	m_dPlayOffset     = lp->gettoken_float(16);
-	m_iRecArm         = lp->getnumtokens() < 18 ? 0 : lp->gettoken_int(17);
+	m_iRecArm         = lp->gettoken_int(17);
 
 
 	// Set the track name "early" for backward compat
@@ -405,7 +405,7 @@ void TrackSnapshot::GetChunk(WDL_FastString* chunk)
 	char guidStr[64];
 	guidToString(&m_guid, guidStr);
 	chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "<TRACK %s %.14f %.14f %d %d %d %d %d %d %.14f %.14f %.14f %.14f %d %d %.14f %d\n",
-			guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iFXEn, m_iVis ^ 2, m_iSel, m_iPanMode, m_dPanWidth, m_dPanL, m_dPanR, m_dPanLaw, m_bPhase ? 1 : 0, m_iPlayOffsetFlag, m_dPlayOffset, m_iRecArm);
+		guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iFXEn, m_iVis ^ 2, m_iSel, m_iPanMode, m_dPanWidth, m_dPanL, m_dPanR, m_dPanLaw, m_bPhase ? 1 : 0, m_iPlayOffsetFlag, m_dPlayOffset, m_iRecArm);
 	chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "NAME \"%s\" %d\n", m_sName.Get(), m_iTrackNum);
 	
 	m_sends.GetChunk(chunk);
@@ -1064,7 +1064,7 @@ void Snapshot::SetName(const char* name)
 			case PLAY_OFFSET_MASK: snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Playback offset", "sws_DLG_101"), m_iSlot); break;
 			case RECARM_MASK:      snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("RecArm", "sws_DLG_101"), m_iSlot); break;
 			default:               snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Mix","sws_DLG_101"), m_iSlot);    break;
-        }
+		}
 		m_cName = new char[strlen(newName)+1];
 		strcpy(m_cName, newName);
 	}

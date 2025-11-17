@@ -332,14 +332,14 @@ bool TrackSnapshot::UpdateReaper(int mask, bool bSelOnly, int* fxErr, bool wantC
 		GetSetMediaTrackInfo(tr, "I_SOLO", &m_iSolo);
 	if (mask & VIS_MASK)
 		SetTrackVis(tr, m_iVis); // ignores master
-        if (mask & SEL_MASK)
-                GetSetMediaTrackInfo(tr, "I_SELECTED", &m_iSel);
-        if (mask & RECARM_MASK)
-        {
-                GetSetMediaTrackInfo(tr, "I_RECARM", &m_iRecArm);
-        }
-        if (mask & FXATM_MASK) // DEPRECATED, keep for previously saved snapshots
-        {
+	if (mask & SEL_MASK)
+		GetSetMediaTrackInfo(tr, "I_SELECTED", &m_iSel);
+	if (mask & RECARM_MASK)
+	{
+		GetSetMediaTrackInfo(tr, "I_RECARM", &m_iRecArm);
+	}
+	if (mask & FXATM_MASK) // DEPRECATED, keep for previously saved snapshots
+	{
 		GetSetMediaTrackInfo(tr, "I_FXEN", &m_iFXEn);
 		int numFX = TrackFX_GetCount(tr);
 		if (numFX)

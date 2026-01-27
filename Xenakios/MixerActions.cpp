@@ -1132,29 +1132,28 @@ project_config_extension_t xen_reftrack_pcreg={
 	NULL,
 };
 
-void NudgeTrackVolumeDB(int tkIndex,double decibel)
+void NudgeTrackVolumeDB(MediaTrack* track, double decibel)
 {
-	MediaTrack* pTk=CSurf_TrackFromID(tkIndex,false);
-	if (pTk)
+	if (track)
 	{
-		double curgain=*(double*)GetSetMediaTrackInfo(pTk,"D_VOL",0);
+		double curgain=*(double*)GetSetMediaTrackInfo(track,"D_VOL",0);
 		double curvol=VAL2DB(curgain);
 		curvol+=decibel;
 		double newgain= exp((curvol)*0.11512925464970228420089957273422);
-		GetSetMediaTrackInfo(pTk,"D_VOL",&newgain);
+		GetSetMediaTrackInfo(track,"D_VOL",&newgain);
 
 	}
 }
 
 void DoNudgeMasterVol1dbUp(COMMAND_T* ct)
 {
-	NudgeTrackVolumeDB(0,1.0);
+	NudgeTrackVolumeDB(GetMasterTrack(NULL), 1.0);
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoNudgeMasterVol1dbDown(COMMAND_T* ct)
 {
-	NudgeTrackVolumeDB(0,-1.0);
+	NudgeTrackVolumeDB(GetMasterTrack(NULL), -1.0);
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
@@ -1164,8 +1163,7 @@ void DoNudgeSelTrackVolumeUp(COMMAND_T* ct)
 	SWS_GetSelectedTracks(&selTracks, true);
 	for (int i = 0; i < selTracks.GetSize(); i++)
 	{
-		int index = CSurf_TrackToID(selTracks.Get()[i], false);
-		NudgeTrackVolumeDB(index, g_command_params.TrackVolumeNudge);
+		NudgeTrackVolumeDB(selTracks.Get()[i], g_command_params.TrackVolumeNudge);
 	}
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
@@ -1176,8 +1174,7 @@ void DoNudgeSelTrackVolumeDown(COMMAND_T* ct)
 	SWS_GetSelectedTracks(&selTracks, true);
 	for (int i = 0; i < selTracks.GetSize(); i++)
 	{
-		int index = CSurf_TrackToID(selTracks.Get()[i], false);
-		NudgeTrackVolumeDB(index, -g_command_params.TrackVolumeNudge);
+		NudgeTrackVolumeDB(selTracks.Get()[i], -g_command_params.TrackVolumeNudge);
 	}
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }

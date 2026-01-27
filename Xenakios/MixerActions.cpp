@@ -1160,24 +1160,24 @@ void DoNudgeMasterVol1dbDown(COMMAND_T* ct)
 
 void DoNudgeSelTrackVolumeUp(COMMAND_T* ct)
 {
-	t_vect_of_Reaper_tracks thetracks;
-	XenGetProjectTracks(thetracks,true);
-	for (int i=0;i<(int)thetracks.size();i++)
+	WDL_TypedBuf<MediaTrack*> selTracks;
+	SWS_GetSelectedTracks(&selTracks, true);
+	for (int i = 0; i < selTracks.GetSize(); i++)
 	{
-		int index=CSurf_TrackToID(thetracks[i],false);
-		NudgeTrackVolumeDB(index,g_command_params.TrackVolumeNudge);
+		int index = CSurf_TrackToID(selTracks.Get()[i], false);
+		NudgeTrackVolumeDB(index, g_command_params.TrackVolumeNudge);
 	}
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoNudgeSelTrackVolumeDown(COMMAND_T* ct)
 {
-	t_vect_of_Reaper_tracks thetracks;
-	XenGetProjectTracks(thetracks,true);
-	for (int i=0;i<(int)thetracks.size();i++)
+	WDL_TypedBuf<MediaTrack*> selTracks;
+	SWS_GetSelectedTracks(&selTracks, true);
+	for (int i = 0; i < selTracks.GetSize(); i++)
 	{
-		int index=CSurf_TrackToID(thetracks[i],false);
-		NudgeTrackVolumeDB(index,-g_command_params.TrackVolumeNudge);
+		int index = CSurf_TrackToID(selTracks.Get()[i], false);
+		NudgeTrackVolumeDB(index, -g_command_params.TrackVolumeNudge);
 	}
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }

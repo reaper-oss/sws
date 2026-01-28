@@ -280,7 +280,7 @@ void SWSCreateExtensionsMenu(HMENU hExtensionsMenu)
 	AddToMenu(hMenu, __LOCALIZE("Live Configs", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOWMIDILIVE"));
 
 	HMENU hMarkerSubMenu = CreatePopupMenu();
-	AddSubMenu(hMenu, hMarkerSubMenu, __LOCALIZE("Marker utilites", "sws_ext_menu"));
+	AddSubMenu(hMenu, hMarkerSubMenu, __LOCALIZE("Marker utilities", "sws_ext_menu"));
 	AddToMenu(hMarkerSubMenu, __LOCALIZE("MarkerList", "sws_ext_menu"), NamedCommandLookup("_SWSMARKERLIST1"));
 	AddToMenu(hMarkerSubMenu, SWS_SEPARATOR, 0);
 	AddToMenu(hMarkerSubMenu, __LOCALIZE("Load marker set...", "sws_ext_menu"), NamedCommandLookup("_SWSMARKERLIST2"));

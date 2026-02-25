@@ -168,7 +168,8 @@ int BR_CSurf_Extended(int call, void* parm1, void* parm2, void* parm3)
 		if (parm1 && parm2)
 		{
 			BR_EnvType type = (call == CSURF_EXT_SETSENDPAN) ? PAN : VOLUME;
-			GetSetLastAdjustedSend(true, (MediaTrack**)&parm1, (int*)parm2, &type);
+			if (GetSendEnvEffectiveAutomationMode((MediaTrack*)parm1, *(int*)parm2, type) != 1)
+				GetSetLastAdjustedSend(true, (MediaTrack**)&parm1, (int*)parm2, &type);
 		}
 	}
 	return 0;

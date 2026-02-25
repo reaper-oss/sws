@@ -937,14 +937,15 @@ error:
 		IMPAPI(GetTooltipWindow);
 		IMPAPI(GetTrack);
 		IMPAPI(GetTrackAutomationMode);
-		IMPAPI(GetTrackGUID);
 		IMPAPI(GetTrackEnvelope);
 		IMPAPI(GetTrackEnvelopeByName);
+		IMPAPI(GetTrackGUID);
 		IMPAPI(GetTrackInfo);
 		IMPAPI(GetTrackMediaItem);
 		IMPAPI(GetTrackMIDINoteNameEx);
 		IMPAPI(GetTrackNumMediaItems);
 		IMPAPI(GetTrackNumSends);
+		IMPAPI(GetTrackSendInfo_Value); // v5.15
 		IMPAPI(GetTrackStateChunk);
 		IMPAPI(GetTrackUIVolPan);
 		IMPAPI(GetUserInputs);

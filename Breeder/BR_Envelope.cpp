@@ -662,7 +662,7 @@ void CursorToEnv1 (COMMAND_T* ct)
 	bool found = false;
 	double pTime = 0, cTime = 0, nTime = 0;
 	double cursor = GetCursorPositionEx(NULL);
-	double takeEnvStartPos = (envelope == GetSelectedTrackEnvelope(NULL)) ? 0 : GetMediaItemInfo_Value(GetMediaItemTake_Item(GetTakeEnvParent(envelope, NULL)), "D_POSITION");
+	double takeEnvStartPos = (envelope == GetSelectedTrackEnvelope(NULL)) ? 0 : GetMediaItemInfo_Value(GetMediaItemTake_Item(Envelope_GetParentTake(envelope, NULL, NULL)), "D_POSITION");
 	cursor -= takeEnvStartPos;
 
 	// Find previous

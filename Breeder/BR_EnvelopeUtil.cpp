@@ -2173,46 +2173,9 @@ TrackEnvelope* GetTakeEnv (MediaItem_Take* take, BR_EnvType envelope)
 
 MediaItem_Take* GetTakeEnvParent (TrackEnvelope* envelope, BR_EnvType* type)
 {
-	if (envelope)
-	{
-		const int itemCount = CountMediaItems(NULL);
-		for (int i = 0; i < itemCount; ++i)
-		{
-			MediaItem* item = GetMediaItem(NULL, i);
-			const int takeCount = CountTakes(item);
-			for (int j = 0; j < takeCount; ++j)
-			{
-				MediaItem_Take* take = GetTake(item, j);
-				BR_EnvType returnType = UNKNOWN;
-
-				if      (GetTakeEnv(take, VOLUME) == envelope) returnType = VOLUME;
-				else if (GetTakeEnv(take, PAN)    == envelope) returnType = PAN;
-				else if (GetTakeEnv(take, MUTE)   == envelope) returnType = MUTE;
-				else if (GetTakeEnv(take, PITCH)  == envelope) returnType = PITCH;
-				else
-				{
-					const int envelopeCount = CountTakeEnvelopes(take);
-					for (int k = 0; k < envelopeCount; ++k)
-					{
-						if (GetTakeEnvelope(take, k) == envelope)
-						{
-							returnType = PARAMETER;
-							break;
-						}
-					}
-				}
-
-				if (returnType != UNKNOWN)
-				{
-					WritePtr(type, returnType);
-					return take;
-				}
-			}
-		}
-	}
-
-	WritePtr(type, UNKNOWN);
-	return NULL;
+	MediaItem_Take *take = envelope ? Envelope_GetParentTake(envelope, NULL, NULL) : NULL;
+	WritePtr(type, take ? GetEnvType(envelope, NULL, NULL) : UNKNOWN);
+	return take;
 }
 
 MediaTrack* GetEnvParent (TrackEnvelope* envelope)

@@ -83,6 +83,12 @@ envelope::FlatEnvPoints::FlatEnvPoints(TrackEnvelope *env)
 	const bool envelopeBypassed = aiOptions & 4;
 	const int aiCount = CountAutomationItems(env);
 
+	double posOffset = 0;
+	if (MediaItem_Take *take = Envelope_GetParentTake(env, nullptr, nullptr)) {
+		MediaItem *item = GetMediaItemTake_Item(take);
+		posOffset = GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemTakeInfo_Value(take, "D_STARTOFFS");
+	}
+
 	if (!envelopeBypassed) {
 		int ai = 0;
 		double nextAiStart = DBL_MAX, nextAiEnd = DBL_MAX;
@@ -96,6 +102,7 @@ envelope::FlatEnvPoints::FlatEnvPoints(TrackEnvelope *env)
 		for (int pi = 0; pi < points; ++pi) {
 			Point pt {-1, pi};
 			GetEnvelopePoint(env, pi, &pt.pos, nullptr, nullptr, nullptr, &pt.sel);
+			pt.pos += posOffset;
 
 			while (pt.pos >= nextAiEnd) {
 				if (++ai < aiCount) {

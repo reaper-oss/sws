@@ -28,29 +28,11 @@
 #include "stdafx.h"
 
 #ifdef _WIN32
-#include <ShellScalingApi.h> // GetDpiForMonitor
 #include "win32-import.h"
 #endif // _WIN32
 
 unsigned int hidpi::GetDpiForPoint(const POINT &point)
 {
-#ifdef _WIN32
-  // not linking against shcore.dll for compatibility with Windows older than 8.1
-  static win32::import<decltype(GetDpiForMonitor)> _GetDpiForMonitor
-    {"SHCore.dll", "GetDpiForMonitor"};
-
-  // using MONITOR_DEFAULTTONEAREST to match GetMonitorRectFromPoint from BR_Util
-  HMONITOR monitor = MonitorFromPoint(point, MONITOR_DEFAULTTONEAREST);
-
-  if (_GetDpiForMonitor && monitor) {
-    unsigned int dpiX, dpiY;
-    if (S_OK == _GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY))
-      return (dpiX * 256) / 96; // same scaling as WDL_WndSizer::calc_dpi
-    else
-      return 256;
-  }
-#endif
-
   return 0;
 }
 

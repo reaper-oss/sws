@@ -213,7 +213,7 @@ WDL_DLGRET ItemSetVolDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 						WillSetVolume=true;
 						NewVol=atof(tbuf);
 						if (NewVol>-144.0)
-							NewVol=exp(NewVol*0.115129254);
+							NewVol=pow(10, NewVol / 20);
 						else NewVol=0.0;
 
 					}
@@ -264,7 +264,7 @@ WDL_DLGRET ItemPanVolDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 					if (strcmp(TempString,"")!=0)
 					{
 						if (NewVol>-144.0)
-							NewVol=exp(NewVol*0.115129254);
+							NewVol=pow(10, NewVol / 20);
 						else
 							NewVol=0;
 						SetVol=TRUE;

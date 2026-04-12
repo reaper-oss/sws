@@ -237,6 +237,7 @@ void NotesWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_bigNotes);
 
 	g_prevNotesType = -1; // will force refresh
+	memset(g_lastText, 0, sizeof(g_lastText));
 	SetType(BOUNDED(g_notesType, 0, m_cbType.GetCount()-1)); // + Update()
 
 /* see OnTimer()
@@ -254,7 +255,6 @@ void NotesWnd::OnDestroy()
 	g_prevNotesType = -1;
 	m_cbType.Empty();
 	m_edit = nullptr;
-	memset(g_lastText, 0, sizeof(g_lastText));
 }
 
 // note: no diff with current type, init would fail otherwise
@@ -1682,9 +1682,6 @@ void OpenNotes(COMMAND_T* _ct)
 			newType = g_notesType;
 
 		w->Show(g_notesType == newType /* i.e toggle */, true);
-
-		if (!w->GetHWND())
-			return;
 
 		w->SetType(newType);
 

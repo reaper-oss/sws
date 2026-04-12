@@ -2688,6 +2688,27 @@ int GetEffectiveAutomationMode (MediaTrack* track)
 	return (override == -1 || override == 5) ? (int)GetMediaTrackInfo_Value(track, "I_AUTOMODE") : override;
 }
 
+int GetSendEnvEffectiveAutomationMode(MediaTrack *track, int sendId, const BR_EnvType type)
+{
+	++sendId;
+
+	const int envCount = CountTrackEnvelopes(track);
+	for (int i = 0; i < envCount; ++i)
+	{
+		TrackEnvelope *env = GetTrackEnvelope(track, i);
+		if (GetEnvelopeInfo_Value(env, "I_SEND_IDX") != sendId)
+			continue;
+		if (GetEnvType(env, nullptr, nullptr) != type)
+			continue;
+		int mode = GetTrackSendInfo_Value(track, 0, sendId - 1, "I_AUTOMODE");
+		if (mode == -1)
+			mode = GetEffectiveAutomationMode(track);
+		return mode;
+	}
+
+	return -1;
+}
+
 int CountTrackEnvelopePanels (MediaTrack* track)
 {
 	const int tcp_h_no_envs = (int)GetMediaTrackInfo_Value(track, "I_TCPH");

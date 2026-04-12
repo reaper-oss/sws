@@ -283,6 +283,7 @@ bool ShowSendEnvelopes (vector<MediaTrack*>& tracks, BR_EnvType envelopeTypes);
 bool EnvVis (TrackEnvelope* envelope, bool* lane);
 int GetEnvId (TrackEnvelope* envelope, MediaTrack* parent = NULL);
 int GetEffectiveAutomationMode (MediaTrack* track); // takes global override into account
+int GetSendEnvEffectiveAutomationMode(MediaTrack *track, int sendId, const BR_EnvType type);
 int CountTrackEnvelopePanels (MediaTrack* track);
 BR_EnvShape GetDefaultPointShape ();
 BR_EnvType GetEnvType (TrackEnvelope* envelope, bool* isSend, bool* isHwSend); // note: relies on envelope names, localization could theoretically break it

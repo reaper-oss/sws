@@ -170,7 +170,7 @@ bool CF_ShellExecute(const char *file, const char *args)
 #ifdef _WIN32
   static_assert(&ShellExecute == &ShellExecuteUTF8,
     "ShellExecute is not aliased to ShellExecuteUTF8");
-  HINSTANCE ret { ShellExecute(nullptr, "open", file, args, nullptr, SW_SHOW) };
+  HINSTANCE ret { ShellExecute(nullptr, nullptr, file, args, nullptr, SW_SHOW) };
   return ret > reinterpret_cast<HINSTANCE>(32);
 #else
   return ShellExecute(nullptr, "open", file, args, nullptr, SW_SHOW);

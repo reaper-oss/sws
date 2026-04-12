@@ -1496,7 +1496,8 @@ void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, Me
 		{
 			TrackEnvelope *env = GetTrackEnvelope(track, i);
 			const int envH = static_cast<int>(GetEnvelopeInfo_Value(env, "I_TCPH"));
-			if (envH < 1) continue;
+			const int envHused = static_cast<int>(GetEnvelopeInfo_Value(env, "I_TCPH_USED"));
+			if (envH < 1 || envHused < 1) continue;
 
 			int envY = static_cast<int>(GetEnvelopeInfo_Value(env, "I_TCPY"));
 			if (envY < elementHeight - spacer) continue; // does not have an envcp
@@ -1512,7 +1513,7 @@ void BR_MouseInfo::GetTrackOrEnvelopeFromY (int y, TrackEnvelope** _envelope, Me
 				// report the height without the AI label gap, but still use the full height for detection under mouse
 				envelope = env;
 				elementOffset += static_cast<int>(GetEnvelopeInfo_Value(env, "I_TCPY_USED"));
-				elementHeight = static_cast<int>(GetEnvelopeInfo_Value(env, "I_TCPH_USED"));
+				elementHeight = envHused;
 				break;
 			}
 		}

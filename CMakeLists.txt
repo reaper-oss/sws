@@ -3,6 +3,7 @@ project(sws LANGUAGES C CXX)
 
 option(BUILD_SWS_PYTHON  "Generate sws_python(32|64).py (requires Perl)" ON)
 option(USE_SYSTEM_TAGLIB "Link against the system-provided TagLib"       OFF)
+option(SWS_NOGDK "Disable features using GDK for headless mode on Linux" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -167,6 +168,10 @@ if(USE_SYSTEM_TAGLIB)
   target_compile_definitions(sws PRIVATE USE_SYSTEM_TAGLIB)
 endif()
 
+if(SWS_NOGDK)
+  target_compile_definitions(sws PRIVATE SWS_NOGDK)
+endif()
+
 find_package(SWELL)
 if(SWELL_FOUND)
   target_link_libraries(sws SWELL::swell)
@@ -181,7 +186,7 @@ if(SWELL_FOUND)
     MAIN_DEPENDENCY sws_extension.rc
   )
 
-  if(NOT APPLE)
+  if(NOT APPLE AND NOT SWS_NOGDK)
     pkg_search_module(GDK REQUIRED gdk-3.0 gdk-2.0)
     # not linking: REAPER takes care of loading GDK via the SWELL_WANT_LOAD_LIBRARY mechanism
     target_include_directories(sws PRIVATE ${GDK_INCLUDE_DIRS})

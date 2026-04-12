@@ -26,7 +26,9 @@
 
 #include "stdafx.h"
 
+#ifndef SWS_NOGDK
 #include <gdk/gdk.h>
+#endif
 
 void SWS_GetDateString(int time, char* buf, int bufsize)
 {
@@ -46,6 +48,9 @@ void SWS_GetTimeString(int time, char* buf, int bufsize)
 
 HCURSOR SWS_Cursor::makeFromData()
 {
+#ifdef SWS_NOGDK
+  return nullptr;
+#else
   if (inst)
     return inst;
 
@@ -62,6 +67,7 @@ HCURSOR SWS_Cursor::makeFromData()
   g_object_unref(pb);
 
   return inst = reinterpret_cast<HCURSOR>(cur);
+#endif
 }
 
 void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwExtraInfo)

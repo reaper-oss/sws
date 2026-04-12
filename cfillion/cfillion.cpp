@@ -45,7 +45,7 @@
 #  include <CoreFoundation/CFString.h>
 #elif defined(_WIN32)
 #  include "Utility/win32-import.h"
-#else
+#elif !defined(SWS_NOGDK)
 #  include <glib.h>
 #endif
 
@@ -645,7 +645,7 @@ void CF_NormalizeUTF8(const char *input, const unsigned int mode,
     WideCharToMultiByte(CP_UTF8, 0, normalized.data(), normalizedChars,
       output, outputSize, nullptr, nullptr);
   }
-#else
+#elif !defined(SWS_NOGDK)
   constexpr GNormalizeMode forms[] {
     G_NORMALIZE_NFD,  // 0b00
     G_NORMALIZE_NFC,  // 0b01

@@ -560,6 +560,62 @@ int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
 	SWS_DockWnd* p = (SWS_DockWnd*)ctx->user;
 	if (p && p->IsActive(true))
 	{
+		const HWND focused = GetFocus();
+		const bool focusInDockWnd = focused && (focused == p->m_hwnd || IsChild(p->m_hwnd, focused));
+		const auto allowSpaceToDialog = [focused]() -> bool {
+			if (!focused)
+				return false;
+			char className[64] = "";
+			GetClassName(focused, className, sizeof(className));
+			if (!strcmp(className, "ListBox"))
+				return false;
+			if (!strcmp(className, "Button"))
+			{
+				const LONG_PTR style = GetWindowLongPtr(focused, GWL_STYLE);
+				switch (style & BS_TYPEMASK)
+				{
+					case BS_AUTOCHECKBOX:
+					case BS_AUTORADIOBUTTON:
+					case BS_CHECKBOX:
+					case BS_RADIOBUTTON:
+						return false;
+					default:
+						return true;
+				}
+			}
+			return true;
+		};
+
+		if (g_SNM_AccessibilityKeyboardNav && msg->message == WM_KEYDOWN)
+		{
+			const bool ctrlDown = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+			const bool altDown = (GetKeyState(VK_MENU) & 0x8000) != 0;
+			if (!ctrlDown && !altDown)
+			{
+				if (msg->wParam == VK_SPACE && focusInDockWnd)
+				{
+					if (allowSpaceToDialog())
+						return 0;
+					return -666;
+				}
+				switch (msg->wParam)
+				{
+					case VK_TAB:
+					case VK_LEFT:
+					case VK_RIGHT:
+					case VK_UP:
+					case VK_DOWN:
+					case VK_HOME:
+					case VK_END:
+					case VK_PRIOR:
+					case VK_NEXT:
+						if (IsDialogMessage(p->m_hwnd, msg))
+							return 1;
+						break;
+				}
+			}
+		}
+
 		// First check for editing keys
 		SWS_ListView* pLV = NULL;
 		for (int i = 0; i < p->m_pLists.GetSize(); i++)
@@ -586,6 +642,27 @@ int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
 			iRet = pLV->LVKeyHandler(msg, iKeys);
 			if (iRet)
 				return iRet;
+		}
+		// When accessibility tab navigation is enabled, let focused controls handle
+		// plain alphanumeric navigation (e.g., listbox type-to-select).
+		if (g_SNM_AccessibilityKeyboardNav && focusInDockWnd && msg->message == WM_KEYDOWN)
+		{
+			const bool ctrlDown = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+			const bool altDown = (GetKeyState(VK_MENU) & 0x8000) != 0;
+			const WPARAM key = msg->wParam;
+			if (!ctrlDown && !altDown && ((key >= '0' && key <= '9') || (key >= 'A' && key <= 'Z')))
+				return 0;
+		}
+		if (g_SNM_AccessibilityKeyboardNav && focusInDockWnd &&
+			(msg->message == WM_CHAR || msg->message == WM_SYSCHAR))
+		{
+			const bool ctrlDown = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+			const bool altDown = (GetKeyState(VK_MENU) & 0x8000) != 0;
+			if (ctrlDown && !altDown && msg->wParam == 0x1A) // Ctrl+Z
+				return -666;
+			if (msg->wParam == VK_SPACE && !allowSpaceToDialog())
+				return -666;
+			return 0;
 		}
 		// We don't want the key, but this window has the focus.
 		// Therefore, force it to main reaper wnd (passthrough) so that main wnd actions work!

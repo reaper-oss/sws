@@ -371,6 +371,16 @@ int IsToolbarsAutoRefeshEnabled(COMMAND_T* _ct) {
 	return g_SNM_ToolbarRefresh;
 }
 
+void ToggleDockWndTabNavigation(COMMAND_T* _ct)
+{
+	g_SNM_AccessibilityKeyboardNav = !g_SNM_AccessibilityKeyboardNav;
+}
+
+int IsDockWndTabNavigationEnabled(COMMAND_T* _ct)
+{
+	return g_SNM_AccessibilityKeyboardNav;
+}
+
 void SNM_RefreshToolbars()
 {
 	constexpr int (*watchStateGetters[])(COMMAND_T *)

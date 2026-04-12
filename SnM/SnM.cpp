@@ -454,6 +454,7 @@ static COMMAND_T s_cmdTable[] =
 
 	// Toolbar ----------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Toggle toolbars auto refresh enable" },	"S&M_TOOLBAR_REFRESH_ENABLE", EnableToolbarsAutoRefesh, NULL, 0, IsToolbarsAutoRefeshEnabled},
+	{ { DEFACCEL, "SWS/S&M: Toggle dock window tab navigation (for screen reader users)" }, "S&M_DOCKWND_TABNAV_TOGGLE", ToggleDockWndTabNavigation, NULL, 0, IsDockWndTabNavigationEnabled},
 	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle track envelopes in touch/latch/latch preview/write" }, "S&M_TOOLBAR_WRITE_ENV", ToggleWriteEnvExists, NULL, 0, WriteEnvExists},
 	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle offscreen item selection (left)" }, "S&M_TOOLBAR_ITEM_SEL0", ToggleOffscreenSelItems, NULL, SNM_ITEM_SEL_LEFT, HasOffscreenSelItems},
 	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle offscreen item selection (right)" },"S&M_TOOLBAR_ITEM_SEL1", ToggleOffscreenSelItems, NULL, SNM_ITEM_SEL_RIGHT, HasOffscreenSelItems},
@@ -1117,7 +1118,7 @@ int MidiOscActionJob::AdjustRelative(int _adjmode, int _reladj)
 WDL_FastString g_SNM_IniFn, g_SNM_CyclIniFn, g_SNM_DiffToolFn;
 int g_SNM_Beta=0, g_SNM_LearnPitchAndNormOSC=0;
 int g_SNM_MediaFlags=0, g_SNM_ToolbarRefreshFreq=SNM_DEF_TOOLBAR_RFRSH_FREQ;
-bool g_SNM_ToolbarRefresh = false, g_SNM_ExtSubmenu = true;
+bool g_SNM_ToolbarRefresh = false, g_SNM_ExtSubmenu = true, g_SNM_AccessibilityKeyboardNav = false;
 
 
 void IniFileInit()
@@ -1132,6 +1133,11 @@ void IniFileInit()
 	g_SNM_ToolbarRefresh = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNM_IniFn.Get()) == 1);
 	g_SNM_ToolbarRefreshFreq = BOUNDED(GetPrivateProfileInt("General", "ToolbarsAutoRefreshFreq", SNM_DEF_TOOLBAR_RFRSH_FREQ, g_SNM_IniFn.Get()), 100, 5000);
 	g_SNM_SupportBuggyPlug = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNM_IniFn.Get());
+	const int accessibilityKeyNav = GetPrivateProfileInt("General", "AccessibilityKeyboardNav", -1, g_SNM_IniFn.Get());
+	if (accessibilityKeyNav >= 0)
+		g_SNM_AccessibilityKeyboardNav = (accessibilityKeyNav == 1);
+	else
+		g_SNM_AccessibilityKeyboardNav = (GetPrivateProfileInt("General", "DockWndTabNavigation", 0, g_SNM_IniFn.Get()) == 1);
 
 	// #1175, prompt by default, may be overridden
 	if (GetPrivateProfileInt("Misc", "RemoveAllEnvsSelTracksPrompt", -666, g_SNM_IniFn.Get()) == -666)
@@ -1169,6 +1175,7 @@ void IniFileExit()
 		<< "ToolbarsAutoRefresh=" << (g_SNM_ToolbarRefresh ? 1 : 0) << '\0'
 		<< "ToolbarsAutoRefreshFreq=" << g_SNM_ToolbarRefreshFreq << " ; in ms (min: 100, max: 5000)" << '\0'
 		<< "BuggyPlugsSupport=" << (g_SNM_SupportBuggyPlug ? 1 : 0) << '\0'
+		<< "AccessibilityKeyboardNav=" << (g_SNM_AccessibilityKeyboardNav ? 1 : 0) << '\0'
 #ifdef _WIN32
 		<< "ClearTypeFont=" << (g_SNM_ClearType ? 1 : 0) << '\0'
 		<< "DiffTool=\"" << g_SNM_DiffToolFn.Get() << '"' << '\0'

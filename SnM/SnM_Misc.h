@@ -64,6 +64,8 @@ bool SNM_TagMediaFile(const char *fn, const char* tag, const char* tagval);
 // toolbar auto refresh
 void EnableToolbarsAutoRefesh(COMMAND_T*);
 int IsToolbarsAutoRefeshEnabled(COMMAND_T*);
+void ToggleDockWndTabNavigation(COMMAND_T*);
+int IsDockWndTabNavigationEnabled(COMMAND_T*);
 void AutoRefreshToolbarRun();
 
 // misc actions

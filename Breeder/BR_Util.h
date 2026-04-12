@@ -234,6 +234,7 @@ int GetTakeEnvHeight (MediaItem_Take* take, int* offsetY);
 int GetTakeEnvHeight (MediaItem* item, int id, int* offsetY);
 int GetTrackEnvHeight (TrackEnvelope* envelope, int* offsetY, bool drawableRangeOnly, MediaTrack* parent = NULL);
 int GetTrackSpacerSize (MediaTrack* track, bool isMcp = false, const int* heightOverride = NULL);
+char GetTrackFixedLanesFlags(MediaTrack* track);
 
 /******************************************************************************
 * Arrange                                                                     *

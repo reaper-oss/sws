@@ -69,6 +69,9 @@ bool RestoreSelectedTracks()
 
 void SetTrackHeight(MediaTrack* track, int height, bool useChunk)
 {
+	if (GetMediaTrackInfo_Value(track, "I_FREEMODE") == 2 && (GetTrackFixedLanesFlags(track) & 1 << 3) > 0)
+		height /= static_cast<int>(GetMediaTrackInfo_Value(track, "I_NUMFIXEDLANES"));
+
 	if (!useChunk)
 	{
 		GetSetMediaTrackInfo(track, "I_HEIGHTOVERRIDE", &height);

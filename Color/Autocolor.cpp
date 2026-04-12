@@ -1080,6 +1080,7 @@ void AutoColorTrack(bool bForce)
 
 	if (bForce)
 		Undo_OnStateChangeEx(__LOCALIZE("Apply auto color/icon/layout","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
+	UpdateArrange();
 	PreventUIRefresh(-1);
 
 	bRecurse = false;

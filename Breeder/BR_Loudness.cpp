@@ -1043,15 +1043,21 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	int mode = integratedOnly ? EBUR128_MODE_I : EBUR128_MODE_M | EBUR128_MODE_S | EBUR128_MODE_I | EBUR128_MODE_LRA;
 	if (!integratedOnly && doTruePeak)
 		mode |= EBUR128_MODE_TRUE_PEAK;
-	loudnessState = ebur128_init((size_t)data.channels, (size_t)data.samplerate, mode);
+
+	// relevantChannels: how many channels to request from the audio accessor and pass to
+	// ebur128. For ambisonics only W (ch0) is measured, so we request 1 channel — this
+	// avoids ingesting all HOA channels (~16× speedup for TOA, ~9× for SOA, etc.).
+	// For all other modes we need every channel, so relevantChannels == data.channels.
+	int relevantChannels = data.channels;
 
 	// Ignore channels according to channel mode. Note: we can't partially request samples, i.e. channel mode is mono, but take is stereo...asking for
 	// 1 channel only won't work. We must always request the real channel count even though reaper interleaves active channels starting from 0
 	if (data.channelMode > 1)
 	{
+		loudnessState = ebur128_init((size_t)data.channels, (size_t)data.samplerate, mode);
 		// Mono channel modes
 		if (data.channelMode <= 66)
-		{	
+		{
 			if (doDualMonoMode) {
 				// Actually there's a check in ebur128_set_channel() for dual mono mode:
 				// if ebur128_init() is called with channels > 1 than dual mono mode is disabled.
@@ -1081,18 +1087,86 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	// Dual mono mode for mono takes
 	else if (doDualMonoMode && _this->m_take && data.channels == 1)
 	{
+		loudnessState = ebur128_init((size_t)data.channels, (size_t)data.samplerate, mode);
 		ebur128_set_channel(loudnessState, 0, EBUR128_DUAL_MONO);
 		for (int i = 1; i <= data.channels; ++i)
 			ebur128_set_channel(loudnessState, i, EBUR128_UNUSED);
 	}
-	// Normal channel mode
+	// Normal channel mode — auto-detect format from channel count
 	else
 	{
-		ebur128_set_channel(loudnessState, 0, EBUR128_LEFT);
-		ebur128_set_channel(loudnessState, 1, EBUR128_RIGHT);
-		ebur128_set_channel(loudnessState, 2, EBUR128_CENTER);
-		ebur128_set_channel(loudnessState, 3, EBUR128_LEFT_SURROUND);
-		ebur128_set_channel(loudnessState, 4, EBUR128_RIGHT_SURROUND);
+		// Ambisonic channel counts are perfect squares: (N+1)^2
+		//   FOA=4, SOA=9, TOA=16, 4th=25, ... 10th=121 — all detected correctly.
+		// Standard surround formats (6, 8, 10, 12, 14) are not perfect squares — no collision.
+		// 16ch is TOA; 9.1.6 would also be 16ch but TOA takes priority here.
+		// Use lround() instead of (int) cast to avoid floating-point rounding on large values.
+		const int sqrtCh = (int)lround(sqrt((double)data.channels));
+		const bool isAmbisonics = (sqrtCh * sqrtCh == data.channels && data.channels >= 4);
+
+		if (isAmbisonics)
+		{
+			// HOA / ambisonics: measure only the W channel (0th-order, omnidirectional).
+			// Per Peters & Epain (AES 154th 2023), applying BS.1770 directly to W is as
+			// accurate as full loudspeaker rendering, with no order-specific correction needed.
+			// Request only 1 channel from the accessor — no need to ingest all HOA channels.
+			relevantChannels = 1;
+			loudnessState = ebur128_init(1, (size_t)data.samplerate, mode);
+			ebur128_set_channel(loudnessState, 0, EBUR128_LEFT); // W channel, G=1.00
+		}
+		else if (data.channels == 14)
+		{
+			// 9.1.4: L, R, C, LFE, Lss, Rss, Ls, Rs, Lb, Rb, Ltf, Rtf, Ltb, Rtb
+			//
+			// Dolby/SMPTE ordering for extended theatrical bed + 4 height channels.
+			// Lss/Rss = wide side at ~±60°, Ls/Rs = surround at ~±110° — both ear-level in
+			// the 60°–120° azimuth range → G=1.41 per BS.1770-5 Annex 3 Table 4.
+			// Lb/Rb = rear back at ~±150° (|θ|>120°, ear-level) → G=1.00.
+			// All height channels (elevation ≥30°) → G=1.00 regardless of azimuth.
+			loudnessState = ebur128_init((size_t)data.channels, (size_t)data.samplerate, mode);
+			ebur128_set_channel(loudnessState, 0,  EBUR128_LEFT);           // L
+			ebur128_set_channel(loudnessState, 1,  EBUR128_RIGHT);          // R
+			ebur128_set_channel(loudnessState, 2,  EBUR128_CENTER);         // C
+			ebur128_set_channel(loudnessState, 3,  EBUR128_UNUSED);         // LFE — excluded
+			ebur128_set_channel(loudnessState, 4,  EBUR128_LEFT_SURROUND);  // Lss ~±60°,  G=1.41
+			ebur128_set_channel(loudnessState, 5,  EBUR128_RIGHT_SURROUND); // Rss ~±60°,  G=1.41
+			ebur128_set_channel(loudnessState, 6,  EBUR128_LEFT_SURROUND);  // Ls  ~±110°, G=1.41
+			ebur128_set_channel(loudnessState, 7,  EBUR128_RIGHT_SURROUND); // Rs  ~±110°, G=1.41
+			ebur128_set_channel(loudnessState, 8,  EBUR128_LEFT);           // Lb  ~±150°, G=1.00
+			ebur128_set_channel(loudnessState, 9,  EBUR128_RIGHT);          // Rb  ~±150°, G=1.00
+			ebur128_set_channel(loudnessState, 10, EBUR128_LEFT);           // Ltf height, G=1.00
+			ebur128_set_channel(loudnessState, 11, EBUR128_RIGHT);          // Rtf height, G=1.00
+			ebur128_set_channel(loudnessState, 12, EBUR128_LEFT);           // Ltb height, G=1.00
+			ebur128_set_channel(loudnessState, 13, EBUR128_RIGHT);          // Rtb height, G=1.00
+		}
+		else
+		{
+			// Dolby/SMPTE channel ordering up to 7.1.4 (12ch):
+			//   L, R, C, LFE, Ls, Rs, Lb, Rb, Ltf, Rtf, Ltb, Rtb
+			//
+			// Per BS.1770-5 Annex 3 Table 4 (position-dependent weightings):
+			//   G=1.41 : ear-level side surrounds at azimuth 60°-120° (Ls, Rs at ~±110°)
+			//   G=1.00 : all other channels — front (L,R,C), rear-backs (Lb,Rb at ~±135°),
+			//            and ALL height channels (any elevation >= 30°)
+			//
+			// 10ch is treated as 7.1.2 (L,R,C,LFE,Ls,Rs,Lb,Rb,Ltf,Rtf); 9.1 has the same
+			// channel count and cannot be distinguished without file metadata.
+			// libebur128 only has LEFT_SURROUND/RIGHT_SURROUND for G=1.41;
+			// for G=1.00 channels we reuse LEFT/RIGHT/CENTER as appropriate.
+			loudnessState = ebur128_init((size_t)data.channels, (size_t)data.samplerate, mode);
+			if (data.channels >= 1)  ebur128_set_channel(loudnessState, 0,  EBUR128_LEFT);
+			if (data.channels >= 2)  ebur128_set_channel(loudnessState, 1,  EBUR128_RIGHT);
+			if (data.channels >= 3)  ebur128_set_channel(loudnessState, 2,  EBUR128_CENTER);
+			if (data.channels >= 4)  ebur128_set_channel(loudnessState, 3,  EBUR128_UNUSED);        // LFE — excluded
+			if (data.channels >= 5)  ebur128_set_channel(loudnessState, 4,  EBUR128_LEFT_SURROUND); // Ls  ~±110°, G=1.41
+			if (data.channels >= 6)  ebur128_set_channel(loudnessState, 5,  EBUR128_RIGHT_SURROUND);// Rs  ~±110°, G=1.41
+			if (data.channels >= 7)  ebur128_set_channel(loudnessState, 6,  EBUR128_LEFT);          // Lb  ~±135°, G=1.00
+			if (data.channels >= 8)  ebur128_set_channel(loudnessState, 7,  EBUR128_RIGHT);         // Rb  ~±135°, G=1.00
+			if (data.channels >= 9)  ebur128_set_channel(loudnessState, 8,  EBUR128_LEFT);          // Ltf height, G=1.00
+			if (data.channels >= 10) ebur128_set_channel(loudnessState, 9,  EBUR128_RIGHT);         // Rtf height, G=1.00
+			if (data.channels >= 11) ebur128_set_channel(loudnessState, 10, EBUR128_LEFT);          // Ltb height, G=1.00
+			if (data.channels >= 12) ebur128_set_channel(loudnessState, 11, EBUR128_RIGHT);         // Rtb height, G=1.00
+			// Channels beyond 12 (other than 14ch/9.1.4) stay at libebur128 defaults (UNUSED)
+		}
 	}
 
 	bool doShortTerm = true;
@@ -1115,7 +1189,7 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 	const double audioLength = data.audioEnd - data.audioStart;
 
 	int sampleCount = data.samplerate / refreshRateInHz;
-	int bufSz = sampleCount * data.channels;
+	int bufSz = sampleCount * relevantChannels;
 	double currentTime = data.audioStart;
 	bool momentaryFilled = true;
 	int processedSamples = 0;
@@ -1129,14 +1203,14 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 		if (remainingTime < bufferTime + numeric_limits<double>::epsilon())
 		{
 			sampleCount = static_cast<int>(data.samplerate * remainingTime);
-			bufSz = sampleCount * data.channels;
+			bufSz = sampleCount * relevantChannels;
 			skipIntervals = true;
 		}
 
 		// Get new 200 ms (or 10 ms in high precision mode) of samples
 		// GetAudioAccessorSamples() stops writing to the buffer once it reaches the item's end, everything from that point to sampleCount is garbage
 		std::vector<double> samples(bufSz);
-		GetAudioAccessorSamples(data.audio, data.samplerate, data.channels, currentTime, sampleCount, &samples[0]);
+		GetAudioAccessorSamples(data.audio, data.samplerate, relevantChannels, currentTime, sampleCount, &samples[0]);
 
 		// Correct for volume and pan/volume envelopes
 		int currentChannel = 1;
@@ -1166,10 +1240,10 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 
 			sample *= adjust;
 
-			if (++currentChannel > data.channels)
+			if (++currentChannel > relevantChannels)
 				currentChannel = 1;
 
-			if (currentChannel + 1 > data.channels)
+			if (currentChannel + 1 > relevantChannels)
 				sampleTime = sampleTime + sampleTimeLen;
 		}
 
@@ -1233,7 +1307,7 @@ unsigned WINAPI BR_LoudnessObject::AnalyzeData (void* loudnessObject)
 			ebur128_loudness_range(loudnessState, &range);
 			if (doTruePeak)
 			{
-				for (int i = 0; i < data.channels; ++i)
+				for (int i = 0; i < relevantChannels; ++i)
 				{
 					double channelTruePeak, channelTruePeakPos;
 					ebur128_true_peak(loudnessState, i, &channelTruePeak, &channelTruePeakPos);

@@ -89,7 +89,7 @@ private:
 		int index;
 		std::string name;
 		double pos;
-        bool operator== (const GrooveMarker &rhs);
+		bool operator== (const GrooveMarker &rhs) const;
 	};
 
 	static GrooveTemplateHandler *instance;

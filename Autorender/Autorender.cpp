@@ -469,14 +469,11 @@ void MakeMediaFilesAbsolute( WDL_FastString *prjStr ){
 	const char *firstChar;
 	string firstTokenStr;
 
-	int lineNum = 0; //for debugging
-
 	//Reaper API's GetProjectPath() returns the path to the project's audio dir, not to .rpp!
 	char projPath[MAX_PATH];
 	GetProjectRealPath( projPath );
 
 	while( GetChunkLine( prjStr->Get(), line, 4096, &pos, false ) ){
-		lineNum++;
 		if( !lp.parse( line ) && lp.getnumtokens() ) {
 			firstTokenStr = lp.gettoken_str(0);
 			firstTokenStr = firstTokenStr.substr(0,1);

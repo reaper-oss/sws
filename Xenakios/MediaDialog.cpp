@@ -493,7 +493,6 @@ void FindMissingFiles()
 		{
 			t_project_take TempTake;
 			TempTake=TakesMissingFiles[i];
-			int FileMatches=0;
 			strcpy(FullFilename,TakesMissingFiles[i].FileName.c_str());
 			ExtractFileNameEx(FullFilename,Shortfilename,false);
 			g_MatchingFiles.clear();
@@ -504,7 +503,6 @@ void FindMissingFiles()
 				ExtractFileNameEx(FullFilenameB,ShortfilenameB,false);
 				if (strcmp(Shortfilename,ShortfilenameB)==0)
 				{
-					FileMatches++;
 					g_MatchingFiles.push_back(FoundMediaFiles[j]);
 				}
 			}

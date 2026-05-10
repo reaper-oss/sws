@@ -12,7 +12,7 @@
 
 #include <WDL/localize/localize.h>
 
-bool GrooveTemplateHandler::GrooveMarker::operator== (const GrooveMarker &rhs)
+bool GrooveTemplateHandler::GrooveMarker::operator== (const GrooveMarker &rhs) const
 {
     return index == rhs.index;
 }

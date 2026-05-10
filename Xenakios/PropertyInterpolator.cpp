@@ -446,7 +446,6 @@ void PerformPropertyChanges()
 {
 	int i;
 	int j;
-	double accumScaler=1.0;
 
 	PreventUIRefresh(1);
 	for (i=0;i<(int)g_IItakes.size();i++)
@@ -492,7 +491,6 @@ void PerformPropertyChanges()
 
 				ItemPosX=g_MinItemTime+(ItemPosX*newItemPropValueF);
 				GetSetMediaItemInfo((MediaItem*)GetSetMediaItemTakeInfo(g_IItakes[i],"P_ITEM",0),"D_POSITION",&ItemPosX);
-				accumScaler+=interpValue;
 			}
 			if (strcmp(g_IIproperties[j].APIAccessID,"F_FREEMODE_Y")==0 && g_IIproperties[j].enabled)
 			{

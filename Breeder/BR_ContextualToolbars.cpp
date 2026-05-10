@@ -78,7 +78,6 @@ enum BuiltinActions
 
 struct ContextAction
 {
-	ContextAction(const ContextAction &) = delete; // all instances must be in the g_actions table
 	int iniKey;
 	enum Type
 	{

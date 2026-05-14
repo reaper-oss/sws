@@ -52,7 +52,7 @@
 
 enum { AC_ANY=0, AC_UNNAMED, AC_FOLDER, AC_CHILDREN, AC_RECEIVE, AC_MASTER, AC_REC_ARM, AC_VCA_MASTER, AC_INSTRUMENT, AC_AUDIOIN, AC_AUDIOOUT, AC_MIDIIN, AC_MIDIOUT, NUM_FILTERTYPES };
 enum { AC_RGNANY=0, AC_RGNUNNAMED, NUM_RGNFILTERTYPES };
-enum { AC_CUSTOM, AC_GRADIENT, AC_RANDOM, AC_NONE, AC_PARENT, AC_IGNORE, NUM_COLORTYPES };
+enum { AC_CUSTOM, AC_GRADIENT, AC_RANDOM, AC_RANDOM_CUSTOM, AC_CUSTOM_NEXT, AC_NONE, AC_PARENT, AC_IGNORE, NUM_COLORTYPES };
 enum { COL_ID=0, COL_TYPE, COL_FILTER, COL_COLOR, COL_ICON, COL_TCP_LAYOUT, COL_MCP_LAYOUT, COL_COUNT };
 enum { AC_TRACK=0, AC_MARKER, AC_REGION, NUM_TYPETYPES }; // keep this order and 2^ values
                                                           // (values used as masks => adding a 4th type would require another solution)
@@ -74,7 +74,7 @@ enum Commands : WPARAM {
 static SWS_LVColumn g_cols[] = { {25, 0, "#" }, {25, 0, "Rule type"}, { 185, 1, "Filter" }, { 70, 1, "Color" }, { 200, 2, "Icon" }, { 100, 1, "TCP Layout" }, { 100, 1, "MCP Layout" }};
 static const char cTypes[][256] = {"Track", "Marker", "Region" }; // keep this order, see above
 static const char cFilterTypes[][256] = { "(any)", "(unnamed)", "(folder)", "(children)", "(receive)", "(master)", "(record armed)", "(vca master)", "(instrument)", "(audio input)", "(audio output)", "(MIDI input)", "(MIDI output)" };
-static const char cColorTypes[][256] = { "Custom", "Gradient", "Random", "None", "Parent", "Ignore" };
+static const char cColorTypes[][256] = { "Custom", "Gradient", "Random", "Random Custom", "Custom +1", "None", "Parent", "Ignore" };
 static const char *cHideLayout = "(hide)"; // #1008, additional '(hide)' layout, same for TCP and MCP
 // !WANT_LOCALIZE_STRINGS_END
 
@@ -878,6 +878,76 @@ void ApplyColorRuleToTrack(FlatSet<SWS_RuleTrack> *activeRules, SWS_RuleItem* ru
 							if (!(iCurColor & 0x1000000))
 								newCol = RGB(rand() % 256, rand() % 256, rand() % 256) | 0x1000000;
 						}
+						else if (rule->m_color == -AC_RANDOM_CUSTOM-1)
+						{
+							if (!(iCurColor & 0x1000000))
+							{
+								// Collect valid custom colors (exclude empty/black slots)
+								int validColors[16];
+								int numValid = 0;
+								for (int c = 0; c < 16; c++) {
+									if (g_custColors[c] != 0) {
+										validColors[numValid++] = g_custColors[c];
+									}
+								}
+								// Pick a random color from the valid custom colors
+								if (numValid > 0) {
+									newCol = validColors[rand() % numValid] | 0x1000000;
+								} else {
+									// 비어있다면 일반 랜덤으로 대체
+									newCol = RGB(rand() % 256, rand() % 256, rand() % 256) | 0x1000000;
+								}
+							}
+						}
+						else if (rule->m_color == -AC_CUSTOM_NEXT-1)
+						{
+							if (!(iCurColor & 0x1000000)) // If the track doesn't have a custom color yet
+							{
+								if (!AllBlack()) // Ensure the palette has at least one color
+								{
+									int nextIdx = 0;
+									bool foundPrev = false;
+
+									// 1. Look at the previous track (i > 1 ensures we skip the Master track and Track 1)
+									if (i > 1) {
+										MediaTrack* prevTr = GetTrack(nullptr, i - 2); // i is 1-based index, so i-2 gets the previous track
+										if (prevTr) {
+											int prevColor = *(int*)GetSetMediaTrackInfo(prevTr, "I_CUSTOMCOLOR", NULL);
+											if (prevColor & 0x1000000) {
+												int rawPrevColor = prevColor & 0xFFFFFF;
+
+												// 2. Find if the previous track's color is in our custom palette
+												for (int c = 0; c < 16; c++) {
+													if (g_custColors[c] == rawPrevColor) {
+														// Found it! Find the NEXT valid (non-black) color slot
+														for (int offset = 1; offset <= 16; offset++) {
+															int checkIdx = (c + offset) % 16;
+															if (g_custColors[checkIdx] != 0) {
+																nextIdx = checkIdx;
+																foundPrev = true;
+																break;
+															}
+														}
+														break;
+													}
+												}
+											}
+										}
+									}
+									// 3. If there is no previous track, or its color isn't in the palette, use the FIRST valid color
+									if (!foundPrev) {
+										for (int c = 0; c < 16; c++) {
+											if (g_custColors[c] != 0) {
+												nextIdx = c;
+												break;
+											}
+										}
+									}
+									// Apply the chosen color
+									newCol = g_custColors[nextIdx] | 0x1000000;
+								}
+							}
+						}						
 						else if (rule->m_color == -AC_CUSTOM-1)
 						{
 							if (!AllBlack())

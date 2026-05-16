@@ -746,6 +746,7 @@ Snapshot::Snapshot(const char* chunk)
 	TrackSnapshot* ts = NULL;
 	m_cName = NULL;
 	m_cNotes = NULL;
+	m_iSlot = 0;
 
 	int auxEnvsOccurence = -1;
 
@@ -822,7 +823,6 @@ Snapshot::Snapshot(const char* chunk)
 
 				ts->m_sends.m_sends.Add(new TrackSend(line, AUXVOL.Get(), AUXPAN.Get(), AUXMUTE.Get()));
 			}
-
 			else if (strcmp("HWOUT", lp.gettoken_str(0)) == 0)
 				ts->m_sends.m_hwSends.Add(new WDL_FastString(line));
 			else if (strcmp("FX", lp.gettoken_str(0)) == 0) // "One liner"
@@ -869,7 +869,9 @@ Snapshot::Snapshot(const char* chunk)
 			else if (ts->ProcessEnv(chunk, line, 4096, &pos, "<MUTEENV", &ts->m_sMuteEnv)) {}
 		}
 	}
-	RegisterSnapshotSlot(m_iSlot);
+
+	if (m_iSlot > 0)
+		RegisterSnapshotSlot(m_iSlot);
 }
 
 Snapshot::~Snapshot()

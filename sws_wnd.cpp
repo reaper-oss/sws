@@ -1284,8 +1284,9 @@ void SWS_ListView::Update(const bool reassign)
 #ifdef _WIN32
 		if (m_hwndTooltip)
 		{
-			TOOLINFO ti = { sizeof(TOOLINFO), };
-			ti.lpszText = str;
+			wchar_t wstr[CELL_MAX_LEN] = L"";
+			TOOLINFOW ti = { sizeof(ti), };
+			ti.lpszText = wstr;
 			ti.hwnd = m_hwndList;
 			ti.uFlags = TTF_SUBCLASS;
 			ti.hinst  = g_hInst;
@@ -1294,16 +1295,14 @@ void SWS_ListView::Update(const bool reassign)
 			while (SendMessage(m_hwndTooltip, TTM_ENUMTOOLS, 0, (LPARAM)&ti))
 				SendMessage(m_hwndTooltip, TTM_DELTOOL, 0, (LPARAM)&ti);
 
-			RECT r;
 			// Add tooltips after sort
-			for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
+			for (ti.uId = 0; ti.uId < lvItemCount; ti.uId++)
 			{
-				// Get the rect of the line
-				ListView_GetItemRect(m_hwndList, i, &r, LVIR_BOUNDS);
-				memcpy(&ti.rect, &r, sizeof(RECT));
-				ti.uId = i;
-				GetItemTooltip(GetListItem(i), str, sizeof(str));
-				SendMessage(m_hwndTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
+				ListView_GetItemRect(m_hwndList, ti.uId, &ti.rect, LVIR_BOUNDS);
+				GetItemTooltip(GetListItem((int)ti.uId), str, sizeof(str));
+				if (!MultiByteToWideChar(CP_UTF8, 0, str, -1, wstr, __ARRAY_SIZE(wstr)))
+					wstr[__ARRAY_SIZE(wstr) - 1] = L'\0';
+				SendMessageW(m_hwndTooltip, TTM_ADDTOOLW, 0, (LPARAM)&ti);
 			}
 		}
 #endif

@@ -788,6 +788,7 @@ error:
 		IMPAPI(CSurf_TrackFromID);
 		IMPAPI(CSurf_TrackToID);
 		IMPAPI(DB2SLIDER);
+		IMPAPI(DeleteEnvelopePointEx);
 		IMPAPI(DeleteEnvelopePointRange); // v5pre5+
 		IMPAPI(DeleteEnvelopePointRangeEx); // v5.4pre3+
 		IMPAPI(DeleteActionShortcut);
@@ -814,6 +815,7 @@ error:
 		IMPAPI(EnumProjectMarkers3);
 		IMPAPI(EnumProjects);
 		IMPAPI(Envelope_Evaluate); // v5pre4+
+		IMPAPI(Envelope_GetParentTake) // v5.24+
 		IMPAPI(Envelope_SortPoints); // v5pre4+
 		IMPAPI(Envelope_SortPointsEx) // v5.4pre3+
 		IMPAPI(file_exists);

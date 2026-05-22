@@ -50,6 +50,59 @@ static HWND g_tempoShapeWnd = NULL;
 /******************************************************************************
 * Misc                                                                        *
 ******************************************************************************/
+
+/**
+ * Explicitly set a tempo envelope point's tempo to its calculated tempo.
+ *
+ * Must call this on a point before creating a BR_Envelope that will change its bpm,
+ * otherwise tempo updates via BR_Envelope will be ignored.
+ *
+ * @param id The tempo envelope point id to ensure has tempo set. It must exist.
+ * @return whether a point was mutated
+ */
+static bool EnsureTempoSet(int id)
+{
+
+	double timeposOut, beat, bpm;
+	int measure, num, den;
+	bool linear;
+	if(GetTempoTimeSigMarker(NULL, id, &timeposOut, &measure, &beat, &bpm, &num, &den, &linear))
+  {
+      char debugStr[256];
+      snprintf(debugStr, sizeof(debugStr), "EnsureTempoSet: id: %d, bpm %d\n", id, bpm);
+			OutputDebugString(debugStr);
+    SetTempoTimeSigMarker(NULL, id, timeposOut, measure, beat, bpm, num, den, linear);
+    //TODO is there any way to tell whether bpm has already been explicitly set by this point?
+    return true;
+  }
+  else
+    return false;
+}
+
+
+  // FIXME hovering over the first point with MOVE_CLOSEST_TEMPO_MOUSE and dragging right
+  // does not work if it the first point doesn't have tempo.
+  // e.g.,   <4/4>
+  //          ^--- drag right...
+  //       then,   
+  //          120bpm,4/4                       <120bpm, 4/4>
+  //          ^--- stuck at 120bpm...           ^-- not locked to grid
+static void BeforeMoveTempo (BR_Envelope& tempoMap, int id2)
+{
+  // Any point immediately before one we are manipulating (changing bpm) must have tempo.
+  // e.g.,   4/4      <120bpm>
+  //         ^--this needs tempo
+  // e.g.,   4/4      4/4      <120bpm>
+  //                  ^-- this needs tempo
+  // e.g.,   4/4      <4/4>      4/4
+  //         ^--------^-- these need tempo
+  int id1 = id2-1;
+  int id3 = id2+1;
+  if (id1 <= 0)
+    EnsureTempoSet(id1);
+  if (id2 == 0 || tempoMap.ValidateId(id3))
+    EnsureTempoSet(id2);
+}
 static bool MoveTempo (BR_Envelope& tempoMap, int id, double timeDiff, bool checkEditedPoints)
 {
 	// Get tempo points
@@ -332,30 +385,37 @@ static HCURSOR MoveGridCursor (COMMAND_T* ct, int window)
 		return NULL;
 }
 
+static bool InitGridTempoMap()
+{
+  if (g_moveGridTempoMap) delete g_moveGridTempoMap;
+  g_moveGridTempoMap = new (nothrow) BR_Envelope(GetTempoEnv());
+
+  if (!g_moveGridTempoMap || !g_moveGridTempoMap->CountPoints() || g_moveGridTempoMap->IsLocked())
+  {
+    ContinuousActionStopAll();
+    return false;
+  }
+  return true;
+}
+
 static void MoveGridToMouse (COMMAND_T* ct)
 {
 	static int    s_lockedId = -1;
 	static double s_lastPosition = 0;
 
+  bool firstTime = false;
+
 	// Action called for the first time: reset variables and cache tempo map for future calls
 	if (!g_moveGridTempoMap)
 	{
+    firstTime = true;
 		s_lockedId = -1;
 		s_lastPosition = 0;
 
 		// Make sure tempo map already has at least one point created (for some reason it won't work if creating it directly in chunk)
-		if ((int)ct->user != 0 && CountTempoTimeSigMarkers(NULL) == 0) // do it only if not moving tempo marker
-		{
-			InitTempoMap();
-			g_didTempoMapInit = true;
-		}
+    g_didTempoMapInit = InitTempoMap();
 
-		g_moveGridTempoMap = new (nothrow) BR_Envelope(GetTempoEnv());
-		if (!g_moveGridTempoMap || !g_moveGridTempoMap->CountPoints() || g_moveGridTempoMap->IsLocked())
-		{
-			ContinuousActionStopAll();
-			return;
-		}
+		if (!InitGridTempoMap()) return;
 	}
 
 	// Find closest grid/tempo marker
@@ -413,6 +473,14 @@ static void MoveGridToMouse (COMMAND_T* ct)
 		}
 	}
 
+  // reinitialize g_moveGridTempoMap so that tempo changes are recognized on points
+  // that don't set bpm (like those that set time sigs or metronome patterns).
+  if (firstTime && s_lockedId >= 0)
+  {
+    BeforeMoveTempo(*g_moveGridTempoMap, s_lockedId);
+    if (!InitGridTempoMap()) return;
+  }
+
 	// Move grid and commit changes
 	if (tDiff != 0 && s_lockedId >= 0)
 	{
@@ -469,12 +537,7 @@ void MoveGridToEditPlayCursor (COMMAND_T* ct)
 	PreventUIRefresh(1);
 
 	// In case tempo map has no tempo points
-	bool didTempoMapInit = false;
-	if (CountTempoTimeSigMarkers(NULL) == 0)
-	{
-		InitTempoMap();
-		didTempoMapInit = true;
-	}
+	bool didTempoMapInit = InitTempoMap();
 
 	BR_Envelope tempoMap(GetTempoEnv());
 
@@ -575,16 +638,29 @@ void MoveTempo (COMMAND_T* ct)
 	// Loop through selected points
 	int skipped = 0;
 	int count = (targetId != -1) ? (1) : (tempoMap.CountSelected());
+
+  // prepare to call MoveTempo
 	for (int i = 0; i < count; ++i)
 	{
 		int id = ((int)ct->user == 3) ? (targetId) : (tempoMap.GetSelected(i));
 		if (id > 0) // skip first point
-			skipped += (MoveTempo(tempoMap, id, tDiff, true)) ? (0) : (1);
+			BeforeMoveTempo(tempoMap, id);
+	}
+  delete &tempoMap;
+	BR_Envelope tempoMap2(GetTempoEnv());
+	if (!tempoMap2.CountPoints())
+		return;
+
+	for (int i = 0; i < count; ++i)
+	{
+		int id = ((int)ct->user == 3) ? (targetId) : (tempoMap2.GetSelected(i));
+		if (id > 0) // skip first point
+			skipped += (MoveTempo(tempoMap2, id, tDiff, true)) ? (0) : (1);
 	}
 
 	// Commit changes
 	PreventUIRefresh(1); // prevent jumpy cursor
-	if (tempoMap.Commit())
+	if (tempoMap2.Commit())
 	{
 		if ((int)ct->user == 3)
 			SetEditCurPos2(NULL, cursor, false, false); // always keep cursor position when moving to closest tempo marker
@@ -594,7 +670,7 @@ void MoveTempo (COMMAND_T* ct)
 
 	// Warn user if some points weren't processed
 	static bool s_warnUser = true;
-	if (s_warnUser && skipped != 0 && !tempoMap.IsLocked())
+	if (s_warnUser && skipped != 0 && !tempoMap2.IsLocked())
 	{
 		char buffer[512];
 		snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points didn't get processed because some points would end up with illegal BPM or position. Would you like to be warned if it happens again?", "sws_mbox"), skipped);

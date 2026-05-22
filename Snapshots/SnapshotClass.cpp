@@ -178,6 +178,7 @@ TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 	m_iFXEn           = *((int*)GetSetMediaTrackInfo(tr, "I_FXEN", NULL));
 	m_iVis            = GetTrackVis(tr);
 	m_iSel            = *((int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL));
+	m_iRecArm         = *((int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL));
 	m_iPanMode        = *((int*)GetSetMediaTrackInfo(tr, "I_PANMODE", NULL));
 	m_dPanWidth       = *((double*)GetSetMediaTrackInfo(tr, "D_WIDTH", NULL));
 	m_dPanL           = *((double*)GetSetMediaTrackInfo(tr, "D_DUALPANL", NULL));
@@ -247,6 +248,7 @@ TrackSnapshot::TrackSnapshot(TrackSnapshot& ts):m_sends(ts.m_sends)
 	m_bPhase          = ts.m_bPhase;
 	m_iPlayOffsetFlag = ts.m_iPlayOffsetFlag;
 	m_dPlayOffset     = ts.m_dPlayOffset;
+	m_iRecArm         = ts.m_iRecArm;
 }
 
 TrackSnapshot::TrackSnapshot(LineParser* lp)
@@ -268,6 +270,7 @@ TrackSnapshot::TrackSnapshot(LineParser* lp)
 	m_bPhase          = lp->gettoken_int(14) ? true : false;
 	m_iPlayOffsetFlag = lp->gettoken_int(15);
 	m_dPlayOffset     = lp->gettoken_float(16);
+	m_iRecArm         = lp->gettoken_int(17);
 
 
 	// Set the track name "early" for backward compat
@@ -331,6 +334,10 @@ bool TrackSnapshot::UpdateReaper(int mask, bool bSelOnly, int* fxErr, bool wantC
 		SetTrackVis(tr, m_iVis); // ignores master
 	if (mask & SEL_MASK)
 		GetSetMediaTrackInfo(tr, "I_SELECTED", &m_iSel);
+	if (mask & RECARM_MASK)
+	{
+		GetSetMediaTrackInfo(tr, "I_RECARM", &m_iRecArm);
+	}
 	if (mask & FXATM_MASK) // DEPRECATED, keep for previously saved snapshots
 	{
 		GetSetMediaTrackInfo(tr, "I_FXEN", &m_iFXEn);
@@ -397,8 +404,8 @@ void TrackSnapshot::GetChunk(WDL_FastString* chunk)
 {
 	char guidStr[64];
 	guidToString(&m_guid, guidStr);
-	chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "<TRACK %s %.14f %.14f %d %d %d %d %d %d %.14f %.14f %.14f %.14f %d %d %.14f\n", 
-		guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iFXEn, m_iVis ^ 2, m_iSel, m_iPanMode, m_dPanWidth, m_dPanL, m_dPanR, m_dPanLaw, m_bPhase ? 1 : 0, m_iPlayOffsetFlag, m_dPlayOffset);
+	chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "<TRACK %s %.14f %.14f %d %d %d %d %d %d %.14f %.14f %.14f %.14f %d %d %.14f %d\n",
+		guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iFXEn, m_iVis ^ 2, m_iSel, m_iPanMode, m_dPanWidth, m_dPanL, m_dPanR, m_dPanLaw, m_bPhase ? 1 : 0, m_iPlayOffsetFlag, m_dPlayOffset, m_iRecArm);
 	chunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "NAME \"%s\" %d\n", m_sName.Get(), m_iTrackNum);
 	
 	m_sends.GetChunk(chunk);
@@ -527,6 +534,13 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 		details->Append(__LOCALIZE("Solo","sws_DLG_101"));
 		details->Append(": ");
 		details->Append(m_iSolo ? __LOCALIZE("on","sws_DLG_101") : __LOCALIZE("off","sws_DLG_101"));
+		details->Append("\r\n");
+	}
+	if (iMask & RECARM_MASK)
+	{
+		details->Append(__LOCALIZE("Record arm","sws_DLG_101"));
+		details->Append(": ");
+		details->Append(m_iRecArm ? __LOCALIZE("on","sws_DLG_101") : __LOCALIZE("off","sws_DLG_101"));
 		details->Append("\r\n");
 	}
 	if (iMask & SEL_MASK)
@@ -994,6 +1008,10 @@ char* Snapshot::Tooltip(char* str, int maxLen)
 		n += snprintf(str + n, maxLen - n, "%s", ", ");
 		n += snprintf(str + n, maxLen - n, "%s", __LOCALIZE("solo","sws_DLG_101"));
 	}
+	if (m_iMask & RECARM_MASK && n < maxLen) {
+		n += snprintf(str + n, maxLen - n, "%s", ", ");
+		n += snprintf(str + n, maxLen - n, "%s", __LOCALIZE("record arm","sws_DLG_101"));
+	}
 	if (m_iMask & FXATM_MASK && n < maxLen) {
 		n += snprintf(str + n, maxLen - n, "%s", ", ");
 		n += snprintf(str + n, maxLen - n, "%s", __LOCALIZE("fx (old style)","sws_DLG_101"));
@@ -1044,6 +1062,7 @@ void Snapshot::SetName(const char* name)
 			case SEL_MASK:         snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Sel","sws_DLG_101"), m_iSlot);    break;
 			case PHASE_MASK:       snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Phase", "sws_DLG_101"), m_iSlot); break;
 			case PLAY_OFFSET_MASK: snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Playback offset", "sws_DLG_101"), m_iSlot); break;
+			case RECARM_MASK:      snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("RecArm", "sws_DLG_101"), m_iSlot); break;
 			default:               snprintf(newName, sizeof(newName), "%s %d", __LOCALIZE("Mix","sws_DLG_101"), m_iSlot);    break;
 		}
 		m_cName = new char[strlen(newName)+1];

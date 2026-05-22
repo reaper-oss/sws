@@ -74,6 +74,7 @@ public:
     int m_iFXEn;
 	int m_iVis;
 	int m_iSel;
+	int m_iRecArm;
 	bool m_bPhase;
 	// track playback offset, REAPER v6.0+
 	int m_iPlayOffsetFlag;
@@ -113,13 +114,14 @@ public:
 #define FXCHAIN_MASK     0x200
 #define PHASE_MASK       0x400
 #define PLAY_OFFSET_MASK 0x800 // track playback offset, REAPER v6.0+
-#define ALL_MASK         0xFEF // large enough for forward compat, leave out FXATM
-#define MIX_MASK         (VOL_MASK | PAN_MASK | MUTE_MASK | SOLO_MASK | FXCHAIN_MASK | SENDS_MASK | PHASE_MASK | PLAY_OFFSET_MASK)
+#define RECARM_MASK      0x1000
+#define ALL_MASK         0x1FEF // large enough for forward compat, leave out FXATM
+#define MIX_MASK         (VOL_MASK | PAN_MASK | MUTE_MASK | SOLO_MASK | FXCHAIN_MASK | SENDS_MASK | PHASE_MASK | PLAY_OFFSET_MASK | RECARM_MASK)
 
 // Map controls to mask elements
-const int cSSMasks[] = { VOL_MASK, PAN_MASK, MUTE_MASK, SOLO_MASK, SENDS_MASK, VIS_MASK,       SEL_MASK,      FXCHAIN_MASK, PHASE_MASK, PLAY_OFFSET_MASK };
-const int cSSCtrls[] = { IDC_VOL,  IDC_PAN,  IDC_MUTE,  IDC_SOLO,  IDC_SENDS,  IDC_VISIBILITY, IDC_SELECTION, IDC_FXCHAIN,  IDC_PHASE,  IDC_PLAY_OFFSET };
-#define MASK_CTRLS 10
+const int cSSMasks[] = { VOL_MASK, PAN_MASK, MUTE_MASK, SOLO_MASK, RECARM_MASK, SENDS_MASK, VIS_MASK,       SEL_MASK,      FXCHAIN_MASK, PHASE_MASK, PLAY_OFFSET_MASK };
+const int cSSCtrls[] = { IDC_VOL,  IDC_PAN,  IDC_MUTE,  IDC_SOLO,  IDC_RECARM,  IDC_SENDS,   IDC_VISIBILITY, IDC_SELECTION, IDC_FXCHAIN,  IDC_PHASE,  IDC_PLAY_OFFSET };
+#define MASK_CTRLS 11
 
 class Snapshot
 {

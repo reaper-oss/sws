@@ -128,7 +128,7 @@ BEGIN
     PUSHBUTTON      "Next",IDC_NEXT,182,212+Y_OFFS_CHB+Y_OFFS_PUSHBTN,41,13
     PUSHBUTTON      "Move Up",IDC_SWAP_UP,140,225+Y_OFFS_CHB+Y_OFFS_PUSHBTN,41,13
     PUSHBUTTON      "Move Down",IDC_SWAP_DOWN,182,225+Y_OFFS_CHB+Y_OFFS_PUSHBTN,41,13
-    LTEXT           "Del: Alt-click\nSave: Ctrl-click",IDC_HELPTEXT,171,3,54,18
+    LTEXT           "Del: Alt-click\nSave: Ctrl-click",IDC_HELPTEXT,167,3,60,18
     GROUPBOX        "Filter",IDC_FILTERGROUP,135,18,88,99+Y_OFFS_CHB
     CONTROL         "Full Track Mix",IDC_MIX,"Button",BS_AUTORADIOBUTTON | WS_GROUP,140,29,70,10
     CONTROL         "Current Visibility",IDC_CURVIS,"Button",BS_AUTORADIOBUTTON,140,41,70,10
@@ -399,29 +399,29 @@ BEGIN
     EDITTEXT        IDC_RANDPROB,120,165,30,14,ES_AUTOHSCROLL
     LTEXT           "%",IDC_STATIC,156,165,8,8
     GROUPBOX        "Nudges",IDC_GROUP3,192,6,198,198
-    LTEXT           "Item position nudge",IDC_STATIC,228,22,62,8
+    RTEXT           "Item position nudge",IDC_STATIC,205,22,83,8
     EDITTEXT        IDC_NUDGE_S,295,20,30,14,ES_AUTOHSCROLL
     LTEXT           "seconds",IDC_STATIC,330,22,28,8
-    LTEXT           "Item position nudge",IDC_STATIC,228,42,62,8
+    RTEXT           "Item position nudge",IDC_STATIC,205,42,83,8
     EDITTEXT        IDC_NUDGE_B,295,40,30,14,ES_AUTOHSCROLL
     LTEXT           "beats",IDC_STATIC,330,42,18,8
-    LTEXT           "Item pitch nudge A",IDC_STATIC,230,62,60,8
+    RTEXT           "Item pitch nudge A",IDC_STATIC,205,62,83,8
     EDITTEXT        IDC_PNUDGE_A,295,60,30,14,ES_AUTOHSCROLL
     LTEXT           "semitones",IDC_STATIC,330,62,32,8
-    LTEXT           "Item pitch nudge B",IDC_STATIC,230,82,60,8
+    RTEXT           "Item pitch nudge B",IDC_STATIC,205,82,83,8
     EDITTEXT        IDC_PNUDGE_B,295,80,30,14,ES_AUTOHSCROLL
     LTEXT           "semitones",IDC_STATIC,330,81,32,8
-    LTEXT           "Item/Take volume nudge",IDC_STATIC,209,102,81,8
+    RTEXT           "Item/Take volume nudge",IDC_STATIC,205,102,83,8
     EDITTEXT        IDC_IVOL_NUDGE,295,100,30,14,ES_AUTOHSCROLL
     LTEXT           "dB",IDC_STATIC,330,103,10,8
-    LTEXT           "Track volume nudge",IDC_TKVOLNUDLAB,224,122,66,8
+    RTEXT           "Track volume nudge",IDC_TKVOLNUDLAB,205,122,83,8
     EDITTEXT        IDC_TVOL_NUDGE,295,120,30,14,ES_AUTOHSCROLL
     LTEXT           "dB",IDC_STATIC,330,122,10,8
-    LTEXT           "Pixels (edit cursor)",IDC_STATIC,232,141,58,8
+    RTEXT           "Pixels (edit cursor)",IDC_STATIC,205,141,83,8
     EDITTEXT        IDC_EDITPIXAM,295,139,30,14,ES_AUTOHSCROLL
-    LTEXT           "Seconds (edit cursor)",IDC_STATIC,222,161,68,8
+    RTEXT           "Seconds (edit cursor)",IDC_STATIC,205,161,83,8
     EDITTEXT        IDC_EDITCURSECS,295,159,30,14,ES_AUTOHSCROLL
-    LTEXT           "Section loop properties",IDC_STATIC,217,183,73,8
+    RTEXT           "Section loop properties",IDC_STATIC,205,183,83,8
     EDITTEXT        IDC_COMPARSECTLOOP,295,181,30,14,ES_AUTOHSCROLL
     LTEXT           "seconds",IDC_STATIC,330,183,28,8
     GROUPBOX        "Tracks",IDC_GROUP4,6,210,275,55

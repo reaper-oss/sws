@@ -767,7 +767,7 @@ void NotesWnd::SaveCurrentExtraProjectNotes(bool _wantUndo)
 	GetWindowText(m_edit, g_lastText, sizeof(g_lastText));
 	g_prjNotes.Get()->Set(g_lastText); // CRLF removed only when saving the project..
 	if (_wantUndo)
-		Undo_OnStateChangeEx2(NULL, __LOCALIZE("Edit exta project notes","sws_undo"), UNDO_STATE_MISCCFG, -1);
+		Undo_OnStateChangeEx2(NULL, __LOCALIZE("Edit extra project notes","sws_undo"), UNDO_STATE_MISCCFG, -1);
 	else
 		MarkProjectDirty(NULL);
 }

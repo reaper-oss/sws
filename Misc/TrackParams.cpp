@@ -334,6 +334,7 @@ void CreateTrack1(COMMAND_T* = NULL)
 	TrackList_AdjustWindows(false);
 	GetSetMediaTrackInfo(CSurf_TrackFromID(1, false), "I_SELECTED", &g_i1);
 	SetLTT();
+	Undo_OnStateChangeEx(__LOCALIZE("Create and select first track", "sws_undo"), UNDO_STATE_ALL, -1);
 }
 
 void DelTracksChild(COMMAND_T* = NULL)

@@ -53,7 +53,7 @@
 enum { AC_ANY=0, AC_UNNAMED, AC_FOLDER, AC_CHILDREN, AC_RECEIVE, AC_MASTER, AC_REC_ARM, AC_VCA_MASTER, AC_INSTRUMENT, AC_AUDIOIN, AC_AUDIOOUT, AC_MIDIIN, AC_MIDIOUT, NUM_FILTERTYPES };
 enum { AC_RGNANY=0, AC_RGNUNNAMED, NUM_RGNFILTERTYPES };
 enum { AC_CUSTOM, AC_GRADIENT, AC_RANDOM, AC_NONE, AC_PARENT, AC_IGNORE, NUM_COLORTYPES };
-enum { COL_ID=0, COL_TYPE, COL_FILTER, COL_COLOR, COL_ICON, COL_TCP_LAYOUT, COL_MCP_LAYOUT, COL_COUNT };
+enum { COL_TYPE=0, COL_FILTER, COL_COLOR, COL_ICON, COL_TCP_LAYOUT, COL_MCP_LAYOUT, COL_COUNT };
 enum { AC_TRACK=0, AC_MARKER, AC_REGION, NUM_TYPETYPES }; // keep this order and 2^ values
                                                           // (values used as masks => adding a 4th type would require another solution)
 
@@ -71,7 +71,7 @@ enum Commands : WPARAM {
 
 // Larger allocs for localized strings..
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_115
-static SWS_LVColumn g_cols[] = { {25, 0, "#" }, {25, 0, "Rule type"}, { 185, 1, "Filter" }, { 70, 1, "Color" }, { 200, 2, "Icon" }, { 100, 1, "TCP Layout" }, { 100, 1, "MCP Layout" }};
+static SWS_LVColumn g_cols[] = { {25, 0, "Rule type"}, { 185, 1, "Filter" }, { 70, 1, "Color" }, { 200, 2, "Icon" }, { 100, 1, "TCP Layout" }, { 100, 1, "MCP Layout" }};
 static const char cTypes[][256] = {"Track", "Marker", "Region" }; // keep this order, see above
 static const char cFilterTypes[][256] = { "(any)", "(unnamed)", "(folder)", "(children)", "(receive)", "(master)", "(record armed)", "(vca master)", "(instrument)", "(audio input)", "(audio output)", "(MIDI input)", "(MIDI output)" };
 static const char cColorTypes[][256] = { "Custom", "Gradient", "Random", "None", "Parent", "Ignore" };
@@ -91,6 +91,9 @@ static bool g_bALEnabled = false;
 static WDL_String g_ACIni;
 static int s_ignore_update;
 
+// Prototypes for helper functions (ADD THIS)
+static int CountWords(const char* str);
+static int CountMatchingWords(const char* trackName, const char* ruleFilter);
 
 // Register to marker/region updates
 class AC_MarkerRegionListener : public SNM_MarkerRegionListener {
@@ -135,10 +138,7 @@ void SWS_AutoColorView::GetItemText(SWS_ListItem* item, int iCol, char* str, int
 		return;
 
 	switch (iCol)
-	{
-	case COL_ID:
-		snprintf(str, iStrMax, "%d", g_pACItems.Find(pItem) + 1);
-		break;
+	{	
 	case COL_TYPE:
 		lstrcpyn(str, __localizeFunc(cTypes[pItem->m_type],"sws_DLG_115",LOCALIZE_FLAG_NOCACHE), iStrMax);
 		break;
@@ -227,7 +227,7 @@ void SWS_AutoColorView::OnItemSelChanged(SWS_ListItem* item, int iState)
 
 void SWS_AutoColorView::OnBeginDrag(SWS_ListItem* item)
 {
-	if (abs(m_iSortCol) == (COL_ID+1)) //1-based
+	if (abs(m_iSortCol) == (COL_TYPE+1)) //1-based
 		SetCapture(GetParent(m_hwndList));
 }
 
@@ -723,7 +723,7 @@ void ApplyColorRuleToTrack(FlatSet<SWS_RuleTrack> *activeRules, SWS_RuleItem* ru
 {
 	if(rule->m_type == AC_TRACK)
 	{
-		if (!bDoColors && !bDoIcons && !bDoLayout) // NF: fix #936
+		if (!bDoColors && !bDoIcons && !bDoLayout)
 			return;
 
 		PreventUIRefresh(1);
@@ -734,245 +734,251 @@ void ApplyColorRuleToTrack(FlatSet<SWS_RuleTrack> *activeRules, SWS_RuleItem* ru
 		if (rule->m_color == -AC_CUSTOM-1)
 			UpdateCustomColors();
 
-		// Check all tracks for matching strings/properties
 		MediaTrack* temp = NULL;
 		const int numTracks = GetNumTracks();
 		activeRules->reserve(numTracks);
+		
 		for (int i = 0; i <= numTracks; i++)
 		{
-			MediaTrack* tr = i ? GetTrack(nullptr, i - 1) : GetMasterTrack(nullptr);
-			bool bColor = bDoColors;
-			bool bIcon  = bDoIcons;
-			bool bLayout[2] = { bDoLayout, bDoLayout };
-
-			auto pACTrack = activeRules->find(tr);
-
-			if (pACTrack != activeRules->end())
-			{
-				// If already modified by a different rule, or ignoring the color/icon/layout ignore this track
-				if (pACTrack->m_bColored || rule->m_color == -AC_IGNORE-1)
-					bColor = false;
-
-				if (pACTrack->m_bIconed || !rule->m_icon.Get()[0])
-					bIcon = false;
-
-				for (int k=0; k<2; k++)
-					if (pACTrack->m_bLayouted[k] || !rule->m_layout[k].Get()[0])
-						bLayout[k] = false;
-			}
-			else
-				pACTrack = activeRules->insert(tr).first;
-
-			// Do the track rule matching
-			if (bColor || bIcon || bLayout[0] || bLayout[1])
-			{
+			MediaTrack* tr = i ? GetTrack(nullptr, i - 1) : GetMasterTrack(nullptr);			
+			
+			struct RuleMatch {
+				SWS_RuleItem* rule;
+				int totalWords;
+				bool isSpecial;
+			};
+			WDL_PtrList<RuleMatch> matches;			
+			
+			for (int r = 0; r < g_pACItems.GetSize(); r++) {
+				SWS_RuleItem* currentRule = g_pACItems.Get(r);
+				if (currentRule->m_type != AC_TRACK) continue;
+				
 				bool bMatch = false;
-
-				if (i) // ignore master for most things
-				{
-					// Check "special" rules first:
-					if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_FOLDER]) == 0)
-					{
+				bool isSpecial = false;
+				int totalWords = 0;
+				
+				if (i) 
+				{					
+					if (strcmp(currentRule->m_str_filter.Get(), cFilterTypes[AC_FOLDER]) == 0) {
 						int iType;
 						GetFolderDepth(tr, &iType, &temp);
-						if (iType == 1)
+						if (iType == 1) {
 							bMatch = true;
-					}
-					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_CHILDREN]) == 0)
-					{
-						temp = CSurf_TrackFromID(0, false); // JFB fix: 'temp' could be out of sync
-						if (GetFolderDepth(tr, NULL, &temp) >= 1)
-							bMatch = true;
-					}
-					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_RECEIVE]) == 0)
-					{
-						if (GetSetTrackSendInfo(tr, -1, 0, "P_SRCTRACK", NULL))
-							bMatch = true;
-					}
-					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_UNNAMED]) == 0)
-					{
-						char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-						if (!cName || !cName[0])
-							bMatch = true;
-					}
-					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_REC_ARM]) == 0)
-					{
-						int* ra = (int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL);
-						if (ra && *ra)
-							bMatch = true;
-					}
-					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_VCA_MASTER]) == 0)
-					{
-						int iVcaMaster = GetSetTrackGroupMembership(tr, "VOLUME_VCA_MASTER", 0, 0);
-
-						// check newly added groups 33 - 64
-						int iVcaMasterHigh = GetSetTrackGroupMembershipHigh(tr, "VOLUME_VCA_MASTER", 0, 0);
-
-						if (iVcaMaster || iVcaMasterHigh)
-							bMatch = true;
-					}
-					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_AUDIOIN]) == 0)
-					{
-						int input = *(int*)GetSetMediaTrackInfo(tr, "I_RECINPUT", NULL);
-						if (input >= 0 && !(input & 4096)) { // !none && !MIDI
-							bMatch = true;
+							isSpecial = true;
 						}
 					}
-					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_AUDIOOUT]) == 0)
-					{
+					else if (strcmp(currentRule->m_str_filter.Get(), cFilterTypes[AC_CHILDREN]) == 0) {
+						temp = CSurf_TrackFromID(0, false);
+						if (GetFolderDepth(tr, NULL, &temp) >= 1) {
+							bMatch = true;
+							isSpecial = true;
+						}
+					}
+					else if (strcmp(currentRule->m_str_filter.Get(), cFilterTypes[AC_RECEIVE]) == 0) {
+						if (GetSetTrackSendInfo(tr, -1, 0, "P_SRCTRACK", NULL)) {
+							bMatch = true;
+							isSpecial = true;
+						}
+					}
+					else if (strcmp(currentRule->m_str_filter.Get(), cFilterTypes[AC_UNNAMED]) == 0) {
+						char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
+						if (!cName || !cName[0]) {
+							bMatch = true;
+							isSpecial = true;
+						}
+					}
+					else if (strcmp(currentRule->m_str_filter.Get(), cFilterTypes[AC_REC_ARM]) == 0) {
+						int* ra = (int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL);
+						if (ra && *ra) {
+							bMatch = true;
+							isSpecial = true;
+						}
+					}
+					else if (strcmp(currentRule->m_str_filter.Get(), cFilterTypes[AC_VCA_MASTER]) == 0) {
+						int iVcaMaster = GetSetTrackGroupMembership(tr, "VOLUME_VCA_MASTER", 0, 0);
+						int iVcaMasterHigh = GetSetTrackGroupMembershipHigh(tr, "VOLUME_VCA_MASTER", 0, 0);
+						if (iVcaMaster || iVcaMasterHigh) {
+							bMatch = true;
+							isSpecial = true;
+						}
+					}
+					else if (strcmp(currentRule->m_str_filter.Get(), cFilterTypes[AC_AUDIOIN]) == 0) {
+						int input = *(int*)GetSetMediaTrackInfo(tr, "I_RECINPUT", NULL);
+						if (input >= 0 && !(input & 4096)) {
+							bMatch = true;
+							isSpecial = true;
+						}
+					}
+					else if (strcmp(currentRule->m_str_filter.Get(), cFilterTypes[AC_AUDIOOUT]) == 0) {
 						int hwouts = GetTrackNumSends(tr, 1);
 						if (hwouts) {
 							bMatch = true;
+							isSpecial = true;
 						}
 					}
-					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_INSTRUMENT]) == 0)
-					{
-						if (TrackFX_GetInstrument(tr) >= 0)
+					else if (strcmp(currentRule->m_str_filter.Get(), cFilterTypes[AC_INSTRUMENT]) == 0) {
+						if (TrackFX_GetInstrument(tr) >= 0) {
 							bMatch = true;
+							isSpecial = true;
+						}
 					}
-					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_MIDIIN]) == 0)
-					{
+					else if (strcmp(currentRule->m_str_filter.Get(), cFilterTypes[AC_MIDIIN]) == 0) {
 						int input = *(int*)GetSetMediaTrackInfo(tr, "I_RECINPUT", NULL);
-						if (input >= 0 && (input & 4096)) { // !none && MIDI
+						if (input >= 0 && (input & 4096)) {
 							bMatch = true;
+							isSpecial = true;
 						}
 					}
-					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_MIDIOUT]) == 0)
-					{
+					else if (strcmp(currentRule->m_str_filter.Get(), cFilterTypes[AC_MIDIOUT]) == 0) {
 						int midihw = *(int*)GetSetMediaTrackInfo(tr, "I_MIDIHWOUT", NULL);
 						int mididv = midihw >> 5;
-						// int midich = midihw & 0xF;
 						if (mididv >= 0) {
 							bMatch = true;
+							isSpecial = true;
 						}
 					}
-					else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_ANY]) == 0)
-					{
+					else if (strcmp(currentRule->m_str_filter.Get(), cFilterTypes[AC_ANY]) == 0) {
 						bMatch = true;
+						isSpecial = true;
 					}
-					else // Check for name match
+					else // Check for name match with multi-word support
 					{
 						char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-						if (cName && stristr(cName, rule->m_str_filter.Get()))
-							bMatch = true;
+						if (cName && cName[0]) {
+							int wordCount = CountWords(currentRule->m_str_filter.Get());
+							int matchCount = CountMatchingWords(cName, currentRule->m_str_filter.Get());							
+							if (matchCount > 0 && matchCount == wordCount) {
+								bMatch = true;
+								totalWords = wordCount;
+							}
+						}
 					}
 				}
-				else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_MASTER]) == 0)
-				{	// Check master rule
+				else if (strcmp(currentRule->m_str_filter.Get(), cFilterTypes[AC_MASTER]) == 0) {
 					bMatch = true;
+					isSpecial = true;
 				}
-
-				if (bMatch)
-				{
-					// Set the color
-					if (bColor)
-					{
+				
+				if (bMatch) {
+					RuleMatch* rm = new RuleMatch();
+					rm->rule = currentRule;
+					rm->totalWords = isSpecial ? 999 : totalWords;
+					rm->isSpecial = isSpecial;
+					matches.Add(rm);
+				}
+			}			
+			
+			SWS_RuleItem* bestRule = NULL;
+			int bestTotalWords = -1;
+			
+			for (int m = 0; m < matches.GetSize(); m++) {
+				RuleMatch* rm = matches.Get(m);
+				if (rm->totalWords > bestTotalWords) {
+					bestTotalWords = rm->totalWords;
+					bestRule = rm->rule;
+				}
+			}			
+			
+			if (bestRule) {
+				auto pACTrack = activeRules->find(tr);
+				if (pACTrack == activeRules->end()) {
+					pACTrack = activeRules->insert(tr).first;
+				}
+				
+				bool bColor = bDoColors && !pACTrack->m_bColored && bestRule->m_color != -AC_IGNORE-1;
+				bool bIcon = bDoIcons && !pACTrack->m_bIconed && bestRule->m_icon.Get()[0];
+				bool bLayout[2] = {
+					bDoLayout && !pACTrack->m_bLayouted[0] && bestRule->m_layout[0].Get()[0],
+					bDoLayout && !pACTrack->m_bLayouted[1] && bestRule->m_layout[1].Get()[0]
+				};
+				
+				if (bColor || bIcon || bLayout[0] || bLayout[1]) {					
+					if (bColor) {
 						int iCurColor = *(int*)GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", NULL);
-						if (!(iCurColor & 0x1000000))
-							iCurColor = 0;
+						if (!(iCurColor & 0x1000000)) iCurColor = 0;
 						int newCol = iCurColor;
 
-						if (rule->m_color == -AC_RANDOM-1)
-						{
-							// Only randomize once
+						if (bestRule->m_color == -AC_RANDOM-1) {
 							if (!(iCurColor & 0x1000000))
 								newCol = RGB(rand() % 256, rand() % 256, rand() % 256) | 0x1000000;
 						}
-						else if (rule->m_color == -AC_CUSTOM-1)
-						{
+						else if (bestRule->m_color == -AC_CUSTOM-1) {
 							if (!AllBlack())
 								while(!(newCol = g_custColors[iCount++ % 16]));
 							newCol |= 0x1000000;
 						}
-						else if (rule->m_color == -AC_GRADIENT-1)
+						else if (bestRule->m_color == -AC_GRADIENT-1)
 							gradientTracks.Add(tr);
-						else if (rule->m_color == -AC_NONE-1)
+						else if (bestRule->m_color == -AC_NONE-1)
 							newCol = 0;
-						else if (rule->m_color == -AC_PARENT-1)
-						{
+						else if (bestRule->m_color == -AC_PARENT-1) {
 							MediaTrack* parent = (MediaTrack*)GetSetMediaTrackInfo(tr, "P_PARTRACK", NULL);
-							if (parent)
-							{
+							if (parent) {
 								int pcol = *(int*)GetSetMediaTrackInfo(parent, "I_CUSTOMCOLOR", NULL);
-								if (pcol & 0x1000000) // Only color like parent if the parent has color (maybe not?)
+								if (pcol & 0x1000000)
 									newCol = pcol;
 							}
 						}
 						else
-							newCol = SWS_ColorToNative(rule->m_color | 0x1000000);
+							newCol = SWS_ColorToNative(bestRule->m_color | 0x1000000);
 
-						// Only set the color if the user hasn't changed the color manually (but record it as being changed)
-						if ((bForce || iCurColor == SWS_ColorToNative(pACTrack->m_col)) && newCol != iCurColor)
-						{
+						if ((bForce || iCurColor == SWS_ColorToNative(pACTrack->m_col)) && newCol != iCurColor) {
 							GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &newCol);
 						}
-
 						pACTrack->m_col = SWS_ColorFromNative(newCol);
 						pACTrack->m_bColored = true;
 					}
-
-					if (bIcon)
-					{
-						if (_stricmp(rule->m_icon.Get(), pACTrack->m_icon.Get()))
-						{
-							const char *cur = (const char*)GetSetMediaTrackInfo(tr, "P_ICON", NULL); // requires REAPER v5.15pre6+
+					
+					if (bIcon) {
+						if (_stricmp(bestRule->m_icon.Get(), pACTrack->m_icon.Get())) {
+							const char *cur = (const char*)GetSetMediaTrackInfo(tr, "P_ICON", NULL);
 							cur = GetShortResourcePath("Data" WDL_DIRCHAR_STR "track_icons", cur);
-							if (cur && _stricmp(cur, rule->m_icon.Get()))
-							{
-								// Only overwrite the icon if there's no icon, or we're forcing, or we set it ourselves earlier
-								if (bForce || !_stricmp(cur, pACTrack->m_icon.Get()))
-								{
-									GetSetMediaTrackInfo(tr, "P_ICON", (void*)rule->m_icon.Get());
+							if (cur && _stricmp(cur, bestRule->m_icon.Get())) {
+								if (bForce || !_stricmp(cur, pACTrack->m_icon.Get())) {
+									GetSetMediaTrackInfo(tr, "P_ICON", (void*)bestRule->m_icon.Get());
 								}
 							}
-							pACTrack->m_icon.Set(rule->m_icon.Get());
+							pACTrack->m_icon.Set(bestRule->m_icon.Get());
 						}
 						pACTrack->m_bIconed = true;
 					}
-
-					// Set the layout
-					for (int k=0; k<2; k++) if (bLayout[k])
-					{
+					
+					for (int k=0; k<2; k++) if (bLayout[k]) {
 						pACTrack->m_bLayouted[k] = true;
-						if (!_stricmp(rule->m_layout[k].Get(), pACTrack->m_layout[k].Get()))
+						if (!_stricmp(bestRule->m_layout[k].Get(), pACTrack->m_layout[k].Get()))
 							continue;
 
-						// 'normal' track layout
-						if (_stricmp(rule->m_layout[k].Get(), cHideLayout))
-						{
+						if (_stricmp(bestRule->m_layout[k].Get(), cHideLayout)) {
 							const bool needUnhide = !_stricmp(pACTrack->m_layout[k].Get(), cHideLayout) && !IsTrackVisible(tr, k ? true : false);
 							const char *curlayout = (const char*)GetSetMediaTrackInfo(tr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", NULL);
-							if (curlayout && _stricmp(curlayout, rule->m_layout[k].Get()))
-							{
-								// Only overwrite the layout if there's no layout, or we're forcing, or we set it ourselves earlier
+							if (curlayout && _stricmp(curlayout, bestRule->m_layout[k].Get())) {
 								if (bForce || needUnhide || !_stricmp(curlayout, pACTrack->m_layout[k].Get()))
-									GetSetMediaTrackInfo(tr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", (void*)rule->m_layout[k].Get());
+									GetSetMediaTrackInfo(tr, k ? "P_MCP_LAYOUT" : "P_TCP_LAYOUT", (void*)bestRule->m_layout[k].Get());
 							}
-							if (needUnhide)
-							{
-								GetSetMediaTrackInfo(tr, k ? "B_SHOWINMIXER" : "B_SHOWINTCP", &g_i1); // hide the track
-								TrackList_AdjustWindows(k ? false : true); // t=208275
-							}
-						}
-						// '(hide)' layout
-						// Only hide the track if visible, or we're forcing, or we hid it ourselves earlier
-						else if (IsTrackVisible(tr, k ? true : false))
-						{
-							if (bForce || IsTrackVisible(pACTrack->m_pTr, k ? true : false))
-							{
-								GetSetMediaTrackInfo(tr, k ? "B_SHOWINMIXER" : "B_SHOWINTCP", &g_i0); // hide the track
-								TrackList_AdjustWindows(k ? false : true); // t=208275
+							if (needUnhide) {
+								GetSetMediaTrackInfo(tr, k ? "B_SHOWINMIXER" : "B_SHOWINTCP", &g_i1);
+								TrackList_AdjustWindows(k ? false : true);
 							}
 						}
-						pACTrack->m_layout[k].Set(rule->m_layout[k].Get());
+						else if (IsTrackVisible(tr, k ? true : false)) {
+							if (bForce || IsTrackVisible(pACTrack->m_pTr, k ? true : false)) {
+								GetSetMediaTrackInfo(tr, k ? "B_SHOWINMIXER" : "B_SHOWINTCP", &g_i0);
+								TrackList_AdjustWindows(k ? false : true);
+							}
+						}
+						pACTrack->m_layout[k].Set(bestRule->m_layout[k].Get());
 					}
-				} // /if (bMatch)
-			} // /Do the track rule matching
-		} // /iterate through all tracks
+				}
+			}			
+			
+			for (int m = 0; m < matches.GetSize(); m++) {
+				delete matches.Get(m);
+			}
+			matches.Empty();
+		}
 
 		// Handle gradients
-		for (int i = 0; i < gradientTracks.GetSize(); i++)
-		{
+		for (int i = 0; i < gradientTracks.GetSize(); i++) {
 			int newCol = g_crGradStart | 0x1000000;
 			if (i && gradientTracks.GetSize() > 1)
 				newCol = CalcGradient(g_crGradStart, g_crGradEnd, (double)i / (gradientTracks.GetSize()-1)) | 0x1000000;
@@ -1100,17 +1106,87 @@ void ApplyColorRuleToMarkerRegion(SWS_RuleItem* _rule, int _flags)
 	PreventUIRefresh(1);
 	if(_rule->m_type & _flags)
 	{
+		// Collect all marker/region rules
+		WDL_PtrList<SWS_RuleItem> markerRegionRules;
+		for (int i = 0; i < g_pACItems.GetSize(); i++) {
+			SWS_RuleItem* rule = g_pACItems.Get(i);
+			if (rule->m_type == AC_MARKER || rule->m_type == AC_REGION) {
+				markerRegionRules.Add(rule);
+			}
+		}
+
 		while ((x = EnumProjectMarkers3(NULL, x, &isRgn, &pos, &end, &name, &num, &color)))
 		{
-			if ((!strcmp(cFilterTypes[AC_RGNANY], _rule->m_str_filter.Get()) ||
-				(!strcmp(cFilterTypes[AC_RGNUNNAMED], _rule->m_str_filter.Get()) && (!name || !*name)) ||
-				(name && stristr(name, _rule->m_str_filter.Get())))
-				&&
-				((_flags&AC_REGION && isRgn && _rule->m_type==AC_REGION) ||
-				(_flags&AC_MARKER && !isRgn && _rule->m_type==AC_MARKER)))
-			{
-				SetProjectMarkerByIndex(NULL, x-1, isRgn, pos, end, num, NULL, _rule->m_color==-AC_NONE-1 ? (isRgn?ct->marker:ct->region) : SWS_ColorToNative(_rule->m_color | 0x1000000));
+			struct RuleMatch {
+				SWS_RuleItem* rule;
+				int totalWords;
+				bool isSpecial;
+			};
+			WDL_PtrList<RuleMatch> matches;
+
+			for (int r = 0; r < markerRegionRules.GetSize(); r++) {
+				SWS_RuleItem* currentRule = markerRegionRules.Get(r);
+
+				// Check type (marker or region)
+				if ((isRgn && currentRule->m_type != AC_REGION) ||
+				    (!isRgn && currentRule->m_type != AC_MARKER)) {
+					continue;
+				}
+
+				bool bMatch = false;
+				bool isSpecial = false;
+				int totalWords = 0;
+
+				if (!strcmp(cFilterTypes[AC_RGNANY], currentRule->m_str_filter.Get())) {
+					bMatch = true;
+					isSpecial = true;
+				}
+				else if (!strcmp(cFilterTypes[AC_RGNUNNAMED], currentRule->m_str_filter.Get()) && (!name || !*name)) {
+					bMatch = true;
+					isSpecial = true;
+				}
+				else if (name && name[0]) {
+					int wordCount = CountWords(currentRule->m_str_filter.Get());
+					int matchCount = CountMatchingWords(name, currentRule->m_str_filter.Get());
+					// Match only if ALL words are present (100%)
+					if (matchCount > 0 && matchCount == wordCount) {
+						bMatch = true;
+						totalWords = wordCount;
+					}
+				}
+
+				if (bMatch) {
+					RuleMatch* rm = new RuleMatch();
+					rm->rule = currentRule;
+					rm->totalWords = isSpecial ? 999 : totalWords;
+					rm->isSpecial = isSpecial;
+					matches.Add(rm);
+				}
 			}
+
+			// Select rule with most words (most specific)
+			SWS_RuleItem* bestRule = NULL;
+			int bestTotalWords = -1;
+
+			for (int m = 0; m < matches.GetSize(); m++) {
+				RuleMatch* rm = matches.Get(m);
+				if (rm->totalWords > bestTotalWords) {
+					bestTotalWords = rm->totalWords;
+					bestRule = rm->rule;
+				}
+			}
+
+			if (bestRule) {
+				SetProjectMarkerByIndex(NULL, x-1, isRgn, pos, end, num, NULL, 
+					bestRule->m_color==-AC_NONE-1 ? (isRgn?ct->marker:ct->region) : 
+					SWS_ColorToNative(bestRule->m_color | 0x1000000));
+			}
+
+			// Cleanup
+			for (int m = 0; m < matches.GetSize(); m++) {
+				delete matches.Get(m);
+			}
+			matches.Empty();
 		}
 	}
 	PreventUIRefresh(-1);
@@ -1133,8 +1209,12 @@ void AutoColorMarkerRegion(bool _force, int _flags)
 	{
 		PreventUIRefresh(1);
 
-		for (int i=g_pACItems.GetSize()-1; i>=0; i--) // reverse to obey priority
-			ApplyColorRuleToMarkerRegion(g_pACItems.Get(i), newFlags);
+		// Apply rules using the new logic
+		// We need to pass all rules, not just one
+		// Create a dummy rule that will trigger the full processing
+		SWS_RuleItem dummyRule(AC_MARKER, "", 0, "", "", "");
+		dummyRule.m_type = AC_MARKER | AC_REGION; // Process all types
+		ApplyColorRuleToMarkerRegion(&dummyRule, newFlags);
 
 		PreventUIRefresh(-1);
 	}
@@ -1277,6 +1357,70 @@ static COMMAND_T g_commandTable[] =
 };
 //!WANT_LOCALIZE_1ST_STRING_END
 
+// ============================================================================
+// Helper functions for word splitting
+// ============================================================================
+
+static int CountWords(const char* str)
+{
+    if (!str || !str[0]) return 0;
+    int count = 0;
+    bool inWord = false;
+    for (const char* p = str; *p; ++p) {
+        if (*p == ' ') {
+            inWord = false;
+        } else if (!inWord) {
+            inWord = true;
+            count++;
+        }
+    }
+    return count;
+}
+
+static int CountMatchingWords(const char* trackName, const char* ruleFilter)
+{
+    if (!trackName || !trackName[0] || !ruleFilter || !ruleFilter[0]) return 0;
+
+    char trackLower[256];
+    char ruleLower[256];
+    strncpy(trackLower, trackName, 255);
+    strncpy(ruleLower, ruleFilter, 255);
+    trackLower[255] = '\0';
+    ruleLower[255] = '\0';
+
+    for (char* p = trackLower; *p; ++p) *p = tolower(*p);
+    for (char* p = ruleLower; *p; ++p) *p = tolower(*p);
+
+    char words[64][64];
+    int wordCount = 0;
+    int i = 0;
+    int j = 0;
+
+    while (ruleLower[i] != '\0' && wordCount < 64) {
+        while (ruleLower[i] == ' ') i++;
+        if (ruleLower[i] == '\0') break;
+
+        j = 0;
+        while (ruleLower[i] != '\0' && ruleLower[i] != ' ' && j < 63) {
+            words[wordCount][j++] = ruleLower[i++];
+        }
+        words[wordCount][j] = '\0';
+        wordCount++;
+    }
+
+    int matches = 0;
+    for (int w = 0; w < wordCount; w++) {
+        if (strstr(trackLower, words[w]) != NULL) {
+            matches++;
+        }
+    }
+
+    return matches;
+}
+
+// ============================================================================
+// End of helper functions
+// ============================================================================
 
 int AutoColorInit()
 {

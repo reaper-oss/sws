@@ -40,6 +40,7 @@ int  BR_GetNextActionToApply ();
 ******************************************************************************/
 void BR_CSurf_SetPlayState (bool play, bool pause, bool rec);
 void BR_CSurf_OnTrackSelection (MediaTrack* track);
+void BR_CSurf_Run ();
 int  BR_CSurf_Extended (int call, void* parm1, void* parm2, void* parm3);
 
 /******************************************************************************

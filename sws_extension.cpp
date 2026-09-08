@@ -506,6 +506,7 @@ public:
 		SNM_CSurfRun();
 		ZoomSlice();
 		MiscSlice();
+		BR_CSurf_Run();
 
 		if (m_bChanged)
 		{

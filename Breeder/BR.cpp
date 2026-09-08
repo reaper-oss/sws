@@ -157,6 +157,89 @@ void BR_CSurf_OnTrackSelection (MediaTrack* track)
 	ExecuteTrackSelAction();
 }
 
+void BR_CSurf_Run ()
+{
+	static std::map<std::pair<MediaTrack*, int>, bool> s_sendMutes;
+	static ReaProject* s_project = NULL;
+	static int s_projectState = -1;
+	static bool s_initialized = false;
+	std::map<std::pair<MediaTrack*, int>, bool> sendMutes;
+	ReaProject* project;
+	int projectState;
+	int trackCount;
+
+	project = EnumProjects(-1, NULL, 0);
+	projectState = GetProjectStateChangeCount(project);
+	if (project == s_project && projectState == s_projectState)
+		return;
+
+	// REAPER does not send a control surface callback for send mute changes.
+	// Compare mute states when the project changes, without treating send list edits as adjustments.
+	if (project != s_project)
+	{
+		s_sendMutes.clear();
+		s_project = project;
+		s_initialized = false;
+	}
+	s_projectState = projectState;
+	trackCount = CountTracks(project);
+
+	for (int trackId = -1; trackId < trackCount; ++trackId)
+	{
+		MediaTrack* track;
+		int sendCount;
+
+		track = (trackId == -1) ? GetMasterTrack(project) : GetTrack(project, trackId);
+		sendCount = GetTrackNumSends(track, 0);
+		for (int sendId = 0; sendId < sendCount; ++sendId)
+		{
+			std::pair<MediaTrack*, int> key;
+			bool mute;
+
+			key = std::make_pair(track, sendId);
+			mute = GetTrackSendInfo_Value(track, 0, sendId, "B_MUTE") != 0;
+			sendMutes[key] = mute;
+		}
+	}
+
+	if (s_initialized && sendMutes.size() == s_sendMutes.size())
+	{
+		bool sameLayout = true;
+
+		for (std::map<std::pair<MediaTrack*, int>, bool>::const_iterator current = sendMutes.begin(); current != sendMutes.end(); ++current)
+		{
+			if (s_sendMutes.find(current->first) == s_sendMutes.end())
+			{
+				sameLayout = false;
+				break;
+			}
+		}
+
+		if (sameLayout)
+		{
+			for (std::map<std::pair<MediaTrack*, int>, bool>::const_iterator current = sendMutes.begin(); current != sendMutes.end(); ++current)
+			{
+				std::map<std::pair<MediaTrack*, int>, bool>::const_iterator previous;
+
+				previous = s_sendMutes.find(current->first);
+				if (previous->second != current->second)
+				{
+					MediaTrack* track;
+					int sendId;
+					BR_EnvType type = VOLUME;
+
+					track = current->first.first;
+					sendId = current->first.second;
+					GetSetLastAdjustedSend(true, &track, &sendId, &type);
+				}
+			}
+		}
+	}
+
+	s_sendMutes.swap(sendMutes);
+	s_initialized = true;
+}
+
 int BR_CSurf_Extended(int call, void* parm1, void* parm2, void* parm3)
 {
 	if (call == CSURF_EXT_RESET)

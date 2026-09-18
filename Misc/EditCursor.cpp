@@ -171,20 +171,14 @@ void EditCursorSlice()
 	double dPos = GetCursorPosition();
 	if (dPos != g_editCursorStack.Get()->Get()[*g_editCursorStackPos.Get()])
 	{
-		(*g_editCursorStackPos.Get())++;
-		if (*g_editCursorStackPos.Get() >= SWS_EDITCURSOR_STACK_SIZE)
-			*g_editCursorStackPos.Get() = 0;
+		int *pos = g_editCursorStackPos.Get();
+		*pos = (*pos + 1) % SWS_EDITCURSOR_STACK_SIZE;
 
-		int iNext = *g_editCursorStackPos.Get();
+		const int next = (*pos + 1) % SWS_EDITCURSOR_STACK_SIZE;
 
-		while(g_editCursorStack.Get()->Get()[iNext] != -DBL_MAX)
-		{
-			g_editCursorStack.Get()->Get()[iNext] = -DBL_MAX;
-			iNext++;
-			if (iNext >= SWS_EDITCURSOR_STACK_SIZE)
-				iNext = 0;
-		}
-		g_editCursorStack.Get()->Get()[*g_editCursorStackPos.Get()] = dPos;
+		double *stack = g_editCursorStack.Get()->Get();
+		stack[*pos] = dPos;
+		stack[next] = -DBL_MAX;
 	}
 }
 

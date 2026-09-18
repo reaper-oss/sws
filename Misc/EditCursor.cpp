@@ -29,32 +29,19 @@
 #include "EditCursor.h"
 #include "../Breeder/BR_Util.h"
 
-#define SWS_EDITCURSOR_STACK_SIZE 50
+#define SWS_EDITCURSOR_STACK_SIZE 64
 
-static SWSProjConfig<WDL_TypedBuf<double> > g_editCursorStack;
-static SWSProjConfig<int> g_editCursorStackPos;
+static SWSProjConfig<WDL_TypedBuf<double>> g_editCursorStack;
+static SWSProjConfig<unsigned> g_editCursorStackPos;
 
-void UndoEditCursor(COMMAND_T*)
+void UndoRedoEditCursor(COMMAND_T* ct)
 {
-	int iPrev = *g_editCursorStackPos.Get() - 1;
-	if (iPrev < 0)
-		iPrev = SWS_EDITCURSOR_STACK_SIZE - 1;
-	if (g_editCursorStack.Get()->Get()[iPrev] != -DBL_MAX)
+	const unsigned i = (*g_editCursorStackPos.Get() + (int)ct->user) % SWS_EDITCURSOR_STACK_SIZE;
+	const double curpos = g_editCursorStack.Get()->Get()[i];
+	if (curpos != -DBL_MAX)
 	{
-		*g_editCursorStackPos.Get() = iPrev;
-		SetEditCurPos(g_editCursorStack.Get()->Get()[iPrev], true, true);
-	}
-}
-
-void RedoEditCursor(COMMAND_T*)
-{
-	int iNext = *g_editCursorStackPos.Get() + 1;
-	if (iNext >= SWS_EDITCURSOR_STACK_SIZE)
-		iNext = 0;
-	if (g_editCursorStack.Get()->Get()[iNext] != -DBL_MAX)
-	{
-		*g_editCursorStackPos.Get() = iNext;
-		SetEditCurPos(g_editCursorStack.Get()->Get()[iNext], true, true);
+		*g_editCursorStackPos.Get() = i;
+		SetEditCurPos(curpos, true, true);
 	}
 }
 
@@ -130,8 +117,8 @@ void MoveCursorFade(COMMAND_T* ct)
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] =
 {
-	{ { DEFACCEL, "SWS: Undo edit cursor move" },						"SWS_EDITCURUNDO",		UndoEditCursor, },
-	{ { DEFACCEL, "SWS: Redo edit cursor move" },						"SWS_EDITCURREDO",		RedoEditCursor, },
+	{ { DEFACCEL, "SWS: Undo edit cursor move" },						"SWS_EDITCURUNDO",		UndoRedoEditCursor, NULL, -1 },
+	{ { DEFACCEL, "SWS: Redo edit cursor move" },						"SWS_EDITCURREDO",		UndoRedoEditCursor, NULL,  1 },
 	{ { DEFACCEL, "SWS: Move cursor and time selection left to grid" },	"SWS_MOVECURSELLEFT",	MoveCursorAndSel, NULL, -1 },
 	{ { DEFACCEL, "SWS: Move cursor and time selection right to grid" },"SWS_MOVECURSELRIGHT",	MoveCursorAndSel, NULL,  1 },
 	{ { DEFACCEL, "SWS: Move cursor left 1 sample (on grid)" },			"SWS_MOVECURSAMPLEFT",	MoveCursorSample, NULL, -1 },
@@ -171,10 +158,10 @@ void EditCursorSlice()
 	double dPos = GetCursorPosition();
 	if (dPos != g_editCursorStack.Get()->Get()[*g_editCursorStackPos.Get()])
 	{
-		int *pos = g_editCursorStackPos.Get();
+		unsigned *pos = g_editCursorStackPos.Get();
 		*pos = (*pos + 1) % SWS_EDITCURSOR_STACK_SIZE;
 
-		const int next = (*pos + 1) % SWS_EDITCURSOR_STACK_SIZE;
+		const unsigned next = (*pos + 1) % SWS_EDITCURSOR_STACK_SIZE;
 
 		double *stack = g_editCursorStack.Get()->Get();
 		stack[*pos] = dPos;

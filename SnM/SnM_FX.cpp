@@ -197,14 +197,8 @@ int IsFXOfflineSelTracks(COMMAND_T * _ct)
 	{
 		MediaTrack* tr = SNM_GetSelectedTrack(NULL, 0, true);
 		int fxId = GetTrackFXIdFromCmd(tr, (int)_ct->user);
-		if (tr && fxId >= 0)
-		{
-			char state[2] = "0";
-			SNM_ChunkParserPatcher p(tr);
-			p.SetWantsMinimalState(true);
-			if (p.Parse(SNM_GET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", fxId, 2, state) > 0)
-				return !strcmp(state,"1");
-		}
+		if (tr && fxId >= 0 && fxId < TrackFX_GetCount(tr))
+			return TrackFX_GetOffline(tr, fxId);
 	}
 	// several selected tracks: possible mix of different states 
 	// => return a fake toggle state (best effort)
@@ -213,7 +207,7 @@ int IsFXOfflineSelTracks(COMMAND_T * _ct)
 	return false;
 }
 
-// core func (no dedicated API yet => state chunk update)
+// core func
 bool PatchSelTracksFXOnline(const char * _undoMsg, int _mode, int _fxCmdId, const char* _val = NULL, const char* _valExcept = NULL)
 {
 	bool updated = false;
@@ -225,16 +219,42 @@ bool PatchSelTracksFXOnline(const char * _undoMsg, int _mode, int _fxCmdId, cons
 			int fxId = GetTrackFXIdFromCmd(tr, _fxCmdId);
 			if (fxId >= 0)
 			{
-				SNM_ChunkParserPatcher p(tr);
-				bool updt = (p.ParsePatch(_mode, 2, "FXCHAIN", "BYPASS", fxId, 2, (void*)_val, (void*)_valExcept) > 0);
-				updated |= updt;
+				const int fxcnt = TrackFX_GetCount(tr);
+				for (int j=0; j<fxcnt; j++)
+				{
+					bool offline = false;
+					switch(_mode)
+					{
+						case SNM_TOGGLE_CHUNK_INT:
+							if (j != fxId) continue;
+							offline = !TrackFX_GetOffline(tr, j);
+							break;
+						case SNM_TOGGLE_CHUNK_INT_EXCEPT:
+							if (j == fxId) continue;
+							offline = !TrackFX_GetOffline(tr, j);
+							break;
+						case SNM_SET_CHUNK_CHAR:
+							if (j != fxId) continue;
+							offline = !strcmp(_val, "1");
+							break;
+						case SNM_SETALL_CHUNK_CHAR_EXCEPT:
+							offline = !strcmp(j == fxId ? _valExcept : _val, "1");
+							break;
+						default:
+							continue;
+					}
 
-				// close the GUI for buggy plugins (before chunk update)
-				// http://github.com/reaper-oss/sws/issues/317
-				if (updt && g_SNM_SupportBuggyPlug)
-					TrackFX_SetOpen(tr, fxId, false);
-
-			} // => auto commit
+					if (offline != TrackFX_GetOffline(tr, j))
+					{
+						// close the GUI for buggy plugins (before changing the state)
+						// http://github.com/reaper-oss/sws/issues/317
+						if (g_SNM_SupportBuggyPlug)
+							TrackFX_SetOpen(tr, j, false);
+						TrackFX_SetOffline(tr, j, offline);
+						updated = true;
+					}
+				}
+			}
 		}
 	}
 	if (updated)

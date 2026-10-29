@@ -21,7 +21,7 @@ for:
 
       install-deps() {
         local arch="$1"; shift
-        local native=("$@" php-cli)
+        local native=("$@" php-cli gcc-7 g++-7)
         local target=(libgtk-3-dev)
 
         sudo dpkg --add-architecture $arch
@@ -30,7 +30,7 @@ for:
         sudo aptitude install -yR ${native[@]} ${target[@]/%/:$arch} > /dev/null
       }
 
-      sudo update-alternatives --set gcc /usr/bin/gcc-7
+      export CC=gcc-7 CXX=g++-7
 
       case $ARCH in
       x86_64)
@@ -110,8 +110,10 @@ for:
       - choco install -y cmake --version 3.16.6
       - choco install -y php
       - refreshenv
-      - curl -fsSLO https://nsis.sourceforge.io/mediawiki/images/1/18/NsProcess.zip
+      # The current archive is v1.7 and no longer contains nsProcessW.dll.
+      - curl -fsSL -o nsProcess.zip https://nsis.sourceforge.io/mediawiki/images/archive/1/18/20261029203037!NsProcess.zip
       - 7z e nsProcess.zip -o"%ProgramFiles(x86)%\NSIS\Unicode\Plugins" nsProcessW.dll -r
+      - if not exist "%ProgramFiles(x86)%\NSIS\Unicode\Plugins\nsProcessW.dll" exit /b 1
       - if "%ARCH%" == "x64" call "%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
       - if "%ARCH%" == "x86" call "%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat"
     build_script:

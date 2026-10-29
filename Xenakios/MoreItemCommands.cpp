@@ -490,21 +490,24 @@ void DoDeleteItemAndMedia(COMMAND_T*)
 int SendFileToRecycleBin(const char *FileName)
 {
 #ifdef _WIN32
-	int slen=(int)strlen(FileName);
-	char *DoubleNullFN=new char[slen+3];
-	memset(DoubleNullFN,0,slen+3);
-	strcpy(DoubleNullFN,FileName);
-	char* pC;
-	while((pC = strchr(DoubleNullFN, '/')))
-		*pC = '\\';
-	SHFILEOPSTRUCT shOp;
-	memset(&shOp,0,sizeof(SHFILEOPSTRUCT));
+	if (!FileName || !*FileName)
+		return ERROR_INVALID_PARAMETER;
+	const int size = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+		FileName, -1, nullptr, 0);
+	if (!size)
+		return ERROR_NO_UNICODE_TRANSLATION;
+	// REAPER paths are UTF-8; the shell requires UTF-16 and a double-NUL list.
+	std::vector<wchar_t> filename(size + 1, L'\0');
+	if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+		FileName, -1, filename.data(), size))
+		return ERROR_NO_UNICODE_TRANSLATION;
+	std::replace(filename.begin(), filename.end(), L'/', L'\\');
+	SHFILEOPSTRUCTW shOp = {};
 	shOp.wFunc=FO_DELETE;
-	shOp.pFrom=DoubleNullFN;
+	shOp.pFrom=filename.data();
 	shOp.fFlags=FOF_FILESONLY|FOF_ALLOWUNDO|FOF_NOCONFIRMATION|FOF_NOERRORUI;
-	int rc= SHFileOperation(&shOp);
-	delete[] DoubleNullFN;
-	return rc;
+	const int rc = SHFileOperationW(&shOp);
+	return rc ? rc : (shOp.fAnyOperationsAborted ? ERROR_CANCELLED : 0);
 #else
 	return 1;
 #endif

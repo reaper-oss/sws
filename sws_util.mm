@@ -75,10 +75,15 @@ int GetCustomColors(COLORREF custColors[])
 		adv = 10;
 		n = 16;
 	}
-  	else if ([cswatch respondsToSelector:@selector(savedColors)])
+  	else if ([cswatch isKindOfClass:NSClassFromString(@"NSColorPanelFavoritesList")])
 	{
-		// high sierra
-		colors = [cswatch performSelector:@selector(savedColors)];
+		// This is the macOS 10.13+ (High Sierra) codepath.
+		//
+		// NB: Before macOS 27, there was a `savedColors` method we could call; that method
+		// no longer exists, but underlying instance variable still does. Fortunately, we
+		// can use `valueForKey:`, which will do the right thing automatically: call the
+		// getter method if present, or read the instance variable directly if not.
+		colors = [cswatch valueForKey:@"savedColors"];
 		adv=1;
 		n = [colors count];
 		if (n > 16) n = 16;
